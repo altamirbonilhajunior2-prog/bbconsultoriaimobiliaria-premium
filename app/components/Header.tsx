@@ -13,28 +13,32 @@ const navigation = [
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-black/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-[120px] max-w-[1720px] items-center justify-between px-8 lg:px-10">
-
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-[132px] max-w-[1720px] items-center gap-6 px-6 lg:px-8 xl:px-10">
         <Link
           href="/"
-          className="relative h-[88px] w-[230px] shrink-0 transition duration-300 hover:scale-[1.02]"
+          aria-label="B&B Consultoria Imobiliária"
+          className="relative block h-[124px] w-[270px] shrink-0 overflow-hidden"
         >
           <Image
             src="/logo-bb.png"
             alt="B&B Consultoria Imobiliária"
             fill
             priority
-            className="object-contain object-left"
+            sizes="270px"
+            className="scale-[1.38] object-contain object-center transition-transform duration-300 hover:scale-[1.43]"
           />
         </Link>
 
-        <nav className="hidden items-center gap-9 lg:flex">
+        <nav
+          aria-label="Navegação principal"
+          className="hidden flex-1 items-center justify-center gap-5 lg:flex xl:gap-7"
+        >
           {navigation.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="relative text-[12px] font-medium uppercase tracking-[0.16em] text-zinc-200 transition duration-300 hover:text-[#D5A85A] after:absolute after:-bottom-2 after:left-0 after:h-px after:w-0 after:bg-[#D5A85A] after:transition-all after:duration-300 hover:after:w-full"
+              className="relative whitespace-nowrap py-3 text-[11px] font-medium uppercase tracking-[0.1em] text-zinc-200 transition-colors duration-300 after:absolute after:bottom-1 after:left-0 after:h-px after:w-0 after:bg-[#D5A85A] after:transition-all after:duration-300 hover:text-[#D5A85A] hover:after:w-full xl:text-[12px]"
             >
               {item.label}
             </Link>
@@ -45,11 +49,10 @@ export default function Header() {
           href="https://wa.me/5512978140636?text=Olá,%20gostaria%20de%20agendar%20uma%20conversa."
           target="_blank"
           rel="noreferrer"
-          className="inline-flex h-12 items-center justify-center border border-[#D5A85A] px-7 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#D5A85A] transition-all duration-300 hover:bg-[#D5A85A] hover:text-black"
+          className="inline-flex h-14 shrink-0 items-center justify-center border border-[#D5A85A] px-6 text-center text-[10px] font-semibold uppercase tracking-[0.16em] text-[#D5A85A] transition-all duration-300 hover:bg-[#D5A85A] hover:text-black xl:px-8 xl:text-[11px]"
         >
           Agendar conversa
         </a>
-
       </div>
     </header>
   );
