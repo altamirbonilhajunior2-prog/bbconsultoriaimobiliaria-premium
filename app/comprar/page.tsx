@@ -116,11 +116,11 @@ export default function ComprarPage() {
         <div className="flex flex-col gap-4 border-b border-white/10 pb-6 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-400">
-              Resultado da busca
+              Imóveis à venda
             </p>
 
             <h2 className="mt-3 font-serif text-4xl font-normal">
-              Imóveis disponíveis
+              Imóveis selecionados para venda
             </h2>
           </div>
 

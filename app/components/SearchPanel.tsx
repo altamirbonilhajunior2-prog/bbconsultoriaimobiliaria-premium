@@ -1,14 +1,14 @@
 export default function SearchPanel() {
   return (
-    <section className="relative z-30 mx-auto -mt-10 w-[calc(100%-40px)] max-w-[1540px]">
-      <div className="border border-amber-500/60 bg-[#090909]/95 px-5 py-5 shadow-[0_24px_70px_rgba(0,0,0,0.5)] backdrop-blur-md sm:px-6">
-        <div className="grid gap-5 lg:grid-cols-[1fr_1fr_1fr_1fr_210px]">
-          <label className="flex flex-col gap-2 border-b border-white/15 pb-3">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400">
+    <section className="relative z-20 w-full bg-black px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1720px] border border-[#D5A85A]/60 bg-[#090909] px-6 py-7 shadow-[0_24px_70px_rgba(0,0,0,0.45)] lg:px-8">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_1fr_230px]">
+          <label className="flex min-w-0 flex-col gap-3 border-b border-white/15 pb-4">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D5A85A]">
               Tipo de imóvel
             </span>
 
-            <select className="h-10 bg-transparent text-sm text-white outline-none">
+            <select className="h-11 w-full min-w-0 bg-transparent text-base text-white outline-none">
               <option className="bg-zinc-900">Todos os tipos</option>
               <option className="bg-zinc-900">Casa</option>
               <option className="bg-zinc-900">Apartamento</option>
@@ -17,24 +17,24 @@ export default function SearchPanel() {
             </select>
           </label>
 
-          <label className="flex flex-col gap-2 border-b border-white/15 pb-3">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400">
+          <label className="flex min-w-0 flex-col gap-3 border-b border-white/15 pb-4">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D5A85A]">
               Finalidade
             </span>
 
-            <select className="h-10 bg-transparent text-sm text-white outline-none">
+            <select className="h-11 w-full min-w-0 bg-transparent text-base text-white outline-none">
               <option className="bg-zinc-900">Comprar</option>
               <option className="bg-zinc-900">Alugar</option>
               <option className="bg-zinc-900">Lançamentos</option>
             </select>
           </label>
 
-          <label className="flex flex-col gap-2 border-b border-white/15 pb-3">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400">
+          <label className="flex min-w-0 flex-col gap-3 border-b border-white/15 pb-4">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D5A85A]">
               Bairro
             </span>
 
-            <select className="h-10 bg-transparent text-sm text-white outline-none">
+            <select className="h-11 w-full min-w-0 bg-transparent text-base text-white outline-none">
               <option className="bg-zinc-900">Todos os bairros</option>
               <option className="bg-zinc-900">Urbanova</option>
               <option className="bg-zinc-900">Jardim Aquarius</option>
@@ -43,12 +43,12 @@ export default function SearchPanel() {
             </select>
           </label>
 
-          <label className="flex flex-col gap-2 border-b border-white/15 pb-3">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400">
+          <label className="flex min-w-0 flex-col gap-3 border-b border-white/15 pb-4">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D5A85A]">
               Faixa de valor
             </span>
 
-            <select className="h-10 bg-transparent text-sm text-white outline-none">
+            <select className="h-11 w-full min-w-0 bg-transparent text-base text-white outline-none">
               <option className="bg-zinc-900">Qualquer valor</option>
               <option className="bg-zinc-900">Até R$ 1 milhão</option>
               <option className="bg-zinc-900">Até R$ 2 milhões</option>
@@ -59,16 +59,16 @@ export default function SearchPanel() {
 
           <button
             type="button"
-            className="min-h-14 bg-amber-500 px-6 text-sm font-bold uppercase tracking-[0.16em] text-black transition hover:bg-amber-400"
+            className="min-h-16 bg-[#D5A85A] px-7 text-sm font-bold uppercase tracking-[0.18em] text-black transition-colors duration-300 hover:bg-[#E5BC6B] xl:min-h-full"
           >
             Buscar imóveis
           </button>
         </div>
 
-        <div className="mt-4 flex justify-center">
+        <div className="mt-7 flex justify-center">
           <button
             type="button"
-            className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400 transition hover:text-amber-300"
+            className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#D5A85A] transition-colors duration-300 hover:text-[#E5BC6B]"
           >
             Busca avançada →
           </button>
