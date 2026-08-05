@@ -21,6 +21,9 @@ export default function PropertyGallery({
 
   const selectedImage = safeImages[selectedIndex];
 
+  const formattedCurrentIndex = String(selectedIndex + 1).padStart(2, "0");
+  const formattedTotalImages = String(safeImages.length).padStart(2, "0");
+
   function selectImage(index: number) {
     setSelectedIndex(index);
   }
@@ -105,11 +108,7 @@ export default function PropertyGallery({
           </span>
 
           <span className="pointer-events-none absolute bottom-5 right-5 z-20 border border-white/20 bg-black/75 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white backdrop-blur-sm">
-            {selectedIndex + 1} de {safeImages.length}
-          </span>
-
-          <span className="pointer-events-none absolute bottom-5 left-5 z-20 border border-white/20 bg-black/75 px-4 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-white backdrop-blur-sm">
-            Clique para ampliar
+            {formattedCurrentIndex} / {formattedTotalImages}
           </span>
 
           {safeImages.length > 1 && (
@@ -180,7 +179,7 @@ export default function PropertyGallery({
                       : "bg-black/75 text-zinc-300"
                   }`}
                 >
-                  {index + 1}
+                  {String(index + 1).padStart(2, "0")}
                 </span>
               </button>
             );
@@ -243,12 +242,8 @@ export default function PropertyGallery({
           </div>
 
           <div className="absolute bottom-5 left-1/2 -translate-x-1/2 border border-white/20 bg-black/80 px-5 py-3 text-center backdrop-blur-sm sm:bottom-8">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-white">
-              {selectedIndex + 1} de {safeImages.length}
-            </p>
-
-            <p className="mt-1 hidden text-[9px] uppercase tracking-[0.14em] text-zinc-500 sm:block">
-              Use as setas do teclado para navegar e ESC para fechar
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-white">
+              {formattedCurrentIndex} / {formattedTotalImages}
             </p>
           </div>
         </div>
