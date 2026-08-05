@@ -5,9 +5,23 @@ export type Property = {
   price: string;
   image: string;
   tag: string;
+
   area: string;
+  landArea?: string;
+
   bedrooms: string;
+  suites?: string;
+  bathrooms?: string;
   parking: string;
+
+  condominium?: string;
+  iptu?: string;
+
+  description?: string;
+
+  gallery?: string[];
+
+  features?: string[];
 };
 
 export type Neighborhood = {

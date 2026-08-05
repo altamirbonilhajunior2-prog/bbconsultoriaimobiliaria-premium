@@ -28,6 +28,7 @@ export default function PropertyCard({
     <article className="group flex h-full flex-col overflow-hidden border border-white/10 bg-[#0a0a0a] transition-all duration-500 hover:-translate-y-1 hover:border-amber-500/60 hover:shadow-[0_24px_70px_rgba(0,0,0,0.5)]">
       <Link
         href={`/imovel/${code.toLowerCase()}`}
+        aria-label={`Conhecer o imóvel ${title}`}
         className="flex h-full flex-col"
       >
         <div className="relative h-[210px] overflow-hidden">
@@ -46,7 +47,7 @@ export default function PropertyCard({
           </span>
 
           <span className="absolute bottom-4 left-4 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/75">
-            Código {code}
+            Ref. {code}
           </span>
 
           <span className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-black/60 text-lg text-white transition group-hover:border-amber-500 group-hover:text-amber-400">
@@ -82,8 +83,8 @@ export default function PropertyCard({
           </div>
 
           <div className="mt-auto pt-5">
-            <span className="flex min-h-11 items-center justify-center border border-amber-500/60 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400 transition group-hover:bg-amber-500 group-hover:text-black">
-              Ver detalhes
+            <span className="flex min-h-12 items-center justify-center border border-amber-500/60 px-4 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400 transition group-hover:bg-amber-500 group-hover:text-black">
+              Conhecer este imóvel →
             </span>
           </div>
         </div>

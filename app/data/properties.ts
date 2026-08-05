@@ -4,13 +4,58 @@ export const properties: Property[] = [
   {
     code: "BBP001",
     title: "Casa contemporânea no Alphaville II",
-    location: "Urbanova • São José dos Campos",
+    location: "Urbanova • São José dos Campos/SP",
     price: "R$ 3.300.000",
-    image: "/hero-clean.png",
-    tag: "Destaque",
+    image: "/imoveis/bbp001/BBP001 (47).jpeg",
+    tag: "Exclusivo",
+
     area: "310 m²",
+    landArea: "479 m²",
+
     bedrooms: "4",
+    suites: "4",
+    bathrooms: "5",
     parking: "4",
+
+    condominium: "R$ 940,00",
+    iptu: "R$ 2.800,00",
+
+    description:
+      "Casa contemporânea de alto padrão localizada no Condomínio Alphaville II, no Urbanova, uma das regiões mais valorizadas de São José dos Campos. O condomínio possui fácil acesso às principais vias da cidade, à Via Dutra e ao Anel Viário, além de estar próximo a supermercados, escolas, farmácias, academias, restaurantes e diversos serviços essenciais. Com 310 m² de área construída em um terreno de 479 m², a residência foi projetada para oferecer integração entre os ambientes, iluminação natural e conforto. O imóvel dispõe de quatro suítes, living amplo com pé-direito elevado, cozinha planejada, espaço gourmet integrado, piscina, lavabo, área de serviço e quatro vagas de garagem. O Condomínio Alphaville II oferece segurança 24 horas, controle de acesso, piscina, academia, salão de festas, espaço gourmet, playground, áreas verdes e espaços de convivência.",
+
+    gallery: [
+      "/imoveis/bbp001/BBP001 (47).jpeg",
+      "/imoveis/bbp001/BBP001 (4).jpeg",
+      "/imoveis/bbp001/BBP001 (40).jpeg",
+      "/imoveis/bbp001/BBP001 (5).jpeg",
+      "/imoveis/bbp001/BBP001 (10).jpeg",
+      "/imoveis/bbp001/BBP001 (36).jpeg",
+      "/imoveis/bbp001/BBP001 (39).jpeg",
+      "/imoveis/bbp001/BBP001 (17).jpeg",
+      "/imoveis/bbp001/BBP001 (25).jpeg",
+      "/imoveis/bbp001/BBP001 (24).jpeg",
+      "/imoveis/bbp001/BBP001 (35).jpeg",
+      "/imoveis/bbp001/BBP001 (22).jpeg",
+      "/imoveis/bbp001/BBP001 (33).jpeg",
+      "/imoveis/bbp001/BBP001 (12).jpeg",
+      "/imoveis/bbp001/BBP001 (1).jpeg",
+      "/imoveis/bbp001/fachada-noite.png",
+    ],
+
+    features: [
+      "Living amplo com pé-direito elevado",
+      "Quatro suítes",
+      "Cozinha planejada",
+      "Espaço gourmet integrado",
+      "Piscina",
+      "Lavabo",
+      "Área de serviço",
+      "Ambientes integrados",
+      "Iluminação natural",
+      "Quatro vagas de garagem",
+      "Condomínio fechado",
+      "Segurança 24 horas",
+    ],
   },
   {
     code: "BBP002",
