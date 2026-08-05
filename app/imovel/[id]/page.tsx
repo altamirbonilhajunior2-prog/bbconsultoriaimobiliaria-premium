@@ -88,10 +88,6 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
     `Olá, gostaria de receber mais informações sobre o imóvel ${property.code} — ${property.title}.`,
   );
 
-  const visitMessage = encodeURIComponent(
-    `Olá, gostaria de agendar uma visita ao imóvel ${property.code} — ${property.title}.`,
-  );
-
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
       <Header />
@@ -312,7 +308,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
             </div>
 
             <a
-              href={`https://wa.me/5512978140636?text=${visitMessage}`}
+              href="https://altamirbonilhajunior2-prog.github.io/Portal-B-B-Premium-version-final-jul-2026/?v=3.0"
               target="_blank"
               rel="noreferrer"
               className="mt-6 inline-flex min-h-16 w-full items-center justify-center bg-amber-500 px-7 text-center text-xs font-bold uppercase tracking-[0.18em] text-black transition hover:bg-amber-400"
