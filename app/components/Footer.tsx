@@ -19,6 +19,10 @@ const neighborhoods = [
   "Condomínios fechados",
 ];
 
+const whatsappMessage = encodeURIComponent(
+  "Olá, gostaria de falar com a B&B Consultoria Imobiliária.",
+);
+
 export default function Footer() {
   return (
     <footer className="border-t border-[#D5A85A]/30 bg-black text-white">
@@ -26,7 +30,7 @@ export default function Footer() {
         <div>
           <Link
             href="/"
-            aria-label="B&B Consultoria Imobiliária"
+            aria-label="Ir para a página inicial da B&B Consultoria Imobiliária"
             className="relative block h-[190px] w-[340px] max-w-full overflow-hidden"
           >
             <Image
@@ -53,7 +57,10 @@ export default function Footer() {
             Navegação
           </h2>
 
-          <div className="mt-6 flex flex-col gap-3 text-sm text-zinc-400">
+          <nav
+            aria-label="Navegação do rodapé"
+            className="mt-6 flex flex-col gap-3 text-sm text-zinc-400"
+          >
             {navigation.map((item) => (
               <Link
                 key={item.href}
@@ -63,7 +70,7 @@ export default function Footer() {
                 {item.label}
               </Link>
             ))}
-          </div>
+          </nav>
         </div>
 
         <div>
@@ -85,18 +92,27 @@ export default function Footer() {
 
           <div className="mt-6 space-y-3 text-sm leading-6 text-zinc-400">
             <p>São José dos Campos — SP</p>
-            <p>(12) 97814-0636</p>
+
+            <a
+              href="tel:+5512978140636"
+              className="block w-fit transition-colors duration-300 hover:text-white"
+            >
+              (12) 97814-0636
+            </a>
+
+            <p>CRECI-SP 311872-F</p>
+
             <p>Atendimento consultivo e personalizado.</p>
-            <p>CRECI: inserir número</p>
           </div>
 
           <a
-            href="https://wa.me/5512978140636?text=Olá,%20gostaria%20de%20falar%20com%20a%20B%26B%20Consultoria%20Imobiliária."
+            href={`https://wa.me/5512978140636?text=${whatsappMessage}`}
             target="_blank"
-            rel="noreferrer"
-            className="mt-7 inline-flex min-h-13 w-full items-center justify-center bg-[#D5A85A] px-6 text-xs font-bold uppercase tracking-[0.16em] text-black transition-colors duration-300 hover:bg-[#E5BC6B]"
+            rel="noopener noreferrer"
+            aria-label="Falar com a B&B Consultoria Imobiliária pelo WhatsApp"
+            className="mt-7 inline-flex min-h-13 w-full items-center justify-center bg-[#D5A85A] px-6 text-center text-xs font-bold uppercase tracking-[0.16em] text-black transition-colors duration-300 hover:bg-[#E5BC6B]"
           >
-            Falar no WhatsApp
+            Falar pelo WhatsApp
           </a>
         </div>
       </div>
@@ -108,7 +124,9 @@ export default function Footer() {
             os direitos reservados.
           </p>
 
-          <p>Construindo valor. Realizando sonhos.</p>
+          <p>
+            Inteligência imobiliária para decisões que constroem patrimônio.
+          </p>
         </div>
       </div>
     </footer>

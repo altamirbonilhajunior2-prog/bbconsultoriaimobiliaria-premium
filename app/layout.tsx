@@ -22,17 +22,19 @@ export const metadata: Metadata = {
   },
 
   description:
-    "Consultoria imobiliária especializada em imóveis de médio e alto padrão em São José dos Campos. Atendimento personalizado, análise patrimonial e oportunidades selecionadas.",
+    "Consultoria imobiliária especializada em imóveis de médio e alto padrão em São José dos Campos. Atendimento consultivo, análise patrimonial e oportunidades selecionadas.",
+
+  applicationName: "B&B Consultoria Imobiliária",
 
   keywords: [
     "imóveis São José dos Campos",
+    "casas Urbanova",
+    "apartamentos Jardim Aquarius",
     "consultoria imobiliária",
-    "Urbanova",
-    "Jardim Aquarius",
-    "Colinas",
-    "Altos do Esplanada",
-    "casas alto padrão",
-    "apartamentos São José dos Campos",
+    "alto padrão",
+    "casas em condomínio",
+    "imóveis de luxo",
+    "imobiliária São José dos Campos",
     "B&B Consultoria Imobiliária",
   ],
 
@@ -44,13 +46,21 @@ export const metadata: Metadata = {
 
   creator: "B&B Consultoria Imobiliária",
 
+  publisher: "B&B Consultoria Imobiliária",
+
+  alternates: {
+    canonical: "/",
+  },
+
   openGraph: {
     type: "website",
     locale: "pt_BR",
+    url: "https://www.bbconsultoriaimobiliaria.com.br",
+    siteName: "B&B Consultoria Imobiliária",
     title: "B&B Consultoria Imobiliária",
     description:
       "Consultoria imobiliária especializada em imóveis de médio e alto padrão em São José dos Campos.",
-    siteName: "B&B Consultoria Imobiliária",
+
     images: [
       {
         url: "/og-image.jpg",
@@ -61,9 +71,24 @@ export const metadata: Metadata = {
     ],
   },
 
+  twitter: {
+    card: "summary_large_image",
+    title: "B&B Consultoria Imobiliária",
+    description:
+      "Consultoria imobiliária especializada em imóveis de médio e alto padrão em São José dos Campos.",
+    images: ["/og-image.jpg"],
+  },
+
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-video-preview": -1,
+      "max-snippet": -1,
+    },
   },
 
   icons: {

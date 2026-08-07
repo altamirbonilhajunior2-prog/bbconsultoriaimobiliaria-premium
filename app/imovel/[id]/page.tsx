@@ -4,7 +4,9 @@ import Footer from "../../components/Footer";
 import Header from "../../components/Header";
 import PropertyCard from "../../components/PropertyCard";
 import PropertyGallery from "../../components/PropertyGallery";
-import { properties } from "../../data/properties";
+import { prisma } from "../../../lib/prisma";
+
+export const dynamic = "force-dynamic";
 
 type PropertyPageProps = {
   params: Promise<{
@@ -32,61 +34,392 @@ const analyzedDifferentials = [
   "Adequação ao objetivo patrimonial",
 ];
 
-export function generateStaticParams() {
-  return properties.map((property) => ({
-    id: property.code.toLowerCase(),
-  }));
+function decimalToNumber(
+  value: { toString(): string } | null,
+) {
+  if (value === null) {
+    return null;
+  }
+
+  const number = Number(
+    value.toString(),
+  );
+
+  return Number.isFinite(number)
+    ? number
+    : null;
 }
 
-export async function generateMetadata({ params }: PropertyPageProps) {
+function formatCurrency(
+  value: { toString(): string } | null,
+) {
+  const number =
+    decimalToNumber(value);
+
+  if (number === null) {
+    return "Sob consulta";
+  }
+
+  return new Intl.NumberFormat(
+    "pt-BR",
+    {
+      style: "currency",
+      currency: "BRL",
+      maximumFractionDigits: 0,
+    },
+  ).format(number);
+}
+
+function formatArea(
+  value: { toString(): string } | null,
+) {
+  const number =
+    decimalToNumber(value);
+
+  if (number === null) {
+    return "Consulte";
+  }
+
+  return `${new Intl.NumberFormat(
+    "pt-BR",
+    {
+      maximumFractionDigits: 2,
+    },
+  ).format(number)} m²`;
+}
+
+function buildLocation(
+  neighborhood: string,
+  city: string,
+  state: string,
+  location: string | null,
+) {
+  if (location) {
+    return location;
+  }
+
+  return [
+    neighborhood,
+    `${city}/${state}`,
+  ]
+    .filter(Boolean)
+    .join(" • ");
+}
+
+export async function generateMetadata({
+  params,
+}: PropertyPageProps) {
   const { id } = await params;
 
-  const property = properties.find(
-    (item) => item.code.toLowerCase() === id.toLowerCase(),
-  );
+  const property =
+    await prisma.property.findFirst({
+      where: {
+        code: id.toUpperCase(),
+        published: true,
+      },
+
+      select: {
+        title: true,
+        description: true,
+        seoTitle: true,
+        seoDescription: true,
+        seoImage: true,
+        neighborhood: true,
+        city: true,
+
+        images: {
+          orderBy: [
+            {
+              position: "asc",
+            },
+            {
+              id: "asc",
+            },
+          ],
+
+          select: {
+            url: true,
+            isCover: true,
+          },
+        },
+      },
+    });
 
   if (!property) {
     return {
-      title: "Imóvel não encontrado | B&B Consultoria Imobiliária",
+      title:
+        "Imóvel não encontrado | B&B Consultoria Imobiliária",
+      robots: {
+        index: false,
+        follow: false,
+      },
     };
   }
 
+  const coverImage =
+    property.seoImage ||
+    property.images.find(
+      (image) => image.isCover,
+    )?.url ||
+    property.images[0]?.url;
+
+  const description =
+    property.seoDescription ||
+    property.description ||
+    `${property.title}, localizado em ${property.neighborhood}, ${property.city}. Consulte a B&B para mais informações.`;
+
   return {
-    title: `${property.title} | B&B Consultoria Imobiliária`,
-    description:
-      property.description ||
-      `${property.title}, localizado em ${property.location}. Consulte a B&B para mais informações.`,
+    title:
+      property.seoTitle ||
+      `${property.title} | B&B Consultoria Imobiliária`,
+
+    description,
+
+    openGraph: {
+      title:
+        property.seoTitle ||
+        property.title,
+
+      description,
+
+      images: coverImage
+        ? [
+            {
+              url: coverImage,
+            },
+          ]
+        : undefined,
+    },
   };
 }
 
-export default async function PropertyPage({ params }: PropertyPageProps) {
+export default async function PropertyPage({
+  params,
+}: PropertyPageProps) {
   const { id } = await params;
 
-  const property = properties.find(
-    (item) => item.code.toLowerCase() === id.toLowerCase(),
-  );
+  const property =
+    await prisma.property.findFirst({
+      where: {
+        code: id.toUpperCase(),
+        published: true,
+      },
+
+      include: {
+        images: {
+          orderBy: [
+            {
+              position: "asc",
+            },
+            {
+              id: "asc",
+            },
+          ],
+        },
+      },
+    });
 
   if (!property) {
     notFound();
   }
 
-  const relatedProperties = properties
-    .filter((item) => item.code !== property.code)
-    .slice(0, 4);
+  const relatedProperties =
+    await prisma.property.findMany({
+      where: {
+        published: true,
+
+        code: {
+          not: property.code,
+        },
+
+        purpose:
+          property.purpose ===
+          "LOCACAO"
+            ? {
+                in: [
+                  "LOCACAO",
+                  "VENDA_E_LOCACAO",
+                ],
+              }
+            : {
+                in: [
+                  "VENDA",
+                  "VENDA_E_LOCACAO",
+                ],
+              },
+      },
+
+      include: {
+        images: {
+          orderBy: [
+            {
+              position: "asc",
+            },
+            {
+              id: "asc",
+            },
+          ],
+        },
+      },
+
+      orderBy: [
+        {
+          highlight: "desc",
+        },
+        {
+          publishedAt: "desc",
+        },
+      ],
+
+      take: 4,
+    });
+
+  const coverImage =
+    property.images.find(
+      (image) => image.isCover,
+    );
 
   const galleryImages =
-    property.gallery && property.gallery.length > 0
-      ? property.gallery
-      : [property.image];
+    coverImage
+      ? [
+          coverImage.url,
+          ...property.images
+            .filter(
+              (image) =>
+                image.id !==
+                coverImage.id,
+            )
+            .map(
+              (image) =>
+                image.url,
+            ),
+        ]
+      : property.images.map(
+          (image) =>
+            image.url,
+        );
+
+  const safeGalleryImages =
+    galleryImages.length > 0
+      ? galleryImages
+      : ["/hero-clean.png"];
 
   const features =
-    property.features && property.features.length > 0
+    property.features.length > 0
       ? property.features
       : defaultFeatures;
 
-  const whatsappMessage = encodeURIComponent(
-    `Olá, gostaria de receber mais informações sobre o imóvel ${property.code} — ${property.title}.`,
-  );
+  const location =
+    buildLocation(
+      property.neighborhood,
+      property.city,
+      property.state,
+      property.location,
+    );
+
+  const tag =
+    property.tag ||
+    (property.highlight
+      ? "Destaque"
+      : "Selecionado");
+
+  const isRentalOnly =
+    property.purpose ===
+    "LOCACAO";
+
+  const backUrl =
+    isRentalOnly
+      ? "/alugar"
+      : "/comprar";
+
+  const salePrice =
+    formatCurrency(
+      property.price,
+    );
+
+  const rentalPrice =
+    formatCurrency(
+      property.rentalPrice,
+    );
+
+  const whatsappMessage =
+    encodeURIComponent(
+      `Olá, gostaria de receber mais informações sobre o imóvel ${property.code} — ${property.title}.`,
+    );
+
+  const scheduleUrl =
+    `/agendar-visita?imovel=${encodeURIComponent(
+      property.code,
+    )}&titulo=${encodeURIComponent(
+      property.title,
+    )}`;
+
+  const relatedCards =
+    relatedProperties.map(
+      (item) => {
+        const relatedCover =
+          item.images.find(
+            (image) =>
+              image.isCover,
+          ) ??
+          item.images[0];
+
+        const relatedLocation =
+          buildLocation(
+            item.neighborhood,
+            item.city,
+            item.state,
+            item.location,
+          );
+
+        const relatedPrice =
+          item.purpose ===
+          "LOCACAO"
+            ? formatCurrency(
+                item.rentalPrice,
+              )
+            : formatCurrency(
+                item.price,
+              );
+
+        return {
+          code: item.code,
+
+          title: item.title,
+
+          location:
+            relatedLocation,
+
+          price:
+            relatedPrice,
+
+          image:
+            relatedCover?.url ??
+            "/hero-clean.png",
+
+          tag:
+            item.tag ||
+            (item.highlight
+              ? "Destaque"
+              : "Selecionado"),
+
+          area:
+            formatArea(
+              item.area,
+            ),
+
+          bedrooms:
+            String(
+              item.bedrooms,
+            ),
+
+          parking:
+            String(
+              item.parking,
+            ),
+        };
+      },
+    );
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
@@ -95,112 +428,65 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
       <section className="border-b border-white/10 bg-[#090909]">
         <div className="mx-auto max-w-[1720px] px-6 py-8 lg:px-10 xl:px-12">
           <Link
-            href="/comprar"
+            href={backUrl}
             className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-400 transition hover:text-amber-300"
           >
             ← Voltar para imóveis
           </Link>
-
-          <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="border border-amber-500 bg-amber-500/10 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
-                  {property.tag}
-                </span>
-
-                <span className="border border-emerald-500/60 bg-emerald-500/10 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400">
-                  Disponível
-                </span>
-              </div>
-
-              <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.22em] text-amber-400">
-                {property.location}
-              </p>
-
-              <h1 className="mt-3 max-w-5xl font-serif text-4xl font-normal leading-tight sm:text-5xl lg:text-6xl">
-                {property.title}
-              </h1>
-
-              {property.code === "BBP001" && (
-                <p className="mt-3 text-lg text-zinc-300">
-                  Condomínio Alphaville II
-                </p>
-              )}
-
-              <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-zinc-500">
-                <span>
-                  Referência:{" "}
-                  <strong className="font-medium text-zinc-200">
-                    {property.code}
-                  </strong>
-                </span>
-
-                <span>{property.area} construídos</span>
-
-                {property.landArea && (
-                  <span>{property.landArea} de terreno</span>
-                )}
-              </div>
-            </div>
-
-            <div className="lg:text-right">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
-                Valor de venda
-              </p>
-
-              <strong className="mt-2 block font-serif text-3xl font-normal text-amber-400 sm:text-4xl">
-                {property.price}
-              </strong>
-            </div>
-          </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1720px] px-6 py-8 lg:px-10 xl:px-12">
-        <div className="grid gap-5 lg:grid-cols-[1.6fr_0.8fr]">
-          <PropertyGallery
-            images={galleryImages}
-            title={property.title}
-            tag={property.tag}
-          />
+      <section className="mx-auto max-w-[1720px] px-6 py-10 lg:px-10 xl:px-12">
+        <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_420px]">
+          <div>
+            <PropertyGallery
+              images={
+                safeGalleryImages
+              }
+              title={
+                property.title
+              }
+              tag={tag}
+            />
+          </div>
 
-          <aside className="h-fit border border-amber-500/35 bg-[#0b0b0b] p-7 lg:sticky lg:top-[150px]">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-400">
-                  Informações do imóvel
-                </p>
+          <aside className="h-fit border border-white/10 bg-[#0a0a0a] p-7 xl:sticky xl:top-6">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400">
+              {tag}
+            </p>
 
-                {property.code === "BBP001" && (
-                  <p className="mt-2 text-sm text-zinc-500">
-                    Condomínio Alphaville II
-                  </p>
-                )}
-              </div>
+            <h1 className="mt-4 font-serif text-4xl font-normal leading-[1.08]">
+              {property.title}
+            </h1>
 
-              <span className="border border-emerald-500/50 bg-emerald-500/10 px-3 py-2 text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-400">
-                Disponível
-              </span>
-            </div>
+            <p className="mt-4 text-sm leading-7 text-zinc-400">
+              {location}
+            </p>
 
-            <div className="mt-7 grid grid-cols-3 gap-3 border-y border-white/10 py-6 text-center">
+            <div className="mt-8 grid grid-cols-3 gap-4 border-y border-white/10 py-6">
               <div>
                 <strong className="block font-serif text-2xl font-normal">
-                  {property.area}
+                  {formatArea(
+                    property.area,
+                  )}
                 </strong>
 
                 <span className="mt-2 block text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-500">
-                  Área construída
+                  Área
                 </span>
               </div>
 
               <div>
                 <strong className="block font-serif text-2xl font-normal">
-                  {property.suites || property.bedrooms}
+                  {property.suites > 0
+                    ? property.suites
+                    : property.bedrooms}
                 </strong>
 
                 <span className="mt-2 block text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-500">
-                  Suítes
+                  {property.suites > 0
+                    ? "Suítes"
+                    : "Dormitórios"}
                 </span>
               </div>
 
@@ -222,7 +508,9 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
                 </span>
 
                 <strong className="mt-2 block font-medium text-white">
-                  {property.landArea || "Consulte"}
+                  {formatArea(
+                    property.landArea,
+                  )}
                 </strong>
               </div>
 
@@ -242,7 +530,8 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
                 </span>
 
                 <strong className="mt-2 block font-medium text-white">
-                  {property.bathrooms || "Consulte"}
+                  {property.bathrooms ||
+                    "Consulte"}
                 </strong>
               </div>
 
@@ -252,7 +541,9 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
                 </span>
 
                 <strong className="mt-2 block font-medium text-white">
-                  {property.condominium || "Consulte"}
+                  {formatCurrency(
+                    property.condominium,
+                  )}
                 </strong>
               </div>
 
@@ -262,7 +553,9 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
                 </span>
 
                 <strong className="mt-2 block font-medium text-white">
-                  {property.iptu || "Consulte"}
+                  {formatCurrency(
+                    property.iptu,
+                  )}
                 </strong>
               </div>
 
@@ -272,49 +565,67 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
                 </span>
 
                 <strong className="mt-2 block font-medium text-white">
-                  Confirmar
+                  Disponível
                 </strong>
               </div>
             </div>
 
             <div className="mt-7 space-y-4 text-sm text-zinc-400">
               <p>
-                <span className="text-zinc-500">Referência:</span>{" "}
+                <span className="text-zinc-500">
+                  Referência:
+                </span>{" "}
                 <strong className="font-medium text-white">
                   {property.code}
                 </strong>
               </p>
 
               <p>
-                <span className="text-zinc-500">Localização:</span>{" "}
+                <span className="text-zinc-500">
+                  Localização:
+                </span>{" "}
                 <strong className="font-medium text-white">
-                  {property.location}
+                  {location}
                 </strong>
               </p>
             </div>
 
-            <div className="mt-8 border border-amber-500/25 bg-black/40 p-5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
-                Valor de venda
-              </p>
+            {property.purpose !==
+            "LOCACAO" ? (
+              <div className="mt-8 border border-amber-500/25 bg-black/40 p-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                  Valor de venda
+                </p>
 
-              <p className="mt-2 font-serif text-3xl text-amber-400">
-                {property.price}
-              </p>
+                <p className="mt-2 font-serif text-3xl text-amber-400">
+                  {salePrice}
+                </p>
+              </div>
+            ) : null}
 
-              <p className="mt-3 text-xs leading-5 text-zinc-500">
-                Consulte condições comerciais e disponibilidade.
-              </p>
-            </div>
+            {property.purpose !==
+            "VENDA" ? (
+              <div className="mt-4 border border-amber-500/25 bg-black/40 p-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                  Valor de locação
+                </p>
 
-            <a
-              href="https://altamirbonilhajunior2-prog.github.io/Portal-B-B-Premium-version-final-jul-2026/?v=3.0"
-              target="_blank"
-              rel="noreferrer"
+                <p className="mt-2 font-serif text-3xl text-amber-400">
+                  {rentalPrice}
+                </p>
+              </div>
+            ) : null}
+
+            <p className="mt-3 text-xs leading-5 text-zinc-500">
+              Consulte condições comerciais e disponibilidade.
+            </p>
+
+            <Link
+              href={scheduleUrl}
               className="mt-6 inline-flex min-h-16 w-full items-center justify-center bg-amber-500 px-7 text-center text-xs font-bold uppercase tracking-[0.18em] text-black transition hover:bg-amber-400"
             >
               Agendar visita
-            </a>
+            </Link>
 
             <a
               href={`https://wa.me/5512978140636?text=${whatsappMessage}`}
@@ -326,8 +637,9 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
             </a>
 
             <p className="mt-6 text-center text-[10px] leading-5 text-zinc-500">
-              Nós analisamos cada imóvel antes de indicá-lo aos nossos clientes.
-              Durante o atendimento, apresentaremos nossa avaliação consultiva.
+              Nós analisamos cada imóvel antes de indicá-lo aos nossos
+              clientes. Durante o atendimento, apresentaremos nossa
+              avaliação consultiva.
             </p>
           </aside>
         </div>
@@ -355,18 +667,22 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
           </p>
 
           <div className="mt-6 space-y-4">
-            {analyzedDifferentials.map((item) => (
-              <div
-                key={item}
-                className="flex items-center gap-4 border-b border-white/10 pb-4 last:border-0 last:pb-0"
-              >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-amber-500 text-xs text-amber-400">
-                  ✓
-                </span>
+            {analyzedDifferentials.map(
+              (item) => (
+                <div
+                  key={item}
+                  className="flex items-center gap-4 border-b border-white/10 pb-4 last:border-0 last:pb-0"
+                >
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-amber-500 text-xs text-amber-400">
+                    ✓
+                  </span>
 
-                <span className="text-sm text-zinc-300">{item}</span>
-              </div>
-            ))}
+                  <span className="text-sm text-zinc-300">
+                    {item}
+                  </span>
+                </div>
+              ),
+            )}
           </div>
         </div>
       </section>
@@ -382,57 +698,71 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
           </h2>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature) => (
-              <div
-                key={feature}
-                className="flex min-h-20 items-center gap-4 border border-white/10 bg-black/30 px-5 py-4"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-amber-500/60 text-sm text-amber-400">
-                  ✓
-                </span>
+            {features.map(
+              (feature) => (
+                <div
+                  key={feature}
+                  className="flex min-h-20 items-center gap-4 border border-white/10 bg-black/30 px-5 py-4"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-amber-500/60 text-sm text-amber-400">
+                    ✓
+                  </span>
 
-                <span className="text-sm text-zinc-300">{feature}</span>
-              </div>
-            ))}
+                  <span className="text-sm text-zinc-300">
+                    {feature}
+                  </span>
+                </div>
+              ),
+            )}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-[1720px] px-6 py-16 lg:px-10 xl:px-12">
-        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-400">
-          Outras oportunidades
-        </p>
+      {relatedCards.length > 0 ? (
+        <section className="mx-auto max-w-[1720px] px-6 py-16 lg:px-10 xl:px-12">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-400">
+            Outras oportunidades
+          </p>
 
-        <div className="mt-4 flex items-end justify-between gap-6">
-          <h2 className="font-serif text-4xl font-normal">
-            Imóveis semelhantes
-          </h2>
+          <div className="mt-4 flex items-end justify-between gap-6">
+            <h2 className="font-serif text-4xl font-normal">
+              Imóveis semelhantes
+            </h2>
 
-          <Link
-            href="/comprar"
-            className="hidden border-b border-amber-500 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400 sm:inline-flex"
-          >
-            Ver todos →
-          </Link>
-        </div>
+            <Link
+              href={backUrl}
+              className="hidden border-b border-amber-500 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400 sm:inline-flex"
+            >
+              Ver todos →
+            </Link>
+          </div>
 
-        <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {relatedProperties.map((item) => (
-            <PropertyCard
-              key={item.code}
-              code={item.code}
-              title={item.title}
-              location={item.location}
-              price={item.price}
-              image={item.image}
-              tag={item.tag}
-              area={item.area}
-              bedrooms={item.bedrooms}
-              parking={item.parking}
-            />
-          ))}
-        </div>
-      </section>
+          <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {relatedCards.map(
+              (item) => (
+                <PropertyCard
+                  key={item.code}
+                  code={item.code}
+                  title={item.title}
+                  location={
+                    item.location
+                  }
+                  price={item.price}
+                  image={item.image}
+                  tag={item.tag}
+                  area={item.area}
+                  bedrooms={
+                    item.bedrooms
+                  }
+                  parking={
+                    item.parking
+                  }
+                />
+              ),
+            )}
+          </div>
+        </section>
+      ) : null}
 
       <Footer />
     </main>

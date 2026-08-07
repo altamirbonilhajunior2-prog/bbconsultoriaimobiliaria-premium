@@ -1,20 +1,28 @@
 export default function WhatsAppButton() {
+  const whatsappMessage = encodeURIComponent(
+    "Olá, gostaria de receber mais informações.",
+  );
+
   return (
     <a
-      href="https://wa.me/5512978140636?text=Olá,%20gostaria%20de%20receber%20mais%20informações."
+      href={`https://wa.me/5512978140636?text=${whatsappMessage}`}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Conversar no WhatsApp"
-      className="fixed bottom-6 right-6 z-[999] flex h-16 w-16 items-center justify-center rounded-full bg-[#25D366] shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-green-500/40"
+      aria-label="Conversar com a B&B Consultoria Imobiliária pelo WhatsApp"
+      title="Conversar pelo WhatsApp"
+      className="fixed bottom-6 right-6 z-[999] flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-[#25D366] shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-green-500/40 focus:outline-none focus:ring-4 focus:ring-[#25D366]/40"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 32 32"
+        viewBox="0 0 448 512"
+        aria-hidden="true"
+        focusable="false"
         className="h-9 w-9 fill-white"
       >
-        <path d="M19.11 17.38c-.29-.14-1.71-.84-1.98-.94-.26-.1-.45-.14-.64.14-.19.29-.74.94-.91 1.13-.17.19-.33.22-.62.07-.29-.14-1.2-.44-2.28-1.4-.84-.75-1.4-1.67-1.57-1.95-.17-.29-.02-.44.13-.58.13-.13.29-.33.43-.5.14-.17.19-.29.29-.48.1-.19.05-.36-.02-.5-.07-.14-.64-1.55-.88-2.12-.23-.56-.46-.48-.64-.49h-.55c-.19 0-.5.07-.76.36-.26.29-1 1-.99 2.43 0 1.43 1.03 2.81 1.18 3 .14.19 2.03 3.1 4.92 4.34.69.3 1.23.47 1.65.6.69.22 1.32.19 1.81.12.55-.08 1.71-.7 1.95-1.38.24-.67.24-1.25.17-1.38-.07-.12-.26-.19-.55-.33z" />
-        <path d="M16.02 3C8.83 3 3 8.82 3 16c0 2.54.73 4.99 2.11 7.1L3.5 29l5.99-1.57A12.93 12.93 0 0016.02 29C23.2 29 29 23.18 29 16S23.2 3 16.02 3zm0 23.67c-2.1 0-4.14-.56-5.92-1.63l-.42-.25-3.56.93.95-3.47-.28-.44A10.63 10.63 0 015.33 16c0-5.9 4.8-10.69 10.69-10.69 5.89 0 10.68 4.8 10.68 10.69 0 5.89-4.79 10.67-10.68 10.67z" />
+        <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.8l-6.7-4-69.8 18.3 18.6-68-4.4-7c-18.5-29.4-28.2-63.4-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.1-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z" />
       </svg>
+
+      <span className="sr-only">Conversar pelo WhatsApp</span>
     </a>
   );
 }

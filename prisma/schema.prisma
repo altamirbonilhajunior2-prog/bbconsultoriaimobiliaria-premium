@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PropertyPurpose {
+  VENDA
+  LOCACAO
+  VENDA_E_LOCACAO
+}
+
+enum OpportunityProfile {
+  MORADIA
+  INVESTIMENTO
+  RENDA
+  VALORIZACAO
+  LANCAMENTO
+}
+
+enum PropertyType {
+  CASA
+  APARTAMENTO
+  TERRENO
+  COMERCIAL
+  RURAL
+}
+
+enum PropertyStatus {
+  DISPONIVEL
+  RESERVADO
+  VENDIDO
+  ALUGADO
+  EM_ANALISE
+}
+
+model Property {
+  id   Int    @id @default(autoincrement())
+  code String @unique @db.VarChar(30)
+
+  title String  @db.VarChar(200)
+  slug  String? @unique @db.VarChar(220)
+
+  purpose             PropertyPurpose
+  opportunityProfiles OpportunityProfile[] @default([])
+
+  propertyType PropertyType
+  category     String @db.VarChar(100)
+
+  status          PropertyStatus @default(EM_ANALISE)
+  highlight       Boolean        @default(false)
+  published       Boolean        @default(false)
+  consultantScore Decimal?       @db.Decimal(3, 1)
+
+  tag String? @db.VarChar(100)
+
+  state        String @default("SP") @db.VarChar(2)
+  city         String @default("São José dos Campos") @db.VarChar(120)
+  neighborhood String @db.VarChar(150)
+
+  development String? @db.VarChar(180)
+  location    String? @db.VarChar(250)
+
+  address String? @db.VarChar(250)
+  zipCode String? @db.VarChar(12)
+
+  latitude      Decimal? @db.Decimal(10, 7)
+  longitude     Decimal? @db.Decimal(10, 7)
+  googleMapsUrl String?  @db.Text
+
+  price       Decimal? @db.Decimal(15, 2)
+  rentalPrice Decimal? @db.Decimal(15, 2)
+
+  condominium Decimal? @db.Decimal(12, 2)
+  iptu        Decimal? @db.Decimal(12, 2)
+
+  area     Decimal? @db.Decimal(10, 2)
+  landArea Decimal? @db.Decimal(10, 2)
+
+  bedrooms  Int @default(0)
+  suites    Int @default(0)
+  bathrooms Int @default(0)
+  parking   Int @default(0)
+
+  description String? @db.Text
+
+  features String[] @default([])
+
+  video       String? @db.Text
+  virtualTour String? @db.Text
+  brochure    String? @db.Text
+
+  seoTitle       String? @db.VarChar(200)
+  seoDescription String? @db.VarChar(300)
+  seoImage       String? @db.Text
+
+  publishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  images PropertyImage[]
+
+  @@index([purpose])
+  @@index([propertyType])
+  @@index([status])
+  @@index([city])
+  @@index([neighborhood])
+  @@index([highlight])
+  @@index([published])
+}
+
+model PropertyImage {
+  id Int @id @default(autoincrement())
+
+  propertyId Int
+
+  url String @db.Text
+  alt String? @db.VarChar(250)
+
+  position Int     @default(0)
+  isCover  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@index([propertyId, position])
+}

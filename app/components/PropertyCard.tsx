@@ -24,17 +24,19 @@ export default function PropertyCard({
   bedrooms,
   parking,
 }: PropertyCardProps) {
+  const propertyUrl = `/imovel/${code.toLowerCase()}`;
+
   return (
     <article className="group flex h-full flex-col overflow-hidden border border-white/10 bg-[#0a0a0a] transition-all duration-500 hover:-translate-y-1 hover:border-amber-500/60 hover:shadow-[0_24px_70px_rgba(0,0,0,0.5)]">
       <Link
-        href={`/imovel/${code.toLowerCase()}`}
-        aria-label={`Conhecer o imóvel ${title}`}
-        className="flex h-full flex-col"
+        href={propertyUrl}
+        aria-label={`Conhecer o imóvel ${title}, referência ${code}`}
+        className="flex h-full flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-inset"
       >
         <div className="relative h-[210px] overflow-hidden">
           <Image
             src={image}
-            alt={title}
+            alt={`${title}, localizado em ${location}`}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             className="object-cover transition-transform duration-700 group-hover:scale-[1.06]"
@@ -48,10 +50,6 @@ export default function PropertyCard({
 
           <span className="absolute bottom-4 left-4 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/75">
             Ref. {code}
-          </span>
-
-          <span className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-black/60 text-lg text-white transition group-hover:border-amber-500 group-hover:text-amber-400">
-            ♡
           </span>
         </div>
 
