@@ -1,8 +1,10 @@
+﻿import { issueSignedToken } from "@vercel/blob";
 import {
-  handleUpload,
-  type HandleUploadBody,
+  handleUploadPresigned,
+  type HandleUploadPresignedBody,
 } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
+
 import { auth } from "../../../../auth";
 import { prisma } from "../../../../lib/prisma";
 
@@ -10,7 +12,19 @@ type UploadPayload = {
   code?: string;
 };
 
-function normalizeCode(value: string | undefined) {
+const allowedContentTypes = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/avif",
+];
+
+const maximumSizeInBytes =
+  25 * 1024 * 1024;
+
+function normalizeCode(
+  value: string | undefined,
+) {
   return String(value ?? "")
     .trim()
     .toUpperCase();
@@ -18,113 +32,103 @@ function normalizeCode(value: string | undefined) {
 
 export async function POST(
   request: Request,
-): Promise<NextResponse> {
+): Promise<Response> {
   const body =
-    (await request.json()) as HandleUploadBody;
+    (await request.json()) as HandleUploadPresignedBody;
 
   try {
-    const jsonResponse = await handleUpload({
-      body,
-      request,
+    const jsonResponse =
+      await handleUploadPresigned({
+        body,
+        request,
 
-      onBeforeGenerateToken: async (
-        pathname,
-        clientPayload,
-      ) => {
-        const session = await auth();
+        getSignedToken: async (
+          pathname,
+          clientPayload,
+        ) => {
+          const session = await auth();
 
-        if (!session?.user) {
-          throw new Error(
-            "Acesso não autorizado.",
-          );
-        }
-
-        let payload: UploadPayload = {};
-
-        if (clientPayload) {
-          try {
-            payload = JSON.parse(
-              clientPayload,
-            ) as UploadPayload;
-          } catch {
+          if (!session?.user) {
             throw new Error(
-              "Dados do upload inválidos.",
+              "Acesso não autorizado.",
             );
           }
-        }
 
-        const code = normalizeCode(
-          payload.code,
-        );
+          let payload: UploadPayload = {};
 
-        if (!code) {
-          throw new Error(
-            "Código do imóvel não informado.",
+          if (clientPayload) {
+            try {
+              payload = JSON.parse(
+                clientPayload,
+              ) as UploadPayload;
+            } catch {
+              throw new Error(
+                "Dados do upload inválidos.",
+              );
+            }
+          }
+
+          const code = normalizeCode(
+            payload.code,
           );
-        }
 
-        const property =
-          await prisma.property.findUnique({
-            where: {
-              code,
+          if (!code) {
+            throw new Error(
+              "Código do imóvel não informado.",
+            );
+          }
+
+          const property =
+            await prisma.property.findUnique({
+              where: {
+                code,
+              },
+              select: {
+                id: true,
+              },
+            });
+
+          if (!property) {
+            throw new Error(
+              "Imóvel não encontrado.",
+            );
+          }
+
+          const expectedPrefix =
+            `imoveis/${code.toLowerCase()}/`;
+
+          if (
+            !pathname.startsWith(
+              expectedPrefix,
+            )
+          ) {
+            throw new Error(
+              "Destino de upload inválido.",
+            );
+          }
+
+          const validUntil =
+            Date.now() +
+            15 * 60 * 1000;
+
+          const token =
+            await issueSignedToken({
+              pathname,
+              operations: ["put"],
+              allowedContentTypes,
+              maximumSizeInBytes,
+              validUntil,
+            });
+
+          return {
+            token,
+
+            urlOptions: {
+              addRandomSuffix: true,
             },
-            select: {
-              id: true,
-            },
-          });
-
-        if (!property) {
-          throw new Error(
-            "Imóvel não encontrado.",
-          );
-        }
-
-        const expectedPrefix =
-          `imoveis/${code.toLowerCase()}/`;
-
-        if (
-          !pathname.startsWith(
-            expectedPrefix,
-          )
-        ) {
-          throw new Error(
-            "Destino de upload inválido.",
-          );
-        }
-
-        return {
-          allowedContentTypes: [
-            "image/jpeg",
-            "image/png",
-            "image/webp",
-            "image/avif",
-          ],
-
-          maximumSizeInBytes:
-            25 * 1024 * 1024,
-
-          addRandomSuffix: true,
-
-          tokenPayload: JSON.stringify({
-            code,
-            propertyId: property.id,
-          }),
-        };
-      },
-
-      onUploadCompleted: async ({
-        blob,
-        tokenPayload,
-      }) => {
-        console.log(
-          "Upload concluído no Vercel Blob:",
-          {
-            url: blob.url,
-            tokenPayload,
-          },
-        );
-      },
-    });
+          };
+        },
+      });
 
     return NextResponse.json(
       jsonResponse,
