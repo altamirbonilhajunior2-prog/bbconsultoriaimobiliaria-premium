@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { uploadPresigned } from "@vercel/blob/client";
 import Image from "next/image";
@@ -208,7 +208,7 @@ export default function ImageManager({
       setUploadState({
         success: false,
         message:
-          `O arquivo "${invalidType.name}" nÃ£o Ã© JPG, PNG, WEBP ou AVIF.`,
+          `O arquivo "${invalidType.name}" não é JPG, PNG, WEBP ou AVIF.`,
       });
 
       return;
@@ -360,7 +360,7 @@ export default function ImageManager({
         message:
           error instanceof Error
             ? error.message
-            : "NÃ£o foi possÃ­vel enviar as fotografias.",
+            : "Não foi possível enviar as fotografias.",
       });
     } finally {
       setUploading(false);
@@ -372,15 +372,15 @@ export default function ImageManager({
       <div className="flex flex-col gap-4 border-b border-white/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-400">
-            GestÃ£o das fotografias
+            Gestão das fotografias
           </p>
 
           <h2 className="mt-3 font-serif text-3xl font-normal text-white">
-            Galeria do imÃ³vel
+            Galeria do imóvel
           </h2>
 
           <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-500">
-            Adicione novas fotografias, organize a sequÃªncia, escolha a imagem
+            Adicione novas fotografias, organize a sequência, escolha a imagem
             principal e remova fotos do cadastro.
           </p>
         </div>
@@ -412,7 +412,7 @@ export default function ImageManager({
         </h3>
 
         <p className="mt-3 text-sm leading-7 text-zinc-400">
-          VocÃª pode selecionar vÃ¡rias fotos de uma vez. Formatos aceitos: JPG,
+          Você pode selecionar várias fotos de uma vez. Formatos aceitos: JPG,
           PNG, WEBP e AVIF. Limite de 25 MB por arquivo.
         </p>
 
@@ -519,7 +519,7 @@ export default function ImageManager({
       {images.length === 0 ? (
         <div className="mt-6 border border-dashed border-white/10 px-6 py-12 text-center">
           <p className="text-sm text-zinc-500">
-            Nenhuma imagem cadastrada para este imÃ³vel.
+            Nenhuma imagem cadastrada para este imóvel.
           </p>
         </div>
       ) : (
@@ -615,7 +615,7 @@ export default function ImageManager({
                         }
                         className={`${buttonClass} w-full`}
                       >
-                        â†‘ Subir
+                        ↑ Subir
                       </button>
                     </form>
 
@@ -647,7 +647,7 @@ export default function ImageManager({
                         }
                         className={`${buttonClass} w-full`}
                       >
-                        â†“ Descer
+                        ↓ Descer
                       </button>
                     </form>
 
@@ -656,7 +656,7 @@ export default function ImageManager({
                       onSubmit={(event) => {
                         const confirmed =
                           window.confirm(
-                            `Remover a foto ${index + 1} do cadastro do imÃ³vel ${code}?`,
+                            `Remover a foto ${index + 1} do cadastro do imóvel ${code}?`,
                           );
 
                         if (!confirmed) {
@@ -695,8 +695,8 @@ export default function ImageManager({
       <div className="mt-7 border border-white/10 bg-[#111111] px-5 py-4">
         <p className="text-sm leading-7 text-zinc-400">
           As fotografias antigas armazenadas localmente permanecem preservadas.
-          Novas fotografias enviadas pelo painel serÃ£o armazenadas no Vercel
-          Blob e vinculadas ao imÃ³vel no PostgreSQL.
+          Novas fotografias enviadas pelo painel serão armazenadas no Vercel
+          Blob e vinculadas ao imóvel no PostgreSQL.
         </p>
       </div>
     </section>
