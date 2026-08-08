@@ -14,20 +14,20 @@ const navigation = [
 export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/95 backdrop-blur-xl">
-      <div className="mx-auto flex h-[84px] w-full max-w-[1800px] items-center gap-3 px-4 sm:px-5 lg:h-[112px] lg:px-8 xl:px-10">
+      <div className="mx-auto flex h-[84px] w-full max-w-[1800px] items-center gap-2 px-3 sm:gap-3 sm:px-5 lg:h-[112px] lg:px-8 xl:px-10">
 
-        <div className="flex w-[145px] shrink-0 items-center justify-start sm:w-[175px] lg:w-[215px] xl:w-[235px] 2xl:w-[260px]">
+        <div className="flex w-[105px] shrink-0 items-center justify-start sm:w-[145px] lg:w-[215px] xl:w-[235px] 2xl:w-[260px]">
           <Link
             href="/"
             aria-label={"B&B Consultoria Imobili\u00E1ria"}
-            className="relative block h-[68px] w-[140px] overflow-hidden sm:h-[74px] sm:w-[165px] lg:h-[96px] lg:w-[190px] xl:w-[205px]"
+            className="relative block h-[66px] w-[105px] overflow-hidden sm:h-[74px] sm:w-[145px] lg:h-[96px] lg:w-[190px] xl:w-[205px]"
           >
             <Image
               src="/logo-bb.png"
               alt={"B&B Consultoria Imobili\u00E1ria"}
               fill
               priority
-              sizes="(max-width: 640px) 140px, (max-width: 1024px) 165px, 205px"
+              sizes="(max-width: 640px) 105px, (max-width: 1024px) 145px, 205px"
               className="object-contain object-center transition-transform duration-300 hover:scale-[1.03]"
             />
           </Link>
@@ -61,19 +61,25 @@ export default function Header() {
           </Link>
         </div>
 
-        <div className="ml-auto flex items-center gap-2 lg:hidden">
+        <div className="ml-auto flex min-w-0 items-center justify-end gap-2 lg:hidden">
           <Link
-            href="/agendar-visita"
-            className="inline-flex h-11 items-center justify-center whitespace-nowrap border border-[#D5A85A] px-3 text-[9px] font-semibold uppercase tracking-[0.10em] text-[#D5A85A] transition hover:bg-[#D5A85A] hover:text-black sm:px-4 sm:text-[10px]"
+            href="/admin"
+            className="inline-flex h-10 shrink-0 items-center justify-center border border-zinc-700 px-2.5 text-[8px] font-semibold uppercase tracking-[0.10em] text-zinc-300 transition hover:border-[#D5A85A] hover:text-[#D5A85A] sm:h-11 sm:px-3 sm:text-[9px]"
           >
-            <span className="sm:hidden">Agendar</span>
-            <span className="hidden sm:inline">Agendar visita</span>
+            Admin
           </Link>
 
-          <details className="group relative">
+          <Link
+            href="/agendar-visita"
+            className="inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap border border-[#D5A85A] px-2.5 text-[8px] font-semibold uppercase tracking-[0.08em] text-[#D5A85A] transition hover:bg-[#D5A85A] hover:text-black sm:h-11 sm:px-4 sm:text-[9px] sm:tracking-[0.10em]"
+          >
+            Agendar visita
+          </Link>
+
+          <details className="group relative shrink-0">
             <summary
               aria-label="Abrir menu"
-              className="flex h-11 w-11 cursor-pointer list-none items-center justify-center border border-white/15 text-white transition hover:border-[#D5A85A] hover:text-[#D5A85A] [&::-webkit-details-marker]:hidden"
+              className="flex h-10 w-10 cursor-pointer list-none items-center justify-center border border-white/15 text-white transition hover:border-[#D5A85A] hover:text-[#D5A85A] sm:h-11 sm:w-11 [&::-webkit-details-marker]:hidden"
             >
               <span className="flex w-5 flex-col gap-[5px]">
                 <span className="block h-px w-full bg-current" />
@@ -82,7 +88,7 @@ export default function Header() {
               </span>
             </summary>
 
-            <div className="absolute right-0 top-[52px] z-[70] w-[280px] border border-white/10 bg-[#080808] p-3 shadow-2xl">
+            <div className="absolute right-0 top-[50px] z-[70] w-[280px] border border-white/10 bg-[#080808] p-3 shadow-2xl">
               <nav className="flex flex-col">
                 {navigation.map((item) => (
                   <Link
@@ -93,13 +99,6 @@ export default function Header() {
                     {item.label}
                   </Link>
                 ))}
-
-                <Link
-                  href="/admin"
-                  className="mt-3 flex min-h-12 items-center justify-center border border-zinc-700 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-300 transition hover:border-[#D5A85A] hover:text-[#D5A85A]"
-                >
-                  Admin
-                </Link>
               </nav>
             </div>
           </details>
