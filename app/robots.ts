@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 const baseUrl =
-  "https://bbconsultoriaimobiliaria-premium.vercel.app";
+  "https://www.bbconsultoriaimoveis.com.br";
 
 export default function robots(): MetadataRoute.Robots {
   return {

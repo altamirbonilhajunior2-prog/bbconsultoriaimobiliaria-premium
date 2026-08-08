@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 import { prisma } from "../lib/prisma";
 
 const baseUrl =
-  "https://bbconsultoriaimobiliaria-premium.vercel.app";
+  "https://www.bbconsultoriaimoveis.com.br";
 
 export const dynamic = "force-dynamic";
 
