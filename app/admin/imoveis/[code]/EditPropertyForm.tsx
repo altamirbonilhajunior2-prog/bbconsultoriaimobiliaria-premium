@@ -795,49 +795,9 @@ export default function EditPropertyForm({
           </div>
         </section>
 
-        <section className={sectionClass}>
+<section className={sectionClass}>
           <p className={sectionTitleClass}>
-            08. Galeria de imagens
-          </p>
-
-          <p className="mt-3 text-sm leading-7 text-zinc-500">
-            As imagens já cadastradas estão preservadas. A inclusão,
-            exclusão e ordenação serão habilitadas em uma etapa
-            específica.
-          </p>
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {property.images.map(
-              (image) => (
-                <div
-                  key={image.id}
-                  className="border border-white/10 bg-[#111111] p-4"
-                >
-                  <p className="truncate text-xs text-zinc-300">
-                    {image.url}
-                  </p>
-
-                  <div className="mt-3 flex items-center justify-between text-[10px] uppercase tracking-[0.14em]">
-                    <span className="text-zinc-600">
-                      Posição{" "}
-                      {image.position + 1}
-                    </span>
-
-                    {image.isCover ? (
-                      <span className="text-amber-400">
-                        Capa
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-              ),
-            )}
-          </div>
-        </section>
-
-        <section className={sectionClass}>
-          <p className={sectionTitleClass}>
-            09. Vídeo e materiais
+            08. Vídeo e materiais
           </p>
 
           <div className="mt-7 grid gap-5 md:grid-cols-2">
@@ -882,7 +842,7 @@ export default function EditPropertyForm({
 
         <section className={sectionClass}>
           <p className={sectionTitleClass}>
-            10. SEO e compartilhamento
+            09. SEO e compartilhamento
           </p>
 
           <div className="mt-7 space-y-5">
@@ -926,7 +886,7 @@ export default function EditPropertyForm({
 
         <section className={sectionClass}>
           <p className={sectionTitleClass}>
-            11. Publicação
+            10. Publicação
           </p>
 
           <div className="mt-6 border border-amber-500/20 bg-amber-500/5 px-5 py-4">

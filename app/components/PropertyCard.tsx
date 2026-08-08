@@ -65,7 +65,12 @@ export default function PropertyCard({
           <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-white/10 py-3 text-[11px] text-zinc-400">
             <span>{area}</span>
             <span className="text-amber-500/70">•</span>
-            <span>{bedrooms} suítes</span>
+            <span>
+          {bedrooms}{" "}
+          {bedrooms === "1"
+            ? "dormitório"
+            : "dormitórios"}
+        </span>
             <span className="text-amber-500/70">•</span>
             <span>{parking} vagas</span>
           </div>
