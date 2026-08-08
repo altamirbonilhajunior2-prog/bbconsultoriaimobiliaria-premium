@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.bbconsultoriaimobiliaria.com.br"),
+  metadataBase: new URL("https://bbconsultoriaimobiliaria-premium.vercel.app"),
 
   title: {
     default: "B&B Consultoria Imobiliária",
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    url: "https://www.bbconsultoriaimobiliaria.com.br",
+    url: "https://bbconsultoriaimobiliaria-premium.vercel.app",
     siteName: "B&B Consultoria Imobiliária",
     title: "B&B Consultoria Imobiliária",
     description:

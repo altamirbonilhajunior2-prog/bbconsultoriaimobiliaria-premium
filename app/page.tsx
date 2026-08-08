@@ -7,7 +7,6 @@ import Hero from "./components/Hero";
 import NeighborhoodsSection from "./components/NeighborhoodsSection";
 import PropertyCard from "./components/PropertyCard";
 import PropertySearch from "./components/PropertySearch";
-import TestimonialsSection from "./components/TestimonialsSection";
 import { prisma } from "../lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -293,7 +292,6 @@ export default async function Home() {
 
       <NeighborhoodsSection />
 
-      <TestimonialsSection />
 
       <section className="border-y border-white/10 bg-[#0a0a0a]">
         <div className="mx-auto grid max-w-[1720px] grid-cols-1 gap-5 px-5 py-10 sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8 xl:px-10">

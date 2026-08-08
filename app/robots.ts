@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap: "https://www.bbconsultoriaimobiliaria.com.br/sitemap.xml",
-    host: "https://www.bbconsultoriaimobiliaria.com.br",
+    sitemap: "https://bbconsultoriaimobiliaria-premium.vercel.app/sitemap.xml",
+    host: "https://bbconsultoriaimobiliaria-premium.vercel.app",
   };
 }
