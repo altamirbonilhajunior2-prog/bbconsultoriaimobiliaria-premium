@@ -70,7 +70,7 @@ export default function ConsultoriaPage() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
-      <Header hideScheduleButton />
+      <Header />
 
       <section className="relative min-h-[540px] overflow-hidden border-b border-amber-500/25">
         <Image

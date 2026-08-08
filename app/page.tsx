@@ -212,7 +212,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
-      <Header hideScheduleButton />
+      <Header />
 
       <Hero />
 

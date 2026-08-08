@@ -78,7 +78,7 @@ const differentials = [
 export default function QuemSomosPage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
-      <Header hideScheduleButton />
+      <Header />
 
       <section className="relative min-h-[570px] overflow-hidden">
         <Image

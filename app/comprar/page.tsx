@@ -686,7 +686,6 @@ export default async function ComprarPage({
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
       <Header
-        hideScheduleButton
       />
 
       <section className="border-b border-white/10 bg-[#090909]">

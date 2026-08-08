@@ -66,7 +66,7 @@ export default function ContatoPage() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
-      <Header hideScheduleButton />
+      <Header />
 
       <section className="relative min-h-[520px] overflow-hidden">
         <Image
