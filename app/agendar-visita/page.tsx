@@ -10,16 +10,16 @@ const whatsappNumber = "5512978140636";
 const questions = [
   {
     name: "objetivo",
-    title: "1. Qual ÃƒÂ© o objetivo desta aquisiÃƒÂ§ÃƒÂ£o?",
+    title: "1. Qual é o objetivo desta aquisição?",
     options: ["Moradia", "Investimento", "Ainda estou avaliando"],
   },
   {
     name: "aquisicao",
-    title: "2. Como pretende realizar esta aquisiÃƒÂ§ÃƒÂ£o?",
+    title: "2. Como pretende realizar esta aquisição?",
     options: [
-      "Recursos prÃƒÂ³prios",
+      "Recursos próprios",
       "Financiamento",
-      "Venda de outro imÃƒÂ³vel",
+      "Venda de outro imóvel",
       "Permuta + complemento financeiro",
       "Ainda estou definindo",
     ],
@@ -28,16 +28,16 @@ const questions = [
     name: "prazo",
     title: "3. Em quanto tempo pretende realizar a compra?",
     options: [
-      "AtÃƒÂ© 30 dias",
-      "AtÃƒÂ© 90 dias",
-      "AtÃƒÂ© 6 meses",
+      "Até 30 dias",
+      "Até 90 dias",
+      "Até 6 meses",
       "Ainda estou avaliando oportunidades",
     ],
   },
   {
     name: "conhecimento",
-    title: "4. JÃƒÂ¡ conhece o condomÃƒÂ­nio ou a regiÃƒÂ£o deste imÃƒÂ³vel?",
-    options: ["Sim", "NÃƒÂ£o", "Estou comparando outras regiÃƒÂµes"],
+    title: "4. Já conhece o condomínio ou a região deste imóvel?",
+    options: ["Sim", "Não", "Estou comparando outras regiões"],
   },
 ] as const;
 
@@ -82,16 +82,16 @@ export default function AgendarVisitaPage() {
         ? `${propertyCode} Ã¢â‚¬â€ ${propertyTitle}`
         : propertyCode
           ? propertyCode
-          : propertyTitle || "Ainda nÃƒÂ£o definido";
+          : propertyTitle || "Ainda não definido";
 
     const message = [
-      "OlÃƒÂ¡, gostaria de agendar uma visita.",
+      "Olá, gostaria de agendar uma visita.",
       "",
-      `ImÃƒÂ³vel: ${propertyIdentification}`,
+      `Imóvel: ${propertyIdentification}`,
       `Objetivo: ${objetivo}`,
-      `AquisiÃƒÂ§ÃƒÂ£o: ${aquisicao}`,
+      `Aquisição: ${aquisicao}`,
       `Prazo: ${prazo}`,
-      `Conhece o condomÃƒÂ­nio/regiÃƒÂ£o: ${conhecimento}`,
+      `Conhece o condomínio/região: ${conhecimento}`,
     ].join("\n");
 
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
@@ -108,7 +108,7 @@ export default function AgendarVisitaPage() {
     : "/comprar";
 
   const selectedPropertyTitle =
-    propertyTitle || "ImÃƒÂ³vel ainda nÃƒÂ£o selecionado";
+    propertyTitle || "Imóvel ainda não selecionado";
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
@@ -121,8 +121,8 @@ export default function AgendarVisitaPage() {
             className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-400 transition hover:text-amber-300"
           >
             {hasSelectedProperty
-              ? "Ã¢â€ Â Voltar para o imÃƒÂ³vel"
-              : "Ã¢â€ Â Voltar para os imÃƒÂ³veis"}
+              ? "Ã¢â€ Â Voltar para o imóvel"
+              : "Ã¢â€ Â Voltar para os imóveis"}
           </Link>
 
           <div className="mt-8 max-w-4xl">
@@ -145,12 +145,12 @@ export default function AgendarVisitaPage() {
       <section className="mx-auto grid max-w-6xl gap-8 px-6 py-12 lg:grid-cols-[0.7fr_1.3fr] lg:px-10 lg:py-16">
         <aside className="h-fit border border-amber-500/30 bg-[#0b0b0b] p-7 lg:sticky lg:top-[155px]">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500">
-            {hasSelectedProperty ? "ImÃƒÂ³vel selecionado" : "Atendimento B&B"}
+            {hasSelectedProperty ? "Imóvel selecionado" : "Atendimento B&B"}
           </p>
 
           {propertyCode && (
             <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.2em] text-amber-400">
-              ReferÃƒÂªncia {propertyCode}
+              Referência {propertyCode}
             </p>
           )}
 
@@ -160,14 +160,14 @@ export default function AgendarVisitaPage() {
 
           {!hasSelectedProperty && (
             <p className="mt-4 text-sm leading-7 text-zinc-500">
-              Caso ainda nÃƒÂ£o tenha escolhido um imÃƒÂ³vel, nÃƒÂ³s identificaremos as
-              opÃƒÂ§ÃƒÂµes mais adequadas durante o atendimento.
+              Caso ainda não tenha escolhido um imóvel, nós identificaremos as
+              opções mais adequadas durante o atendimento.
             </p>
           )}
 
           <div className="mt-7 border-t border-white/10 pt-6">
             <p className="text-sm leading-7 text-zinc-400">
-              O preenchimento leva menos de um minuto. Ao finalizar, vocÃƒÂª serÃƒÂ¡
+              O preenchimento leva menos de um minuto. Ao finalizar, você será
               direcionado ao WhatsApp da B&B com suas respostas organizadas.
             </p>
           </div>
@@ -178,7 +178,7 @@ export default function AgendarVisitaPage() {
             </p>
 
             <p className="mt-3 text-sm leading-6 text-zinc-500">
-              NÃƒÂ³s verificaremos a disponibilidade e prepararemos o atendimento
+              Nós verificaremos a disponibilidade e prepararemos o atendimento
               de acordo com o seu objetivo.
             </p>
           </div>
@@ -191,7 +191,7 @@ export default function AgendarVisitaPage() {
             </p>
 
             <h2 className="mt-3 font-serif text-3xl font-normal sm:text-4xl">
-              Conte-nos sobre sua intenÃƒÂ§ÃƒÂ£o de compra
+              Conte-nos sobre sua intenção de compra
             </h2>
 
             <p className="mt-4 text-sm leading-7 text-zinc-500">
@@ -255,7 +255,7 @@ export default function AgendarVisitaPage() {
             </button>
 
             <p className="mt-5 text-center text-[11px] leading-5 text-zinc-600">
-              Suas respostas serÃƒÂ£o utilizadas apenas para personalizar o
+              Suas respostas serão utilizadas apenas para personalizar o
               atendimento.
             </p>
           </form>
