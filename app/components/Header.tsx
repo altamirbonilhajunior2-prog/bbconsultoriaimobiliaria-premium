@@ -11,13 +11,7 @@ const navigation = [
   { label: "Contato", href: "/contato" },
 ];
 
-type HeaderProps = {
-  hideScheduleButton?: boolean;
-};
-
-export default function Header({
-  hideScheduleButton = false,
-}: HeaderProps) {
+export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/95 backdrop-blur-xl">
       <div className="mx-auto flex h-[112px] w-full max-w-[1800px] items-center px-5 sm:px-6 lg:px-8 xl:px-10">
@@ -51,23 +45,21 @@ export default function Header({
           ))}
         </nav>
 
-        <div className="flex w-[215px] shrink-0 items-center justify-end gap-3 xl:w-[290px] 2xl:w-[330px]">
+        <div className="ml-auto flex shrink-0 items-center justify-end gap-3">
           <Link
             href="/admin"
-            className="inline-flex h-14 shrink-0 items-center justify-center border border-zinc-700 px-5 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-300 transition hover:border-[#D5A85A] hover:text-[#D5A85A] xl:text-[11px]"
+            className="inline-flex h-14 shrink-0 items-center justify-center border border-zinc-700 px-5 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-300 transition hover:border-[#D5A85A] hover:text-[#D5A85A] xl:px-6 xl:text-[11px]"
           >
             Admin
           </Link>
 
-          {!hideScheduleButton && (
-            <Link
-              href="/agendar-visita"
-              aria-label="Abrir question\u00E1rio para agendar uma visita"
-              className="hidden h-14 shrink-0 items-center justify-center whitespace-nowrap border border-[#D5A85A] px-5 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D5A85A] transition-all duration-300 hover:bg-[#D5A85A] hover:text-black xl:inline-flex 2xl:px-7 2xl:text-[11px]"
-            >
-              Agendar visita
-            </Link>
-          )}
+          <Link
+            href="/agendar-visita"
+            aria-label="Abrir question\u00E1rio para agendar uma visita"
+            className="inline-flex h-14 shrink-0 items-center justify-center whitespace-nowrap border border-[#D5A85A] px-5 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D5A85A] transition-all duration-300 hover:bg-[#D5A85A] hover:text-black xl:px-6 xl:text-[11px] 2xl:px-7"
+          >
+            Agendar visita
+          </Link>
         </div>
 
       </div>
