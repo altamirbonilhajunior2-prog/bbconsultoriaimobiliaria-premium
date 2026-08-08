@@ -98,7 +98,7 @@ const benefits = [
 export default function Hero() {
   return (
     <section className="relative overflow-hidden bg-black">
-      <div className="relative min-h-[760px] lg:min-h-[calc(100vh-128px)]">
+      <div className="relative lg:min-h-[calc(100vh-128px)]">
         <Image
           src="/hero-clean.png"
           alt="Residência contemporânea de alto padrão"
@@ -111,13 +111,13 @@ export default function Hero() {
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.65)_38%,rgba(0,0,0,0.08)_75%)]" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/15" />
 
-        <div className="relative z-10 mx-auto flex min-h-[760px] max-w-[1720px] flex-col justify-center px-6 pb-72 pt-16 lg:min-h-[calc(100vh-128px)] lg:px-10 lg:pb-72 xl:px-12">
+        <div className="relative z-10 mx-auto flex min-h-[560px] max-w-[1720px] flex-col justify-center px-5 pb-10 pt-10 sm:min-h-[620px] sm:px-6 sm:pb-12 sm:pt-14 lg:min-h-[calc(100vh-128px)] lg:px-10 lg:pb-72 lg:pt-16 xl:px-12">
           <div className="max-w-[650px]">
             <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-amber-400 sm:text-xs">
               Conexões que constroem patrimônio.
             </p>
 
-            <h1 className="mt-5 font-serif text-[46px] font-normal leading-[0.98] tracking-[-0.035em] text-white sm:text-[58px] lg:text-[68px]">
+            <h1 className="mt-4 font-serif text-[36px] font-normal leading-[1.02] tracking-[-0.03em] text-white sm:mt-5 sm:text-[50px] sm:leading-[0.98] lg:text-[68px]">
               Mais que imóveis.
               <span className="mt-2 block text-[#d5a85a]">
                 Estratégia para
@@ -126,13 +126,13 @@ export default function Hero() {
               </span>
             </h1>
 
-            <p className="mt-6 max-w-[560px] text-base leading-8 text-zinc-200 sm:text-lg">
+            <p className="mt-5 max-w-[560px] text-sm leading-7 text-zinc-200 sm:mt-6 sm:text-lg sm:leading-8">
               Nós unimos conhecimento de mercado, curadoria e experiência para
               conectar você às melhores oportunidades de São José dos Campos e
               região.
             </p>
 
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+            <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:gap-4">
               <Link
                 href="/comprar"
                 className="inline-flex min-h-14 items-center justify-center gap-3 rounded-sm bg-[#ddb461] px-8 text-xs font-bold uppercase tracking-[0.12em] text-black transition hover:bg-[#edc876]"
@@ -192,33 +192,33 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className="absolute inset-x-0 bottom-[104px] z-20">
+        <div className="relative z-20 pb-6 lg:absolute lg:inset-x-0 lg:bottom-[104px] lg:pb-0">
           <div className="mx-auto max-w-[1500px] px-4 sm:px-6">
-            <div className="rounded-xl border border-[#d5a85a]/45 bg-[#080808]/90 p-5 shadow-[0_28px_80px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:p-7">
-              <div className="grid border-b border-white/10 md:grid-cols-3">
+            <div className="rounded-xl border border-[#d5a85a]/45 bg-[#080808]/95 p-4 shadow-[0_28px_80px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:p-6 lg:p-7">
+              <div className="grid grid-cols-3 border-b border-white/10">
                 <button
                   type="button"
-                  className="flex min-h-14 items-center justify-center gap-3 border-b-2 border-[#d5a85a] text-xs font-bold uppercase tracking-[0.12em] text-white"
+                  className="flex min-h-12 items-center justify-center gap-2 border-b-2 border-[#d5a85a] px-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white sm:min-h-14 sm:text-xs sm:tracking-[0.12em]"
                 >
                   Comprar
                 </button>
 
                 <button
                   type="button"
-                  className="flex min-h-14 items-center justify-center gap-3 border-b-2 border-transparent text-xs font-bold uppercase tracking-[0.12em] text-zinc-300 transition hover:text-[#d5a85a]"
+                  className="flex min-h-12 items-center justify-center gap-2 border-b-2 border-transparent px-1 text-[10px] font-bold uppercase tracking-[0.08em] text-zinc-300 transition hover:text-[#d5a85a] sm:min-h-14 sm:text-xs sm:tracking-[0.12em]"
                 >
                   Alugar
                 </button>
 
                 <button
                   type="button"
-                  className="flex min-h-14 items-center justify-center gap-3 border-b-2 border-transparent text-xs font-bold uppercase tracking-[0.12em] text-zinc-300 transition hover:text-[#d5a85a]"
+                  className="flex min-h-12 items-center justify-center gap-2 border-b-2 border-transparent px-1 text-[10px] font-bold uppercase tracking-[0.08em] text-zinc-300 transition hover:text-[#d5a85a] sm:min-h-14 sm:text-xs sm:tracking-[0.12em]"
                 >
                   Lançamentos
                 </button>
               </div>
 
-              <div className="mt-6 grid gap-4 lg:grid-cols-[1fr_1.15fr_1fr_180px]">
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:mt-6 lg:grid-cols-[1fr_1.15fr_1fr_180px] lg:gap-4">
                 <label className="border border-white/10 bg-white/[0.035] px-4 py-3">
                   <span className="block text-[9px] uppercase tracking-[0.12em] text-zinc-500">
                     Tipo de imóvel
@@ -278,12 +278,12 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 z-20 border-t border-white/10 bg-black/90">
-          <div className="mx-auto grid max-w-[1720px] grid-cols-2 px-6 lg:grid-cols-4 lg:px-10 xl:px-12">
+        <div className="relative z-20 border-t border-white/10 bg-black/90 lg:absolute lg:inset-x-0 lg:bottom-0">
+          <div className="mx-auto grid max-w-[1720px] grid-cols-2 px-4 sm:px-6 lg:grid-cols-4 lg:px-10 xl:px-12">
             {benefits.map((benefit, index) => (
               <article
                 key={benefit.title}
-                className={`flex min-h-[104px] items-center gap-5 py-5 ${
+                className={`flex min-h-[88px] items-center gap-3 py-4 sm:min-h-[104px] sm:gap-5 sm:py-5 ${
                   index < benefits.length - 1
                     ? "lg:border-r lg:border-white/10"
                     : ""
