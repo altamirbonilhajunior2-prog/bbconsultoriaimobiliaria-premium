@@ -1,9 +1,27 @@
-import { MetadataRoute } from "next";
+import type { MetadataRoute } from "next";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://bbconsultoriaimobiliaria-premium.vercel.app";
+import { prisma } from "../lib/prisma";
 
-  return [
+const baseUrl =
+  "https://bbconsultoriaimobiliaria-premium.vercel.app";
+
+export const dynamic = "force-dynamic";
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const properties = await prisma.property.findMany({
+    where: {
+      published: true,
+    },
+    select: {
+      code: true,
+      updatedAt: true,
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+  });
+
+  const staticPages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: new Date(),
@@ -20,7 +38,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}/alugar`,
       lastModified: new Date(),
       changeFrequency: "weekly",
-      priority: 0.90,
+      priority: 0.9,
     },
     {
       url: `${baseUrl}/lancamentos`,
@@ -32,19 +50,39 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}/bairros`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.80,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/consultoria`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.9,
     },
     {
       url: `${baseUrl}/quem-somos`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.80,
+      priority: 0.8,
     },
     {
       url: `${baseUrl}/contato`,
       lastModified: new Date(),
       changeFrequency: "monthly",
-      priority: 0.80,
+      priority: 0.8,
     },
+  ];
+
+  const propertyPages: MetadataRoute.Sitemap = properties.map(
+    (property) => ({
+      url: `${baseUrl}/imovel/${property.code.toLowerCase()}`,
+      lastModified: property.updatedAt,
+      changeFrequency: "weekly",
+      priority: 0.9,
+    }),
+  );
+
+  return [
+    ...staticPages,
+    ...propertyPages,
   ];
 }

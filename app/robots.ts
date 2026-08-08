@@ -1,12 +1,21 @@
-import { MetadataRoute } from "next";
+import type { MetadataRoute } from "next";
+
+const baseUrl =
+  "https://bbconsultoriaimobiliaria-premium.vercel.app";
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
       allow: "/",
+      disallow: [
+        "/admin",
+        "/login-admin",
+        "/api/",
+      ],
     },
-    sitemap: "https://bbconsultoriaimobiliaria-premium.vercel.app/sitemap.xml",
-    host: "https://bbconsultoriaimobiliaria-premium.vercel.app",
+
+    sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
   };
 }
