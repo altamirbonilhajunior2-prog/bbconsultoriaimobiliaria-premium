@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "../../../../auth";
 import { prisma } from "../../../../lib/prisma";
+import { getAccessContext } from "../../../../lib/admin/access";
 
 export type PropertyEditState = {
   success: boolean;
@@ -219,6 +220,43 @@ export async function updatePropertyAction(
     ownerIdRaw.trim() !== ""
       ? Number(ownerIdRaw)
       : null;
+  const access = await getAccessContext();
+
+  let validatedOwnerId: number | null = null;
+
+  if (
+    ownerId !== null &&
+    Number.isInteger(ownerId)
+  ) {
+    const allowedOwner =
+      await prisma.owner.findFirst({
+        where: {
+          id: ownerId,
+
+          ...(access.isAdmin
+            ? {}
+            : {
+                capturedById:
+                  access.agentId ?? -1,
+              }),
+        },
+
+        select: {
+          id: true,
+        },
+      });
+
+    if (!allowedOwner) {
+      return {
+        success: false,
+        message:
+          "Proprietário não encontrado ou acesso não autorizado.",
+      };
+    }
+
+    validatedOwnerId =
+      allowedOwner.id;
+  }
   const neighborhood =
     getText(
       formData,
@@ -468,11 +506,7 @@ export async function updatePropertyAction(
 
         neighborhood,
 
-        ownerId:
-          ownerId !== null &&
-          Number.isInteger(ownerId)
-            ? ownerId
-            : null,
+        ownerId: validatedOwnerId,
 
         development:
           getOptionalText(

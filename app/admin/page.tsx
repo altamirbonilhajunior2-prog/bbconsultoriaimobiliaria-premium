@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "../../lib/prisma";
+import { getAccessContext } from "../../lib/admin/access";
 import LogoutButton from "./components/LogoutButton";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,12 @@ const managementLinks = [
     description:
       "Cadastrar e consultar propriet\u00E1rios dos im\u00F3veis.",
     href: "/admin/proprietarios",
+  },
+  {
+    title: "Captadores / Angariadores",
+    description:
+      "Gerenciar profissionais responsáveis pelas captações.",
+    href: "/admin/captadores",
   },
   {
     title: "Bairros",
@@ -50,6 +57,16 @@ const managementLinks = [
 ];
 
 export default async function AdminPage() {
+  const access = await getAccessContext();
+
+  const visibleManagementLinks =
+    access.isAdmin
+      ? managementLinks
+      : managementLinks.filter(
+          (item) =>
+            item.href !==
+            "/admin/captadores",
+        );
   const [
     totalProperties,
     highlightedProperties,
@@ -220,7 +237,7 @@ export default async function AdminPage() {
           </div>
 
           <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {managementLinks.map((item) => (
+            {visibleManagementLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}

@@ -104,9 +104,13 @@ model Property {
   ownerId   Int?
   owner     Owner?   @relation(fields: [ownerId], references: [id], onDelete: SetNull)
 
+  captorId Int?
+  captor   Agent? @relation(fields: [captorId], references: [id], onDelete: SetNull)
+
   images PropertyImage[]
 
   @@index([ownerId])
+  @@index([captorId])
   @@index([purpose])
   @@index([propertyType])
   @@index([status])
@@ -157,9 +161,44 @@ model Owner {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  capturedById Int?
+  capturedBy   Agent? @relation(fields: [capturedById], references: [id], onDelete: SetNull)
+
   properties Property[]
 
+  @@index([capturedById])
   @@index([name])
   @@index([phone])
   @@index([email])
+}
+
+enum AgentRole {
+  ADMIN
+  CAPTADOR
+}
+
+model Agent {
+  id Int @id @default(autoincrement())
+
+  name  String  @db.VarChar(180)
+  email String  @unique @db.VarChar(180)
+  phone String? @db.VarChar(30)
+  creci String? @db.VarChar(50)
+
+  role AgentRole @default(CAPTADOR)
+
+  passwordHash String @db.VarChar(200)
+  passwordSalt String @db.VarChar(200)
+
+  active Boolean @default(true)
+
+  capturedOwners     Owner[]
+  capturedProperties Property[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([role])
+  @@index([active])
 }

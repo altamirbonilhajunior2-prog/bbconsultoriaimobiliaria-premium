@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "../../../../lib/prisma";
+import { getAccessContext } from "../../../../lib/admin/access";
 import EditPropertyForm from "./EditPropertyForm";
 import ImageManager from "./ImageManager";
 import PublicationControl from "./PublicationControl";
@@ -55,11 +56,19 @@ export default async function EditarImovelPage({
   params,
 }: EditarImovelPageProps) {
   const { code } = await params;
+  const access = await getAccessContext();
 
   const owners = await prisma.owner.findMany({
+    where: access.isAdmin
+      ? {}
+      : {
+          capturedById: access.agentId ?? -1,
+        },
+
     orderBy: {
       name: "asc",
     },
+
     select: {
       id: true,
       name: true,
