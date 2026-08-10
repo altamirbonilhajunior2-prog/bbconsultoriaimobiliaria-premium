@@ -12,6 +12,12 @@ const managementLinks = [
     href: "/admin/imoveis",
   },
   {
+    title: "Propriet\u00E1rios",
+    description:
+      "Cadastrar e consultar propriet\u00E1rios dos im\u00F3veis.",
+    href: "/admin/proprietarios",
+  },
+  {
     title: "Bairros",
     description:
       "Organizar bairros e regiões atendidas pela B&B.",

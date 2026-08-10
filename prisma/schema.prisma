@@ -48,7 +48,7 @@ model Property {
   opportunityProfiles OpportunityProfile[] @default([])
 
   propertyType PropertyType
-  category     String @db.VarChar(100)
+  category     String       @db.VarChar(100)
 
   status          PropertyStatus @default(EM_ANALISE)
   highlight       Boolean        @default(false)
@@ -118,7 +118,7 @@ model PropertyImage {
 
   propertyId Int
 
-  url String @db.Text
+  url String  @db.Text
   alt String? @db.VarChar(250)
 
   position Int     @default(0)
@@ -130,4 +130,31 @@ model PropertyImage {
 
   @@index([propertyId])
   @@index([propertyId, position])
+}
+
+model Owner {
+  id Int @id @default(autoincrement())
+
+  name  String  @db.VarChar(180)
+  phone String? @db.VarChar(30)
+  email String? @db.VarChar(180)
+
+  rg  String? @db.VarChar(30)
+  cpf String? @unique @db.VarChar(20)
+
+  address      String? @db.VarChar(250)
+  complement   String? @db.VarChar(120)
+  neighborhood String? @db.VarChar(150)
+  city         String? @db.VarChar(120)
+  state        String? @db.VarChar(2)
+  zipCode      String? @db.VarChar(12)
+
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([phone])
+  @@index([email])
 }
