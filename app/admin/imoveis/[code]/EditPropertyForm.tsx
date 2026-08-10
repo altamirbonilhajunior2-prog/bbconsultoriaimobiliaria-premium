@@ -59,6 +59,7 @@ type EditableProperty = {
 
   state: string;
   city: string;
+  ownerId: number | null;
   neighborhood: string;
 
   development: string | null;
@@ -528,6 +529,31 @@ export default function EditPropertyForm({
               />
             </Field>
 
+            <Field label="Proprietário">
+              <select
+                name="ownerId"
+                defaultValue={
+                  property.ownerId?.toString() ?? ""
+                }
+                className={inputClass}
+              >
+                <option value="">
+                  Nenhum proprietário vinculado
+                </option>
+
+                {owners.map((owner) => (
+                  <option
+                    key={owner.id}
+                    value={owner.id}
+                  >
+                    {owner.name}
+                    {owner.cpf
+                      ? ` — CPF ${owner.cpf}`
+                      : ""}
+                  </option>
+                ))}
+              </select>
+            </Field>
             <Field label="Bairro">
               <input
                 name="neighborhood"

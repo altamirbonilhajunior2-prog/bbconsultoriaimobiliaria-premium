@@ -234,6 +234,13 @@ export async function createPropertyAction(
     "title",
   );
 
+  const ownerIdRaw = formData.get("ownerId");
+
+  const ownerId =
+    typeof ownerIdRaw === "string" &&
+    ownerIdRaw.trim() !== ""
+      ? Number(ownerIdRaw)
+      : null;
   const neighborhood =
     getText(
       formData,
@@ -488,6 +495,12 @@ export async function createPropertyAction(
           city,
 
           neighborhood,
+
+          ownerId:
+            ownerId !== null &&
+            Number.isInteger(ownerId)
+              ? ownerId
+              : null,
 
           development:
             getOptionalText(

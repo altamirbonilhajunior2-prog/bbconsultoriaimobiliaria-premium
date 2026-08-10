@@ -56,6 +56,17 @@ export default async function EditarImovelPage({
 }: EditarImovelPageProps) {
   const { code } = await params;
 
+  const owners = await prisma.owner.findMany({
+    orderBy: {
+      name: "asc",
+    },
+    select: {
+      id: true,
+      name: true,
+      cpf: true,
+    },
+  });
+
   const property =
     await prisma.property.findUnique({
       where: {
@@ -138,6 +149,9 @@ export default async function EditarImovelPage({
 
     city:
       property.city,
+
+    ownerId:
+      property.ownerId,
 
     neighborhood:
       property.neighborhood,
@@ -284,6 +298,7 @@ export default async function EditarImovelPage({
         <div className="mt-10">
           <EditPropertyForm
             property={editableProperty}
+            owners={owners}
           />
         </div>
 

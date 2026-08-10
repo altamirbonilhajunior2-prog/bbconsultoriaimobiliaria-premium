@@ -212,6 +212,13 @@ export async function updatePropertyAction(
     "title",
   );
 
+  const ownerIdRaw = formData.get("ownerId");
+
+  const ownerId =
+    typeof ownerIdRaw === "string" &&
+    ownerIdRaw.trim() !== ""
+      ? Number(ownerIdRaw)
+      : null;
   const neighborhood =
     getText(
       formData,
@@ -460,6 +467,12 @@ export async function updatePropertyAction(
           "São José dos Campos",
 
         neighborhood,
+
+        ownerId:
+          ownerId !== null &&
+          Number.isInteger(ownerId)
+            ? ownerId
+            : null,
 
         development:
           getOptionalText(

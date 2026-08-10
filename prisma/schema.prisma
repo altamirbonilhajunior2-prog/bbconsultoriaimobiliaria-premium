@@ -102,8 +102,14 @@ model Property {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  properties Property[]
+
+  ownerId Int?
+  owner   Owner? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
   images PropertyImage[]
 
+  @@index([ownerId])
   @@index([purpose])
   @@index([propertyType])
   @@index([status])
@@ -153,6 +159,8 @@ model Owner {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  properties Property[]
 
   @@index([name])
   @@index([phone])
