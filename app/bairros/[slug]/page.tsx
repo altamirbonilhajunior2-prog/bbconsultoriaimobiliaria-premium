@@ -17,79 +17,79 @@ const details: Record<string, {
   highlights: string[];
 }> = {
   urbanova: {
-    eyebrow: "Urbanova | S\u00E3o Jos\u00E9 dos Campos",
+    eyebrow: "Urbanova | São José dos Campos",
     title: "Urbanova",
     intro:
-      "Uma das regi\u00F5es mais consolidadas de S\u00E3o Jos\u00E9 dos Campos para quem busca qualidade de vida, condom\u00EDnios fechados e im\u00F3veis de m\u00E9dio e alto padr\u00E3o.",
+      "Uma das regiões mais consolidadas de São José dos Campos para quem busca qualidade de vida, condomínios fechados e imóveis de médio e alto padrão.",
     paragraphs: [
-      "O Urbanova combina perfil residencial, \u00E1reas verdes, infraestrutura e acesso a servi\u00E7os que fazem parte da rotina das fam\u00EDlias que escolheram a regi\u00E3o para morar.",
-      "A expans\u00E3o dos condom\u00EDnios ao longo dos anos consolidou diferentes perfis de im\u00F3veis e faixas de valor. Por isso, a escolha exige an\u00E1lise do condom\u00EDnio, localiza\u00E7\u00E3o interna, mobilidade, padr\u00E3o construtivo e potencial de revenda.",
-      "Na B&B, nossa atua\u00E7\u00E3o no Urbanova parte de uma leitura consultiva: buscamos entender o momento do cliente e comparar as op\u00E7\u00F5es de maneira racional antes da decis\u00E3o.",
+      "O Urbanova combina perfil residencial, áreas verdes, infraestrutura e acesso a serviços que fazem parte da rotina das famílias que escolheram a região para morar.",
+      "A expansão dos condomínios ao longo dos anos consolidou diferentes perfis de imóveis e faixas de valor. Por isso, a escolha exige análise do condomínio, localização interna, mobilidade, padrão construtivo e potencial de revenda.",
+      "Na B&B, nossa atuação no Urbanova parte de uma leitura consultiva: buscamos entender o momento do cliente e comparar as opções de maneira racional antes da decisão.",
     ],
     highlights: [
-      "Condom\u00EDnios fechados e seguran\u00E7a",
-      "\u00C1reas verdes e perfil residencial",
-      "Im\u00F3veis de m\u00E9dio e alto padr\u00E3o",
-      "Estrutura de com\u00E9rcio, escolas e servi\u00E7os",
-      "Diferentes perfis de condom\u00EDnios",
-      "Mercado relevante para moradia e valoriza\u00E7\u00E3o patrimonial",
+      "Condomínios fechados e segurança",
+      "Áreas verdes e perfil residencial",
+      "Imóveis de médio e alto padrão",
+      "Estrutura de comércio, escolas e serviços",
+      "Diferentes perfis de condomínios",
+      "Mercado relevante para moradia e valorização patrimonial",
     ],
   },
   "jardim-aquarius": {
-    eyebrow: "Jardim Aquarius | S\u00E3o Jos\u00E9 dos Campos",
+    eyebrow: "Jardim Aquarius | São José dos Campos",
     title: "Jardim Aquarius",
     intro:
-      "Uma regi\u00E3o urbana consolidada, com forte presen\u00E7a de edif\u00EDcios residenciais, servi\u00E7os, gastronomia e mobilidade.",
+      "Uma região urbana consolidada, com forte presença de edifícios residenciais, serviços, gastronomia e mobilidade.",
     paragraphs: [
-      "O Jardim Aquarius oferece uma rotina marcada pela proximidade entre moradia, com\u00E9rcio e servi\u00E7os.",
-      "A diversidade de edif\u00EDcios exige compara\u00E7\u00E3o entre idade, padr\u00E3o construtivo, lazer, posi\u00E7\u00E3o da unidade, vagas e liquidez.",
-      "Nossa curadoria busca separar atributos est\u00E9ticos de fatores que realmente influenciam uso, valor e revenda.",
+      "O Jardim Aquarius oferece uma rotina marcada pela proximidade entre moradia, comércio e serviços.",
+      "A diversidade de edifícios exige comparação entre idade, padrão construtivo, lazer, posição da unidade, vagas e liquidez.",
+      "Nossa curadoria busca separar atributos estéticos de fatores que realmente influenciam uso, valor e revenda.",
     ],
     highlights: [
-      "Localiza\u00E7\u00E3o consolidada",
-      "Com\u00E9rcio e servi\u00E7os",
+      "Localização consolidada",
+      "Comércio e serviços",
       "Perfil predominantemente vertical",
-      "Gastronomia e conveni\u00EAncia",
+      "Gastronomia e conveniência",
       "Boa mobilidade urbana",
       "Oferta diversificada de apartamentos",
     ],
   },
   colinas: {
-    eyebrow: "Colinas | S\u00E3o Jos\u00E9 dos Campos",
+    eyebrow: "Colinas | São José dos Campos",
     title: "Colinas",
     intro:
-      "Uma regi\u00E3o tradicional de S\u00E3o Jos\u00E9 dos Campos, reconhecida pela localiza\u00E7\u00E3o e proximidade a importantes servi\u00E7os da cidade.",
+      "Uma região tradicional de São José dos Campos, reconhecida pela localização e proximidade a importantes serviços da cidade.",
     paragraphs: [
-      "A regi\u00E3o dos Colinas re\u00FAne conveni\u00EAncia, acesso e diferentes perfis residenciais.",
-      "Na escolha de um im\u00F3vel, avaliamos entorno, mobilidade, ru\u00EDdo, posi\u00E7\u00E3o e caracter\u00EDsticas espec\u00EDficas de cada empreendimento.",
-      "Esse conjunto de fatores ajuda a entender n\u00E3o apenas como \u00E9 morar no local, mas tamb\u00E9m a perspectiva patrimonial da aquisi\u00E7\u00E3o.",
+      "A região dos Colinas reúne conveniência, acesso e diferentes perfis residenciais.",
+      "Na escolha de um imóvel, avaliamos entorno, mobilidade, ruído, posição e características específicas de cada empreendimento.",
+      "Esse conjunto de fatores ajuda a entender não apenas como é morar no local, mas também a perspectiva patrimonial da aquisição.",
     ],
     highlights: [
-      "Regi\u00E3o tradicional",
-      "Localiza\u00E7\u00E3o estrat\u00E9gica",
-      "Servi\u00E7os consolidados",
+      "Região tradicional",
+      "Localização estratégica",
+      "Serviços consolidados",
       "Mobilidade",
       "Perfil residencial valorizado",
-      "Diversidade imobili\u00E1ria",
+      "Diversidade imobiliária",
     ],
   },
   "altos-do-esplanada": {
-    eyebrow: "Altos do Esplanada | S\u00E3o Jos\u00E9 dos Campos",
+    eyebrow: "Altos do Esplanada | São José dos Campos",
     title: "Altos do Esplanada",
     intro:
-      "Uma regi\u00E3o associada a exclusividade, tranquilidade e im\u00F3veis voltados ao segmento de maior padr\u00E3o.",
+      "Uma região associada a exclusividade, tranquilidade e imóveis voltados ao segmento de maior padrão.",
     paragraphs: [
       "O Altos do Esplanada apresenta perfil residencial diferenciado e acesso a importantes eixos da cidade.",
-      "Im\u00F3veis nessa regi\u00E3o devem ser avaliados considerando padr\u00E3o arquitet\u00F4nico, privacidade, localiza\u00E7\u00E3o, entorno e liquidez.",
-      "Nossa an\u00E1lise busca relacionar esses atributos ao objetivo do comprador, seja para moradia ou posicionamento patrimonial.",
+      "Imóveis nessa região devem ser avaliados considerando padrão arquitetônico, privacidade, localização, entorno e liquidez.",
+      "Nossa análise busca relacionar esses atributos ao objetivo do comprador, seja para moradia ou posicionamento patrimonial.",
     ],
     highlights: [
       "Perfil residencial premium",
       "Tranquilidade",
       "Privacidade",
-      "Boa localiza\u00E7\u00E3o",
-      "Im\u00F3veis de alto padr\u00E3o",
-      "An\u00E1lise patrimonial relevante",
+      "Boa localização",
+      "Imóveis de alto padrão",
+      "Análise patrimonial relevante",
     ],
   },
 };
@@ -152,11 +152,11 @@ export default async function NeighborhoodPage({ params }: PageProps) {
       <section className="mx-auto grid max-w-[1500px] gap-12 px-5 py-16 sm:px-6 lg:grid-cols-[1.25fr_0.75fr] lg:px-10 lg:py-24">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-amber-400">
-            Conhe\u00E7a a regi\u00E3o
+            Conheça a região
           </p>
 
           <h2 className="mt-4 font-serif text-4xl leading-tight sm:text-5xl">
-            Uma escolha que vai al\u00E9m do im\u00F3vel.
+            Uma escolha que vai além do imóvel.
           </h2>
 
           <div className="mt-8 space-y-6 text-base leading-8 text-zinc-400">
@@ -170,21 +170,21 @@ export default async function NeighborhoodPage({ params }: PageProps) {
               href={`/comprar?bairro=${encodedName}`}
               className="inline-flex min-h-14 items-center justify-center bg-[#D5A85A] px-7 text-[10px] font-bold uppercase tracking-[0.14em] text-black transition hover:bg-[#e3bd77]"
             >
-              Ver im\u00F3veis \u00E0 venda
+              Ver imóveis à venda
             </Link>
 
             <Link
               href={`/alugar?bairro=${encodedName}`}
               className="inline-flex min-h-14 items-center justify-center border border-[#D5A85A] px-7 text-[10px] font-bold uppercase tracking-[0.14em] text-[#D5A85A] transition hover:bg-[#D5A85A] hover:text-black"
             >
-              Ver im\u00F3veis para loca\u00E7\u00E3o
+              Ver imóveis para locação
             </Link>
           </div>
         </div>
 
         <aside className="border border-white/10 bg-[#0a0a0a] p-6 sm:p-8">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-400">
-            Caracter\u00EDsticas
+            Características
           </p>
 
           <h2 className="mt-4 font-serif text-3xl">
@@ -212,7 +212,7 @@ export default async function NeighborhoodPage({ params }: PageProps) {
               Consultoria B&B
             </p>
             <h2 className="mt-3 font-serif text-3xl sm:text-4xl">
-              Avalie a regi\u00E3o antes de decidir.
+              Avalie a região antes de decidir.
             </h2>
           </div>
 
