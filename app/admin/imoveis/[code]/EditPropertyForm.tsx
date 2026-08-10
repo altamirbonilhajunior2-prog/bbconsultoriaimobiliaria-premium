@@ -110,6 +110,11 @@ type EditableProperty = {
 
 type EditPropertyFormProps = {
   property: EditableProperty;
+  owners: {
+    id: number;
+    name: string;
+    cpf: string | null;
+  }[];
 };
 
 type FieldProps = {
@@ -156,6 +161,7 @@ function Field({
 
 export default function EditPropertyForm({
   property,
+  owners,
 }: EditPropertyFormProps) {
   const [
     formState,

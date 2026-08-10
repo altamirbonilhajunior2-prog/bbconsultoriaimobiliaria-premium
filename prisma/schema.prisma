@@ -101,11 +101,8 @@ model Property {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  properties Property[]
-
-  ownerId Int?
-  owner   Owner? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  ownerId   Int?
+  owner     Owner?   @relation(fields: [ownerId], references: [id], onDelete: SetNull)
 
   images PropertyImage[]
 
