@@ -4,7 +4,7 @@ import Link from "next/link";
 const navigation = [
   { label: "Comprar", href: "/comprar" },
   { label: "Alugar", href: "/alugar" },
-  { label: "Lan\u00E7amentos", href: "/lancamentos" },
+  { label: "Lançamentos", href: "/lancamentos" },
   { label: "Bairros", href: "/bairros" },
   { label: "Nossa metodologia", href: "/consultoria" },
   { label: "Sobre", href: "/quem-somos" },
@@ -19,12 +19,12 @@ export default function Header() {
         <div className="flex w-[105px] shrink-0 items-center justify-start sm:w-[145px] lg:w-[215px] xl:w-[235px] 2xl:w-[260px]">
           <Link
             href="/"
-            aria-label={"B&B Consultoria Imobili\u00E1ria"}
+            aria-label={"B&B Consultoria Imobiliária"}
             className="relative block h-[66px] w-[105px] overflow-hidden sm:h-[74px] sm:w-[145px] lg:h-[96px] lg:w-[190px] xl:w-[205px]"
           >
             <Image
               src="/logo-bb.png"
-              alt={"B&B Consultoria Imobili\u00E1ria"}
+              alt={"B&B Consultoria Imobiliária"}
               fill
               priority
               sizes="(max-width: 640px) 105px, (max-width: 1024px) 145px, 205px"
@@ -47,13 +47,6 @@ export default function Header() {
 
         <div className="ml-auto hidden shrink-0 items-center justify-end gap-3 lg:flex">
           <Link
-            href="/admin"
-            className="inline-flex h-14 shrink-0 items-center justify-center border border-zinc-700 px-5 text-[10px] font-semibold uppercase tracking-[0.14em] text-zinc-300 transition hover:border-[#D5A85A] hover:text-[#D5A85A] xl:px-6 xl:text-[11px]"
-          >
-            Admin
-          </Link>
-
-          <Link
             href="/agendar-visita"
             className="inline-flex h-14 shrink-0 items-center justify-center whitespace-nowrap border border-[#D5A85A] px-5 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D5A85A] transition-all duration-300 hover:bg-[#D5A85A] hover:text-black xl:px-6 xl:text-[11px] 2xl:px-7"
           >
@@ -62,13 +55,6 @@ export default function Header() {
         </div>
 
         <div className="ml-auto flex min-w-0 items-center justify-end gap-2 lg:hidden">
-          <Link
-            href="/admin"
-            className="inline-flex h-10 shrink-0 items-center justify-center border border-zinc-700 px-2.5 text-[8px] font-semibold uppercase tracking-[0.10em] text-zinc-300 transition hover:border-[#D5A85A] hover:text-[#D5A85A] sm:h-11 sm:px-3 sm:text-[9px]"
-          >
-            Admin
-          </Link>
-
           <Link
             href="/agendar-visita"
             className="inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap border border-[#D5A85A] px-2.5 text-[8px] font-semibold uppercase tracking-[0.08em] text-[#D5A85A] transition hover:bg-[#D5A85A] hover:text-black sm:h-11 sm:px-4 sm:text-[9px] sm:tracking-[0.10em]"
