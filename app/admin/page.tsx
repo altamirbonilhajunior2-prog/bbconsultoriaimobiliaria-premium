@@ -8,50 +8,42 @@ export const dynamic = "force-dynamic";
 const managementLinks = [
   {
     title: "Imóveis",
-    description:
-      "Visualizar, editar e gerenciar os imóveis cadastrados.",
+    description: "Visualizar, editar e gerenciar os imóveis cadastrados.",
     href: "/admin/imoveis",
   },
   {
-    title: "Propriet\u00E1rios",
-    description:
-      "Cadastrar e consultar propriet\u00E1rios dos im\u00F3veis.",
+    title: "Proprietários",
+    description: "Cadastrar e consultar proprietários dos imóveis.",
     href: "/admin/proprietarios",
   },
   {
     title: "Captadores / Angariadores",
-    description:
-      "Gerenciar profissionais responsáveis pelas captações.",
+    description: "Gerenciar profissionais responsáveis pelas captações.",
     href: "/admin/captadores",
   },
   {
     title: "Bairros",
-    description:
-      "Organizar bairros e regiões atendidas pela B&B.",
+    description: "Organizar bairros e regiões atendidas pela B&B.",
     href: "/admin/bairros",
   },
   {
     title: "Condomínios",
-    description:
-      "Gerenciar condomínios residenciais cadastrados.",
+    description: "Gerenciar condomínios residenciais cadastrados.",
     href: "/admin/condominios",
   },
   {
     title: "Edifícios",
-    description:
-      "Gerenciar edifícios e empreendimentos verticais.",
+    description: "Gerenciar edifícios e empreendimentos verticais.",
     href: "/admin/edificios",
   },
   {
     title: "Clientes e leads",
-    description:
-      "Acompanhar contatos e oportunidades comerciais.",
+    description: "Acompanhar contatos e oportunidades comerciais.",
     href: "/admin/clientes",
   },
   {
     title: "Configurações",
-    description:
-      "Dados da empresa, SEO e integrações do portal.",
+    description: "Dados da empresa, SEO e integrações do portal.",
     href: "/admin/configuracoes",
   },
 ];
@@ -59,14 +51,12 @@ const managementLinks = [
 export default async function AdminPage() {
   const access = await getAccessContext();
 
-  const visibleManagementLinks =
-    access.isAdmin
-      ? managementLinks
-      : managementLinks.filter(
-          (item) =>
-            item.href !==
-            "/admin/captadores",
-        );
+  const visibleManagementLinks = access.isAdmin
+    ? managementLinks
+    : managementLinks.filter(
+        (item) => item.href !== "/admin/captadores",
+      );
+
   const [
     totalProperties,
     highlightedProperties,
@@ -86,10 +76,7 @@ export default async function AdminPage() {
     prisma.property.count({
       where: {
         purpose: {
-          in: [
-            "VENDA",
-            "VENDA_E_LOCACAO",
-          ],
+          in: ["VENDA", "VENDA_E_LOCACAO"],
         },
       },
     }),
@@ -97,10 +84,7 @@ export default async function AdminPage() {
     prisma.property.count({
       where: {
         purpose: {
-          in: [
-            "LOCACAO",
-            "VENDA_E_LOCACAO",
-          ],
+          in: ["LOCACAO", "VENDA_E_LOCACAO"],
         },
       },
     }),
@@ -161,12 +145,12 @@ export default async function AdminPage() {
             </p>
 
             <h1 className="mt-3 font-serif text-5xl font-normal">
-              Administração
+              CRM B&amp;B
             </h1>
 
             <p className="mt-4 max-w-3xl text-sm leading-7 text-zinc-400">
-              Gerencie os imóveis e as principais áreas do Portal B&amp;B em um
-              ambiente protegido.
+              Ambiente interno para gestão de imóveis, proprietários,
+              captações, clientes e operações da B&amp;B Consultoria Imobiliária.
             </p>
           </div>
 
@@ -176,7 +160,7 @@ export default async function AdminPage() {
               target="_blank"
               className="inline-flex min-h-14 items-center justify-center border border-amber-500 px-7 text-center text-xs font-bold uppercase tracking-[0.16em] text-amber-400 transition hover:bg-amber-500 hover:text-black"
             >
-              Ver portal
+              Ver portal público
             </Link>
 
             <LogoutButton />
@@ -191,7 +175,7 @@ export default async function AdminPage() {
               </p>
 
               <h2 className="mt-3 font-serif text-4xl font-normal">
-                Indicadores do portal
+                Indicadores da operação
               </h2>
             </div>
 
@@ -228,7 +212,7 @@ export default async function AdminPage() {
         <section className="mt-14">
           <div className="border-b border-white/10 pb-6">
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-400">
-              Administração
+              CRM B&amp;B
             </p>
 
             <h2 className="mt-3 font-serif text-4xl font-normal">
