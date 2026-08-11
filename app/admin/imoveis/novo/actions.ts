@@ -162,6 +162,29 @@ function mapPropertyType(
   }
 }
 
+function getPropertyCodePrefix(
+  propertyType: NonNullable<
+    ReturnType<typeof mapPropertyType>
+  >,
+) {
+  switch (propertyType) {
+    case "CASA":
+      return "BBC";
+
+    case "APARTAMENTO":
+      return "BBA";
+
+    case "TERRENO":
+      return "BBT";
+
+    case "COMERCIAL":
+      return "BBM";
+
+    case "RURAL":
+      return "BBR";
+  }
+}
+
 function mapStatus(
   value: string,
 ) {
@@ -224,33 +247,31 @@ export async function createPropertyAction(
     };
   }
 
-  const code = getText(
-    formData,
-    "code",
-  ).toUpperCase();
-
   const title = getText(
     formData,
     "title",
   );
 
-  const ownerIdRaw = formData.get("ownerId");
+  const ownerIdRaw =
+    formData.get("ownerId");
 
   const ownerId =
     typeof ownerIdRaw === "string" &&
     ownerIdRaw.trim() !== ""
       ? Number(ownerIdRaw)
       : null;
+
   const neighborhood =
     getText(
       formData,
       "neighborhood",
     );
 
-  const category = getText(
-    formData,
-    "category",
-  );
+  const category =
+    getText(
+      formData,
+      "category",
+    );
 
   const purpose =
     mapPurpose(
@@ -277,7 +298,6 @@ export async function createPropertyAction(
     );
 
   if (
-    !code ||
     !title ||
     !neighborhood ||
     !category
@@ -285,15 +305,7 @@ export async function createPropertyAction(
     return {
       success: false,
       message:
-        "Preencha código, título, bairro e categoria.",
-    };
-  }
-
-  if (code.length > 30) {
-    return {
-      success: false,
-      message:
-        "O código do imóvel deve ter no máximo 30 caracteres.",
+        "Preencha título, bairro e categoria.",
     };
   }
 
@@ -383,24 +395,6 @@ export async function createPropertyAction(
     };
   }
 
-  const existingProperty =
-    await prisma.property.findUnique({
-      where: {
-        code,
-      },
-      select: {
-        id: true,
-      },
-    });
-
-  if (existingProperty) {
-    return {
-      success: false,
-      message:
-        "Já existe um imóvel cadastrado com esse código.",
-    };
-  }
-
   const opportunityProfiles =
     formData
       .getAll(
@@ -421,15 +415,16 @@ export async function createPropertyAction(
         > => value !== null,
       );
 
-  const features = getText(
-    formData,
-    "features",
-  )
-    .split(/\r?\n/)
-    .map((item) =>
-      item.trim(),
+  const features =
+    getText(
+      formData,
+      "features",
     )
-    .filter(Boolean);
+      .split(/\r?\n/)
+      .map((item) =>
+        item.trim(),
+      )
+      .filter(Boolean);
 
   const state =
     getText(
@@ -454,218 +449,292 @@ export async function createPropertyAction(
 
   try {
     const property =
-      await prisma.property.create({
-        data: {
-          code,
+      await prisma.$transaction(
+        async (tx) => {
+          const prefix =
+            getPropertyCodePrefix(
+              propertyType,
+            );
 
-          title,
+          const existingCodes =
+            await tx.property.findMany({
+              where: {
+                code: {
+                  startsWith:
+                    prefix,
+                },
+              },
 
-          slug: createSlug(
-            code,
-            title,
-          ),
+              select: {
+                code: true,
+              },
+            });
 
-          purpose,
+          const highestNumber =
+            existingCodes.reduce(
+              (
+                highest,
+                property,
+              ) => {
+                const match =
+                  property.code.match(
+                    new RegExp(
+                      `^${prefix}(\\d+)$`,
+                      "i",
+                    ),
+                  );
 
-          opportunityProfiles,
+                if (!match) {
+                  return highest;
+                }
 
-          propertyType,
+                const number =
+                  Number.parseInt(
+                    match[1],
+                    10,
+                  );
 
-          category,
+                if (
+                  !Number.isFinite(
+                    number,
+                  )
+                ) {
+                  return highest;
+                }
 
-          status,
+                return Math.max(
+                  highest,
+                  number,
+                );
+              },
+              0,
+            );
 
-          highlight:
-            formData.get(
-              "highlight",
-            ) === "on",
+          const code =
+            `${prefix}${String(
+              highestNumber + 1,
+            ).padStart(3, "0")}`;
 
-          published: false,
+          return tx.property.create({
+            data: {
+              code,
 
-          consultantScore,
+              title,
 
-          tag: getOptionalText(
-            formData,
-            "tag",
-          ),
-
-          state:
-            state.toUpperCase(),
-
-          city,
-
-          neighborhood,
-
-          ownerId:
-            ownerId !== null &&
-            Number.isInteger(ownerId)
-              ? ownerId
-              : null,
-
-          development:
-            getOptionalText(
-              formData,
-              "development",
-            ),
-
-          location:
-            getOptionalText(
-              formData,
-              "location",
-            ),
-
-          address:
-            getOptionalText(
-              formData,
-              "address",
-            ),
-
-          zipCode:
-            getOptionalText(
-              formData,
-              "zipCode",
-            ),
-
-          latitude,
-
-          longitude,
-
-          googleMapsUrl:
-            getOptionalText(
-              formData,
-              "googleMapsUrl",
-            ),
-
-          price:
-            parseDecimal(
-              getText(
-                formData,
-                "price",
+              slug: createSlug(
+                code,
+                title,
               ),
-            ),
 
-          rentalPrice:
-            parseDecimal(
-              getText(
+              purpose,
+
+              opportunityProfiles,
+
+              propertyType,
+
+              category,
+
+              status,
+
+              highlight:
+                formData.get(
+                  "highlight",
+                ) === "on",
+
+              published: false,
+
+              consultantScore,
+
+              tag: getOptionalText(
                 formData,
-                "rentalPrice",
+                "tag",
               ),
-            ),
 
-          condominium:
-            parseDecimal(
-              getText(
-                formData,
-                "condominium",
-              ),
-            ),
+              state:
+                state.toUpperCase(),
 
-          iptu:
-            parseDecimal(
-              getText(
-                formData,
-                "iptu",
-              ),
-            ),
+              city,
 
-          area:
-            parseDecimal(
-              getText(
-                formData,
-                "area",
-              ),
-            ),
+              neighborhood,
 
-          landArea:
-            parseDecimal(
-              getText(
-                formData,
-                "landArea",
-              ),
-            ),
+              ownerId:
+                ownerId !== null &&
+                Number.isInteger(
+                  ownerId,
+                )
+                  ? ownerId
+                  : null,
 
-          bedrooms:
-            parseInteger(
-              getText(
-                formData,
-                "bedrooms",
-              ),
-            ),
+              development:
+                getOptionalText(
+                  formData,
+                  "development",
+                ),
 
-          suites:
-            parseInteger(
-              getText(
-                formData,
-                "suites",
-              ),
-            ),
+              location:
+                getOptionalText(
+                  formData,
+                  "location",
+                ),
 
-          bathrooms:
-            parseInteger(
-              getText(
-                formData,
-                "bathrooms",
-              ),
-            ),
+              address:
+                getOptionalText(
+                  formData,
+                  "address",
+                ),
 
-          parking:
-            parseInteger(
-              getText(
-                formData,
-                "parking",
-              ),
-            ),
+              zipCode:
+                getOptionalText(
+                  formData,
+                  "zipCode",
+                ),
 
-          description:
-            getOptionalText(
-              formData,
-              "description",
-            ),
+              latitude,
 
-          features,
+              longitude,
 
-          video:
-            getOptionalText(
-              formData,
-              "video",
-            ),
+              googleMapsUrl:
+                getOptionalText(
+                  formData,
+                  "googleMapsUrl",
+                ),
 
-          virtualTour:
-            getOptionalText(
-              formData,
-              "virtualTour",
-            ),
+              price:
+                parseDecimal(
+                  getText(
+                    formData,
+                    "price",
+                  ),
+                ),
 
-          brochure:
-            getOptionalText(
-              formData,
-              "brochure",
-            ),
+              rentalPrice:
+                parseDecimal(
+                  getText(
+                    formData,
+                    "rentalPrice",
+                  ),
+                ),
 
-          seoTitle:
-            getOptionalText(
-              formData,
-              "seoTitle",
-            ),
+              condominium:
+                parseDecimal(
+                  getText(
+                    formData,
+                    "condominium",
+                  ),
+                ),
 
-          seoDescription:
-            getOptionalText(
-              formData,
-              "seoDescription",
-            ),
+              iptu:
+                parseDecimal(
+                  getText(
+                    formData,
+                    "iptu",
+                  ),
+                ),
 
-          seoImage:
-            getOptionalText(
-              formData,
-              "seoImage",
-            ),
+              area:
+                parseDecimal(
+                  getText(
+                    formData,
+                    "area",
+                  ),
+                ),
+
+              landArea:
+                parseDecimal(
+                  getText(
+                    formData,
+                    "landArea",
+                  ),
+                ),
+
+              bedrooms:
+                parseInteger(
+                  getText(
+                    formData,
+                    "bedrooms",
+                  ),
+                ),
+
+              suites:
+                parseInteger(
+                  getText(
+                    formData,
+                    "suites",
+                  ),
+                ),
+
+              bathrooms:
+                parseInteger(
+                  getText(
+                    formData,
+                    "bathrooms",
+                  ),
+                ),
+
+              parking:
+                parseInteger(
+                  getText(
+                    formData,
+                    "parking",
+                  ),
+                ),
+
+              description:
+                getOptionalText(
+                  formData,
+                  "description",
+                ),
+
+              features,
+
+              video:
+                getOptionalText(
+                  formData,
+                  "video",
+                ),
+
+              virtualTour:
+                getOptionalText(
+                  formData,
+                  "virtualTour",
+                ),
+
+              brochure:
+                getOptionalText(
+                  formData,
+                  "brochure",
+                ),
+
+              seoTitle:
+                getOptionalText(
+                  formData,
+                  "seoTitle",
+                ),
+
+              seoDescription:
+                getOptionalText(
+                  formData,
+                  "seoDescription",
+                ),
+
+              seoImage:
+                getOptionalText(
+                  formData,
+                  "seoImage",
+                ),
+            },
+
+            select: {
+              id: true,
+              code: true,
+            },
+          });
         },
-
-        select: {
-          id: true,
-          code: true,
+        {
+          isolationLevel:
+            "Serializable",
         },
-      });
+      );
 
     revalidatePath(
       "/admin",

@@ -8,7 +8,6 @@ export const propertyTypes = {
     "Térrea",
     "Sobrado",
     "Assobradada",
-    "Condomínio Fechado",
     "Village",
   ],
 
