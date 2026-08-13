@@ -2,12 +2,26 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "../../../../auth";
+import { getAccessContext } from "../../../../lib/admin/access";
 import { prisma } from "../../../../lib/prisma";
 
 export type PropertyFormState = {
   success: boolean;
   message: string;
   propertyId?: number;
+};
+
+export type PropertyFormAgent = {
+  id: number;
+  name: string;
+  role: "ADMIN" | "CAPTADOR";
+};
+
+export type PropertyFormAccessData = {
+  success: boolean;
+  isAdmin: boolean;
+  agentId: number | null;
+  agents: PropertyFormAgent[];
 };
 
 function getText(
@@ -29,6 +43,30 @@ function getOptionalText(
   );
 
   return value || null;
+}
+
+function getOptionalInteger(
+  formData: FormData,
+  field: string,
+) {
+  const raw = getText(
+    formData,
+    field,
+  );
+
+  if (!raw) {
+    return null;
+  }
+
+  const parsed =
+    Number.parseInt(
+      raw,
+      10,
+    );
+
+  return Number.isInteger(parsed)
+    ? parsed
+    : null;
 }
 
 function parseDecimal(
@@ -233,6 +271,47 @@ function mapOpportunityProfile(
   }
 }
 
+export async function getPropertyFormAccessAction(): Promise<PropertyFormAccessData> {
+  const session = await auth();
+
+  if (!session?.user) {
+    return {
+      success: false,
+      isAdmin: false,
+      agentId: null,
+      agents: [],
+    };
+  }
+
+  const access =
+    await getAccessContext();
+
+  const agents =
+    await prisma.agent.findMany({
+      where: {
+        active: true,
+      },
+
+      orderBy: {
+        name: "asc",
+      },
+
+      select: {
+        id: true,
+        name: true,
+        role: true,
+      },
+    });
+
+  return {
+    success: true,
+    isAdmin: access.isAdmin,
+    agentId:
+      access.agentId ?? null,
+    agents,
+  };
+}
+
 export async function createPropertyAction(
   _previousState: PropertyFormState,
   formData: FormData,
@@ -247,19 +326,66 @@ export async function createPropertyAction(
     };
   }
 
+  const access =
+    await getAccessContext();
+
+  if (
+    !access.isAdmin &&
+    !access.agentId
+  ) {
+    return {
+      success: false,
+      message:
+        "Não foi possível identificar o angariador responsável.",
+    };
+  }
+
   const title = getText(
     formData,
     "title",
   );
 
-  const ownerIdRaw =
-    formData.get("ownerId");
-
   const ownerId =
-    typeof ownerIdRaw === "string" &&
-    ownerIdRaw.trim() !== ""
-      ? Number(ownerIdRaw)
-      : null;
+    getOptionalInteger(
+      formData,
+      "ownerId",
+    );
+
+  const requestedCaptorId =
+    getOptionalInteger(
+      formData,
+      "captorId",
+    );
+
+  const coCaptorId =
+    getOptionalInteger(
+      formData,
+      "coCaptorId",
+    );
+
+  const captorId =
+    access.isAdmin
+      ? requestedCaptorId
+      : access.agentId;
+
+  if (!captorId) {
+    return {
+      success: false,
+      message:
+        "Selecione o angariador principal do imóvel.",
+    };
+  }
+
+  if (
+    coCaptorId !== null &&
+    coCaptorId === captorId
+  ) {
+    return {
+      success: false,
+      message:
+        "O co-angariador deve ser diferente do angariador principal.",
+    };
+  }
 
   const neighborhood =
     getText(
@@ -448,6 +574,57 @@ export async function createPropertyAction(
   }
 
   try {
+    const agents =
+      await prisma.agent.findMany({
+        where: {
+          id: {
+            in: [
+              captorId,
+              ...(coCaptorId !== null
+                ? [coCaptorId]
+                : []),
+            ],
+          },
+          active: true,
+        },
+
+        select: {
+          id: true,
+        },
+      });
+
+    const validAgentIds =
+      new Set(
+        agents.map(
+          (agent) => agent.id,
+        ),
+      );
+
+    if (
+      !validAgentIds.has(
+        captorId,
+      )
+    ) {
+      return {
+        success: false,
+        message:
+          "O angariador principal selecionado não está disponível.",
+      };
+    }
+
+    if (
+      coCaptorId !== null &&
+      !validAgentIds.has(
+        coCaptorId,
+      )
+    ) {
+      return {
+        success: false,
+        message:
+          "O co-angariador selecionado não está disponível.",
+      };
+    }
+
     const property =
       await prisma.$transaction(
         async (tx) => {
@@ -557,13 +734,11 @@ export async function createPropertyAction(
 
               neighborhood,
 
-              ownerId:
-                ownerId !== null &&
-                Number.isInteger(
-                  ownerId,
-                )
-                  ? ownerId
-                  : null,
+              ownerId,
+
+              captorId,
+
+              coCaptorId,
 
               development:
                 getOptionalText(

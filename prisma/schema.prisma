@@ -101,16 +101,21 @@ model Property {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  ownerId   Int?
-  owner     Owner?   @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+
+  ownerId Int?
+  owner   Owner? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
 
   captorId Int?
-  captor   Agent? @relation(fields: [captorId], references: [id], onDelete: SetNull)
+  captor   Agent? @relation("PropertyPrimaryCaptor", fields: [captorId], references: [id], onDelete: SetNull)
+
+  coCaptorId Int?
+  coCaptor   Agent? @relation("PropertyCoCaptor", fields: [coCaptorId], references: [id], onDelete: SetNull)
 
   images PropertyImage[]
 
   @@index([ownerId])
   @@index([captorId])
+  @@index([coCaptorId])
   @@index([purpose])
   @@index([propertyType])
   @@index([status])
@@ -192,8 +197,10 @@ model Agent {
 
   active Boolean @default(true)
 
-  capturedOwners     Owner[]
-  capturedProperties Property[]
+  capturedOwners Owner[]
+
+  capturedProperties   Property[] @relation("PropertyPrimaryCaptor")
+  coCapturedProperties Property[] @relation("PropertyCoCaptor")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

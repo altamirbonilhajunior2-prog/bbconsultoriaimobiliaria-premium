@@ -10,10 +10,13 @@ import {
 import { propertyTypes } from "../../../data/searchOptions";
 import {
   createPropertyAction,
+  getPropertyFormAccessAction,
+  type PropertyFormAccessData,
   type PropertyFormState,
 } from "./actions";
 
-type PropertyType = keyof typeof propertyTypes;
+type PropertyType =
+  keyof typeof propertyTypes;
 
 const purposes = [
   "Venda",
@@ -21,7 +24,8 @@ const purposes = [
   "Venda e locação",
 ] as const;
 
-type Purpose = (typeof purposes)[number];
+type Purpose =
+  (typeof purposes)[number];
 
 const opportunityProfiles = [
   "Moradia",
@@ -59,7 +63,10 @@ const sectionClass =
 const sectionTitleClass =
   "text-[11px] font-bold uppercase tracking-[0.22em] text-amber-400";
 
-const codePrefixes: Record<PropertyType, string> = {
+const codePrefixes: Record<
+  PropertyType,
+  string
+> = {
   Casa: "BBC",
   Apartamento: "BBA",
   Terreno: "BBT",
@@ -77,29 +84,152 @@ export default function NovoImovelPage() {
     initialState,
   );
 
-  const [propertyType, setPropertyType] =
-    useState<PropertyType>("Casa");
+  const [
+    propertyType,
+    setPropertyType,
+  ] =
+    useState<PropertyType>(
+      "Casa",
+    );
 
-  const [purpose, setPurpose] =
-    useState<Purpose>("Venda");
+  const [
+    purpose,
+    setPurpose,
+  ] =
+    useState<Purpose>(
+      "Venda",
+    );
 
   const [
     selectedProfiles,
     setSelectedProfiles,
-  ] = useState<string[]>([]);
+  ] =
+    useState<string[]>(
+      [],
+    );
 
-  const [photoNames, setPhotoNames] =
-    useState<string[]>([]);
+  const [
+    photoNames,
+    setPhotoNames,
+  ] =
+    useState<string[]>(
+      [],
+    );
 
-  const categories = useMemo(
-    () => [
-      ...propertyTypes[propertyType],
-    ],
-    [propertyType],
-  );
+  const [
+    accessData,
+    setAccessData,
+  ] =
+    useState<PropertyFormAccessData | null>(
+      null,
+    );
+
+  const [
+    selectedCaptorId,
+    setSelectedCaptorId,
+  ] =
+    useState("");
+
+  const [
+    accessLoading,
+    setAccessLoading,
+  ] =
+    useState(true);
+
+  const categories =
+    useMemo(
+      () => [
+        ...propertyTypes[
+          propertyType
+        ],
+      ],
+      [propertyType],
+    );
+
+  const currentAgent =
+    useMemo(() => {
+      if (
+        !accessData?.agentId
+      ) {
+        return null;
+      }
+
+      return (
+        accessData.agents.find(
+          (agent) =>
+            agent.id ===
+            accessData.agentId,
+        ) ?? null
+      );
+    }, [accessData]);
+
+  const principalCaptorId =
+    accessData?.isAdmin
+      ? selectedCaptorId
+      : accessData?.agentId
+        ? String(
+            accessData.agentId,
+          )
+        : "";
+
+  const availableCoCaptors =
+    useMemo(() => {
+      if (!accessData) {
+        return [];
+      }
+
+      return accessData.agents.filter(
+        (agent) =>
+          String(agent.id) !==
+          principalCaptorId,
+      );
+    }, [
+      accessData,
+      principalCaptorId,
+    ]);
 
   useEffect(() => {
-    if (!formState.message) {
+    let active = true;
+
+    async function loadAccess() {
+      try {
+        const data =
+          await getPropertyFormAccessAction();
+
+        if (!active) {
+          return;
+        }
+
+        setAccessData(data);
+
+        if (
+          data.success &&
+          data.isAdmin
+        ) {
+          setSelectedCaptorId(
+            "",
+          );
+        }
+      } finally {
+        if (active) {
+          setAccessLoading(
+            false,
+          );
+        }
+      }
+    }
+
+    void loadAccess();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (
+      !formState.message
+    ) {
       return;
     }
 
@@ -107,7 +237,9 @@ export default function NovoImovelPage() {
       top: 0,
       behavior: "smooth",
     });
-  }, [formState.message]);
+  }, [
+    formState.message,
+  ]);
 
   function toggleProfile(
     profile: string,
@@ -121,7 +253,8 @@ export default function NovoImovelPage() {
         ) {
           return current.filter(
             (item) =>
-              item !== profile,
+              item !==
+              profile,
           );
         }
 
@@ -161,9 +294,10 @@ export default function NovoImovelPage() {
 
           <div className="mt-6 border border-amber-500/20 bg-amber-500/5 px-5 py-4">
             <p className="text-sm leading-6 text-amber-200">
-              O código interno será gerado
-              automaticamente pelo CRM de
-              acordo com o tipo do imóvel.
+              O código interno será
+              gerado automaticamente pelo
+              CRM de acordo com o tipo do
+              imóvel.
             </p>
           </div>
 
@@ -230,7 +364,11 @@ export default function NovoImovelPage() {
                 </span>
 
                 <div className="flex h-14 items-center border border-amber-500/20 bg-amber-500/5 px-4 text-sm text-amber-200">
-                  {codePrefixes[propertyType]}
+                  {
+                    codePrefixes[
+                      propertyType
+                    ]
+                  }
                   ### — gerado ao salvar
                 </div>
               </div>
@@ -248,7 +386,9 @@ export default function NovoImovelPage() {
                   name="title"
                   type="text"
                   required
-                  maxLength={200}
+                  maxLength={
+                    200
+                  }
                   placeholder="Ex.: Casa contemporânea no Alphaville II"
                   className={
                     inputClass
@@ -340,10 +480,163 @@ export default function NovoImovelPage() {
                 />
 
                 <span className="text-sm text-zinc-300">
-                  Exibir este imóvel como
-                  destaque no portal
+                  Exibir este imóvel
+                  como destaque no
+                  portal
                 </span>
               </label>
+            </div>
+
+            <div className="mt-8 border-t border-white/10 pt-7">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                Angariação
+              </p>
+
+              <p className="mt-2 text-sm leading-6 text-zinc-500">
+                Defina o corretor
+                responsável pela
+                angariação do imóvel e,
+                quando houver, um
+                co-angariador.
+              </p>
+
+              {accessLoading ? (
+                <div className="mt-5 border border-white/10 bg-[#111111] px-5 py-5">
+                  <p className="text-sm text-zinc-500">
+                    Carregando
+                    angariadores...
+                  </p>
+                </div>
+              ) : !accessData?.success ? (
+                <div className="mt-5 border border-red-500/30 bg-red-500/10 px-5 py-5">
+                  <p className="text-sm text-red-300">
+                    Não foi possível
+                    carregar os dados de
+                    angariação. Atualize a
+                    página e tente
+                    novamente.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-5 grid gap-5 md:grid-cols-2">
+                  {accessData.isAdmin ? (
+                    <label className="flex flex-col gap-2">
+                      <span
+                        className={
+                          labelTitleClass
+                        }
+                      >
+                        Angariador
+                        principal *
+                      </span>
+
+                      <select
+                        name="captorId"
+                        required
+                        value={
+                          selectedCaptorId
+                        }
+                        onChange={(
+                          event,
+                        ) =>
+                          setSelectedCaptorId(
+                            event
+                              .target
+                              .value,
+                          )
+                        }
+                        className={
+                          inputClass
+                        }
+                      >
+                        <option value="">
+                          Selecione o
+                          angariador
+                          principal
+                        </option>
+
+                        {accessData.agents.map(
+                          (
+                            agent,
+                          ) => (
+                            <option
+                              key={
+                                agent.id
+                              }
+                              value={
+                                agent.id
+                              }
+                            >
+                              {
+                                agent.name
+                              }
+                            </option>
+                          ),
+                        )}
+                      </select>
+                    </label>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <span
+                        className={
+                          labelTitleClass
+                        }
+                      >
+                        Angariador
+                        principal *
+                      </span>
+
+                      <div className="flex h-14 items-center border border-amber-500/20 bg-amber-500/5 px-4 text-sm text-amber-200">
+                        {currentAgent
+                          ?.name ??
+                          "Angariador atual"}
+                      </div>
+                    </div>
+                  )}
+
+                  <label className="flex flex-col gap-2">
+                    <span
+                      className={
+                        labelTitleClass
+                      }
+                    >
+                      Co-angariador
+                    </span>
+
+                    <select
+                      name="coCaptorId"
+                      defaultValue=""
+                      className={
+                        inputClass
+                      }
+                    >
+                      <option value="">
+                        Sem
+                        co-angariador
+                      </option>
+
+                      {availableCoCaptors.map(
+                        (
+                          agent,
+                        ) => (
+                          <option
+                            key={
+                              agent.id
+                            }
+                            value={
+                              agent.id
+                            }
+                          >
+                            {
+                              agent.name
+                            }
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </label>
+                </div>
+              )}
             </div>
           </section>
 
@@ -359,7 +652,8 @@ export default function NovoImovelPage() {
                 sectionTitleClass
               }
             >
-              02. Classificação comercial
+              02. Classificação
+              comercial
             </p>
 
             <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -374,7 +668,9 @@ export default function NovoImovelPage() {
 
                 <select
                   name="purpose"
-                  value={purpose}
+                  value={
+                    purpose
+                  }
                   onChange={(
                     event,
                   ) =>
@@ -498,7 +794,8 @@ export default function NovoImovelPage() {
                   labelTitleClass
                 }
               >
-                Perfil da oportunidade
+                Perfil da
+                oportunidade
               </p>
 
               <p className="mt-2 text-sm text-zinc-500">
@@ -557,97 +854,158 @@ export default function NovoImovelPage() {
 
           {/* LOCALIZAÇÃO */}
 
-          <section className={sectionClass}>
-            <p className={sectionTitleClass}>
+          <section
+            className={
+              sectionClass
+            }
+          >
+            <p
+              className={
+                sectionTitleClass
+              }
+            >
               03. Localização
             </p>
 
             <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Estado
                 </span>
+
                 <input
                   name="state"
                   type="text"
                   required
-                  maxLength={2}
+                  maxLength={
+                    2
+                  }
                   defaultValue="SP"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Cidade
                 </span>
+
                 <input
                   name="city"
                   type="text"
                   required
                   defaultValue="São José dos Campos"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Bairro
                 </span>
+
                 <input
                   name="neighborhood"
                   type="text"
                   required
                   placeholder="Ex.: Urbanova"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
-                  Condomínio ou edifício
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
+                  Condomínio ou
+                  edifício
                 </span>
+
                 <input
                   name="development"
                   type="text"
                   placeholder="Ex.: Alphaville II"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2 md:col-span-2 xl:col-span-3">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Endereço
                 </span>
+
                 <input
                   name="address"
                   type="text"
                   placeholder="Rua, avenida, número e complemento"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   CEP
                 </span>
+
                 <input
                   name="zipCode"
                   type="text"
                   placeholder="00000-000"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2 md:col-span-2 xl:col-span-4">
-                <span className={labelTitleClass}>
-                  Localização resumida
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
+                  Localização
+                  resumida
                 </span>
+
                 <input
                   name="location"
                   type="text"
                   placeholder="Ex.: Alphaville II, Urbanova — São José dos Campos/SP"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
             </div>
@@ -655,45 +1013,75 @@ export default function NovoImovelPage() {
 
           {/* MAPA */}
 
-          <section className={sectionClass}>
-            <p className={sectionTitleClass}>
-              04. Mapa e geolocalização
+          <section
+            className={
+              sectionClass
+            }
+          >
+            <p
+              className={
+                sectionTitleClass
+              }
+            >
+              04. Mapa e
+              geolocalização
             </p>
 
             <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Latitude
                 </span>
+
                 <input
                   name="latitude"
                   type="text"
                   placeholder="-23.000000"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Longitude
                 </span>
+
                 <input
                   name="longitude"
                   type="text"
                   placeholder="-45.000000"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2 md:col-span-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Link Google Maps
                 </span>
+
                 <input
                   name="googleMapsUrl"
                   type="url"
                   placeholder="https://maps.google.com/..."
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
             </div>
@@ -702,69 +1090,109 @@ export default function NovoImovelPage() {
               <p className="text-sm leading-7 text-zinc-500">
                 A localização automática
                 pelo endereço e a
-                visualização do mapa poderão
-                ser adicionadas posteriormente.
+                visualização do mapa
+                poderão ser adicionadas
+                posteriormente.
               </p>
             </div>
           </section>
 
           {/* VALORES */}
 
-          <section className={sectionClass}>
-            <p className={sectionTitleClass}>
+          <section
+            className={
+              sectionClass
+            }
+          >
+            <p
+              className={
+                sectionTitleClass
+              }
+            >
               05. Valores
             </p>
 
             <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-              {purpose !== "Locação" ? (
+              {purpose !==
+              "Locação" ? (
                 <label className="flex flex-col gap-2">
-                  <span className={labelTitleClass}>
+                  <span
+                    className={
+                      labelTitleClass
+                    }
+                  >
                     Valor de venda
                   </span>
+
                   <input
                     name="price"
                     type="text"
                     placeholder="Ex.: R$ 3.300.000"
-                    className={inputClass}
+                    className={
+                      inputClass
+                    }
                   />
                 </label>
               ) : null}
 
-              {purpose !== "Venda" ? (
+              {purpose !==
+              "Venda" ? (
                 <label className="flex flex-col gap-2">
-                  <span className={labelTitleClass}>
-                    Valor de locação
+                  <span
+                    className={
+                      labelTitleClass
+                    }
+                  >
+                    Valor de
+                    locação
                   </span>
+
                   <input
                     name="rentalPrice"
                     type="text"
                     placeholder="Ex.: R$ 12.000/mês"
-                    className={inputClass}
+                    className={
+                      inputClass
+                    }
                   />
                 </label>
               ) : null}
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Condomínio
                 </span>
+
                 <input
                   name="condominium"
                   type="text"
                   placeholder="Ex.: R$ 940,00"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   IPTU
                 </span>
+
                 <input
                   name="iptu"
                   type="text"
                   placeholder="Ex.: R$ 2.800,00"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
             </div>
@@ -772,85 +1200,136 @@ export default function NovoImovelPage() {
 
           {/* ÁREAS */}
 
-          <section className={sectionClass}>
-            <p className={sectionTitleClass}>
+          <section
+            className={
+              sectionClass
+            }
+          >
+            <p
+              className={
+                sectionTitleClass
+              }
+            >
               06. Áreas e ambientes
             </p>
 
             <div className="mt-7 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
-                  Área construída / privativa
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
+                  Área construída /
+                  privativa
                 </span>
+
                 <input
                   name="area"
                   type="text"
                   placeholder="Ex.: 310 m²"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Área do terreno
                 </span>
+
                 <input
                   name="landArea"
                   type="text"
                   placeholder="Ex.: 479 m²"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Dormitórios
                 </span>
+
                 <input
                   name="bedrooms"
                   type="number"
                   min="0"
                   placeholder="0"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Suítes
                 </span>
+
                 <input
                   name="suites"
                   type="number"
                   min="0"
                   placeholder="0"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Banheiros
                 </span>
+
                 <input
                   name="bathrooms"
                   type="number"
                   min="0"
                   placeholder="0"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Vagas
                 </span>
+
                 <input
                   name="parking"
                   type="number"
                   min="0"
                   placeholder="0"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
             </div>
@@ -858,31 +1337,57 @@ export default function NovoImovelPage() {
 
           {/* APRESENTAÇÃO */}
 
-          <section className={sectionClass}>
-            <p className={sectionTitleClass}>
-              07. Apresentação do imóvel
+          <section
+            className={
+              sectionClass
+            }
+          >
+            <p
+              className={
+                sectionTitleClass
+              }
+            >
+              07. Apresentação do
+              imóvel
             </p>
 
             <div className="mt-7 space-y-6">
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Descrição comercial
                 </span>
+
                 <textarea
                   name="description"
-                  rows={10}
+                  rows={
+                    10
+                  }
                   placeholder="Descreva o imóvel, seus diferenciais, localização e proposta..."
-                  className={textareaClass}
+                  className={
+                    textareaClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
-                  Características e diferenciais
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
+                  Características e
+                  diferenciais
                 </span>
+
                 <textarea
                   name="features"
-                  rows={8}
+                  rows={
+                    8
+                  }
                   placeholder={`Digite uma característica por linha.
 
 Exemplo:
@@ -891,7 +1396,9 @@ Espaço gourmet
 Energia fotovoltaica
 Automação
 Ar-condicionado`}
-                  className={textareaClass}
+                  className={
+                    textareaClass
+                  }
                 />
               </label>
             </div>
@@ -899,23 +1406,33 @@ Ar-condicionado`}
 
           {/* GALERIA */}
 
-          <section className={sectionClass}>
-            <p className={sectionTitleClass}>
+          <section
+            className={
+              sectionClass
+            }
+          >
+            <p
+              className={
+                sectionTitleClass
+              }
+            >
               08. Galeria de imagens
             </p>
 
             <div className="mt-3 border border-amber-500/20 bg-amber-500/5 px-5 py-4">
               <p className="text-sm leading-6 text-amber-200">
-                A seleção abaixo é somente
-                uma prévia nesta etapa. As
-                imagens ainda não serão
-                enviadas nem gravadas.
+                A seleção abaixo é
+                somente uma prévia nesta
+                etapa. As imagens ainda
+                não serão enviadas nem
+                gravadas.
               </p>
             </div>
 
             <label className="mt-7 flex min-h-56 cursor-pointer flex-col items-center justify-center border border-dashed border-amber-500/50 bg-black/30 px-6 text-center transition hover:border-amber-500 hover:bg-amber-500/5">
               <span className="font-serif text-2xl">
-                Selecionar fotos do imóvel
+                Selecionar fotos do
+                imóvel
               </span>
 
               <span className="mt-3 text-sm text-zinc-500">
@@ -923,8 +1440,8 @@ Ar-condicionado`}
               </span>
 
               <span className="mt-2 text-xs text-zinc-600">
-                É possível selecionar várias
-                imagens.
+                É possível selecionar
+                várias imagens.
               </span>
 
               <input
@@ -936,46 +1453,72 @@ Ar-condicionado`}
                   event,
                 ) => {
                   const files =
-                    event.target.files;
+                    event
+                      .target
+                      .files;
 
                   if (!files) {
-                    setPhotoNames([]);
+                    setPhotoNames(
+                      [],
+                    );
                     return;
                   }
 
                   setPhotoNames(
-                    Array.from(files).map(
-                      (file) => file.name,
+                    Array.from(
+                      files,
+                    ).map(
+                      (file) =>
+                        file.name,
                     ),
                   );
                 }}
               />
             </label>
 
-            {photoNames.length > 0 ? (
+            {photoNames.length >
+            0 ? (
               <div className="mt-5 border border-white/10 bg-[#111111] p-5">
                 <p className="text-sm font-medium text-white">
-                  {photoNames.length}{" "}
-                  {photoNames.length === 1
+                  {
+                    photoNames.length
+                  }{" "}
+                  {photoNames.length ===
+                  1
                     ? "foto selecionada"
                     : "fotos selecionadas"}
                 </p>
 
                 <div className="mt-3 space-y-1">
                   {photoNames
-                    .slice(0, 5)
-                    .map((name) => (
-                      <p
-                        key={name}
-                        className="truncate text-xs text-zinc-500"
-                      >
-                        {name}
-                      </p>
-                    ))}
+                    .slice(
+                      0,
+                      5,
+                    )
+                    .map(
+                      (
+                        name,
+                      ) => (
+                        <p
+                          key={
+                            name
+                          }
+                          className="truncate text-xs text-zinc-500"
+                        >
+                          {
+                            name
+                          }
+                        </p>
+                      ),
+                    )}
 
-                  {photoNames.length > 5 ? (
+                  {photoNames.length >
+                  5 ? (
                     <p className="text-xs text-amber-400">
-                      + {photoNames.length - 5} arquivos
+                      +{" "}
+                      {photoNames.length -
+                        5}{" "}
+                      arquivos
                     </p>
                   ) : null}
                 </div>
@@ -985,45 +1528,75 @@ Ar-condicionado`}
 
           {/* MÍDIA */}
 
-          <section className={sectionClass}>
-            <p className={sectionTitleClass}>
+          <section
+            className={
+              sectionClass
+            }
+          >
+            <p
+              className={
+                sectionTitleClass
+              }
+            >
               09. Vídeo e materiais
             </p>
 
             <div className="mt-7 grid gap-5 md:grid-cols-2">
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Vídeo
                 </span>
+
                 <input
                   name="video"
                   type="url"
                   placeholder="Link do YouTube ou Vimeo"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Tour virtual
                 </span>
+
                 <input
                   name="virtualTour"
                   type="url"
                   placeholder="Link Matterport ou similar"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2 md:col-span-2">
-                <span className={labelTitleClass}>
-                  Apresentação / Brochura
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
+                  Apresentação /
+                  Brochura
                 </span>
+
                 <input
                   name="brochure"
                   type="url"
                   placeholder="Link para PDF ou apresentação do imóvel"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
             </div>
@@ -1031,54 +1604,91 @@ Ar-condicionado`}
 
           {/* SEO */}
 
-          <section className={sectionClass}>
-            <p className={sectionTitleClass}>
-              10. SEO e compartilhamento
+          <section
+            className={
+              sectionClass
+            }
+          >
+            <p
+              className={
+                sectionTitleClass
+              }
+            >
+              10. SEO e
+              compartilhamento
             </p>
 
             <p className="mt-3 max-w-3xl text-sm leading-7 text-zinc-500">
-              Estes dados serão utilizados
-              pelo Google, WhatsApp e redes
-              sociais na apresentação do
-              imóvel.
+              Estes dados serão
+              utilizados pelo Google,
+              WhatsApp e redes sociais
+              na apresentação do imóvel.
             </p>
 
             <div className="mt-7 space-y-5">
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Título SEO
                 </span>
+
                 <input
                   name="seoTitle"
                   type="text"
-                  maxLength={70}
+                  maxLength={
+                    70
+                  }
                   placeholder="Ex.: Casa Alto Padrão Alphaville II Urbanova | 4 Suítes"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
                   Descrição SEO
                 </span>
+
                 <textarea
                   name="seoDescription"
-                  rows={4}
-                  maxLength={170}
+                  rows={
+                    4
+                  }
+                  maxLength={
+                    170
+                  }
                   placeholder="Descrição resumida para mecanismos de busca..."
-                  className={textareaClass}
+                  className={
+                    textareaClass
+                  }
                 />
               </label>
 
               <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
-                  Imagem de compartilhamento
+                <span
+                  className={
+                    labelTitleClass
+                  }
+                >
+                  Imagem de
+                  compartilhamento
                 </span>
+
                 <input
                   name="seoImage"
                   type="text"
                   placeholder="URL ou caminho da imagem principal"
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </label>
             </div>
@@ -1096,7 +1706,11 @@ Ar-condicionado`}
 
             <button
               type="submit"
-              disabled={isPending}
+              disabled={
+                isPending ||
+                accessLoading ||
+                !accessData?.success
+              }
               className="inline-flex min-h-14 items-center justify-center bg-amber-500 px-8 text-xs font-bold uppercase tracking-[0.16em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isPending
