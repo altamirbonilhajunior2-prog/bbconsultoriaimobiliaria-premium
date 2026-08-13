@@ -14,7 +14,9 @@ import {
   type ImageActionState,
   moveImageAction,
   registerUploadedImagesAction,
+  removeAllImagesAction,
   removeImageAction,
+  removeSelectedImagesAction,
   setCoverImageAction,
 } from "./image-actions";
 
@@ -103,6 +105,11 @@ export default function ImageManager({
   ] = useState<File[]>([]);
 
   const [
+    selectedImageIds,
+    setSelectedImageIds,
+  ] = useState<number[]>([]);
+
+  const [
     inputKey,
     setInputKey,
   ] = useState(0);
@@ -151,33 +158,90 @@ export default function ImageManager({
     initialState,
   );
 
+  const [
+    removeSelectedState,
+    removeSelectedAction,
+    removeSelectedPending,
+  ] = useActionState(
+    removeSelectedImagesAction,
+    initialState,
+  );
+
+  const [
+    removeAllState,
+    removeAllAction,
+    removeAllPending,
+  ] = useActionState(
+    removeAllImagesAction,
+    initialState,
+  );
+
   const currentState =
-    removeState.message
-      ? removeState
-      : moveState.message
-        ? moveState
-        : coverState;
+    removeAllState.message
+      ? removeAllState
+      : removeSelectedState.message
+        ? removeSelectedState
+        : removeState.message
+          ? removeState
+          : moveState.message
+            ? moveState
+            : coverState;
 
   useEffect(() => {
     if (
       coverState.success ||
       moveState.success ||
-      removeState.success
+      removeState.success ||
+      removeSelectedState.success ||
+      removeAllState.success
     ) {
       router.refresh();
+    }
+
+    if (
+      removeSelectedState.success ||
+      removeAllState.success
+    ) {
+      setSelectedImageIds([]);
     }
   }, [
     coverState,
     moveState,
     removeState,
+    removeSelectedState,
+    removeAllState,
     router,
   ]);
+
+  useEffect(() => {
+    const validIds =
+      new Set(
+        images.map(
+          (image) => image.id,
+        ),
+      );
+
+    setSelectedImageIds(
+      (current) =>
+        current.filter(
+          (id) =>
+            validIds.has(id),
+        ),
+    );
+  }, [images]);
 
   const isPending =
     uploading ||
     coverPending ||
     movePending ||
-    removePending;
+    removePending ||
+    removeSelectedPending ||
+    removeAllPending;
+
+  const allSelected =
+    images.length > 0 &&
+    selectedImageIds.length ===
+      images.length;
 
   function handleFileSelection(
     files: FileList | null,
@@ -236,6 +300,35 @@ export default function ImageManager({
     setSelectedFiles(
       selected,
     );
+  }
+
+  function toggleImageSelection(
+    imageId: number,
+  ) {
+    setSelectedImageIds(
+      (current) =>
+        current.includes(imageId)
+          ? current.filter(
+              (id) =>
+                id !== imageId,
+            )
+          : [
+              ...current,
+              imageId,
+            ],
+    );
+  }
+
+  function selectAllImages() {
+    setSelectedImageIds(
+      images.map(
+        (image) => image.id,
+      ),
+    );
+  }
+
+  function clearSelection() {
+    setSelectedImageIds([]);
   }
 
   async function handleUpload(
@@ -385,17 +478,51 @@ export default function ImageManager({
           </p>
         </div>
 
-        <div className="border border-white/10 bg-[#111111] px-5 py-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
-            Total
-          </p>
+        <div className="flex flex-col gap-3 sm:items-end">
+          <div className="border border-white/10 bg-[#111111] px-5 py-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+              Total
+            </p>
 
-          <p className="mt-1 text-xl text-white">
-            {images.length}{" "}
-            {images.length === 1
-              ? "imagem"
-              : "imagens"}
-          </p>
+            <p className="mt-1 text-xl text-white">
+              {images.length}{" "}
+              {images.length === 1
+                ? "imagem"
+                : "imagens"}
+            </p>
+          </div>
+
+          {images.length > 0 ? (
+            <form
+              action={removeAllAction}
+              onSubmit={(event) => {
+                const confirmed =
+                  window.confirm(
+                    `Remover todas as ${images.length} fotos do cadastro do imóvel ${code}? Esta ação não pode ser desfeita.`,
+                  );
+
+                if (!confirmed) {
+                  event.preventDefault();
+                }
+              }}
+            >
+              <input
+                type="hidden"
+                name="code"
+                value={code}
+              />
+
+              <button
+                type="submit"
+                disabled={isPending}
+                className="inline-flex min-h-10 items-center justify-center border border-red-500/30 px-4 text-[10px] font-bold uppercase tracking-[0.12em] text-red-300 transition hover:border-red-400 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {removeAllPending
+                  ? "Removendo fotos..."
+                  : "Remover todas as fotos"}
+              </button>
+            </form>
+          ) : null}
         </div>
       </div>
 
@@ -496,6 +623,121 @@ export default function ImageManager({
         ) : null}
       </form>
 
+      {images.length > 0 ? (
+        <div className="mt-7 border border-white/10 bg-[#111111] p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                Seleção de fotografias
+              </p>
+
+              <p className="mt-2 text-sm text-zinc-300">
+                {selectedImageIds.length ===
+                0
+                  ? "Nenhuma fotografia selecionada."
+                  : selectedImageIds.length ===
+                      1
+                    ? "1 fotografia selecionada."
+                    : `${selectedImageIds.length} fotografias selecionadas.`}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={
+                  allSelected
+                    ? clearSelection
+                    : selectAllImages
+                }
+                disabled={isPending}
+                className={buttonClass}
+              >
+                {allSelected
+                  ? "Desmarcar todas"
+                  : "Selecionar todas"}
+              </button>
+
+              {selectedImageIds.length >
+              0 ? (
+                <button
+                  type="button"
+                  onClick={
+                    clearSelection
+                  }
+                  disabled={isPending}
+                  className={buttonClass}
+                >
+                  Limpar seleção
+                </button>
+              ) : null}
+
+              <form
+                action={
+                  removeSelectedAction
+                }
+                onSubmit={(event) => {
+                  if (
+                    selectedImageIds.length ===
+                    0
+                  ) {
+                    event.preventDefault();
+                    return;
+                  }
+
+                  const confirmed =
+                    window.confirm(
+                      `Remover ${
+                        selectedImageIds.length
+                      } ${
+                        selectedImageIds.length ===
+                        1
+                          ? "foto selecionada"
+                          : "fotos selecionadas"
+                      } do imóvel ${code}? Esta ação não pode ser desfeita.`,
+                    );
+
+                  if (!confirmed) {
+                    event.preventDefault();
+                  }
+                }}
+              >
+                <input
+                  type="hidden"
+                  name="code"
+                  value={code}
+                />
+
+                {selectedImageIds.map(
+                  (imageId) => (
+                    <input
+                      key={imageId}
+                      type="hidden"
+                      name="imageIds"
+                      value={imageId}
+                    />
+                  ),
+                )}
+
+                <button
+                  type="submit"
+                  disabled={
+                    isPending ||
+                    selectedImageIds.length ===
+                      0
+                  }
+                  className="inline-flex min-h-10 items-center justify-center border border-red-500/30 px-4 text-[10px] font-bold uppercase tracking-[0.12em] text-red-300 transition hover:border-red-400 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {removeSelectedPending
+                    ? "Excluindo..."
+                    : "Excluir selecionadas"}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {currentState.message ? (
         <div
           className={`mt-6 border px-5 py-4 ${
@@ -525,169 +767,202 @@ export default function ImageManager({
       ) : (
         <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {images.map(
-            (image, index) => (
-              <article
-                key={image.id}
-                className="overflow-hidden border border-white/10 bg-[#111111]"
-              >
-                <div className="relative aspect-[4/3] bg-black">
-                  <Image
-                    src={image.url}
-                    alt={
-                      image.alt ??
-                      `${code} - Foto ${index + 1}`
-                    }
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                    className="object-cover"
-                  />
+            (image, index) => {
+              const selected =
+                selectedImageIds.includes(
+                  image.id,
+                );
 
-                  <div className="absolute left-3 top-3 flex gap-2">
-                    <span className="bg-black/80 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white">
-                      Foto {index + 1}
-                    </span>
+              return (
+                <article
+                  key={image.id}
+                  className={`overflow-hidden border bg-[#111111] transition ${
+                    selected
+                      ? "border-amber-500"
+                      : "border-white/10"
+                  }`}
+                >
+                  <div className="relative aspect-[4/3] bg-black">
+                    <Image
+                      src={image.url}
+                      alt={
+                        image.alt ??
+                        `${code} - Foto ${index + 1}`
+                      }
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                      className="object-cover"
+                    />
 
-                    {image.isCover ? (
-                      <span className="bg-amber-500 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-black">
-                        Capa
+                    <div className="absolute left-3 top-3 flex gap-2">
+                      <span className="bg-black/80 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white">
+                        Foto {index + 1}
                       </span>
-                    ) : null}
+
+                      {image.isCover ? (
+                        <span className="bg-amber-500 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-black">
+                          Capa
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <label className="absolute right-3 top-3 flex cursor-pointer items-center gap-2 bg-black/80 px-3 py-2">
+                      <input
+                        type="checkbox"
+                        checked={
+                          selected
+                        }
+                        disabled={
+                          isPending
+                        }
+                        onChange={() =>
+                          toggleImageSelection(
+                            image.id,
+                          )
+                        }
+                        className="h-4 w-4 accent-amber-500"
+                      />
+
+                      <span className="text-[9px] font-bold uppercase tracking-[0.12em] text-white">
+                        Selecionar
+                      </span>
+                    </label>
                   </div>
-                </div>
 
-                <div className="p-4">
-                  <p className="truncate text-xs text-zinc-400">
-                    {image.url}
-                  </p>
+                  <div className="p-4">
+                    <p className="truncate text-xs text-zinc-400">
+                      {image.url}
+                    </p>
 
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    <form action={coverAction}>
-                      <input
-                        type="hidden"
-                        name="code"
-                        value={code}
-                      />
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <form action={coverAction}>
+                        <input
+                          type="hidden"
+                          name="code"
+                          value={code}
+                        />
 
-                      <input
-                        type="hidden"
-                        name="imageId"
-                        value={image.id}
-                      />
+                        <input
+                          type="hidden"
+                          name="imageId"
+                          value={image.id}
+                        />
 
-                      <button
-                        type="submit"
-                        disabled={
-                          isPending ||
-                          image.isCover
-                        }
-                        className={`${buttonClass} w-full`}
+                        <button
+                          type="submit"
+                          disabled={
+                            isPending ||
+                            image.isCover
+                          }
+                          className={`${buttonClass} w-full`}
+                        >
+                          {image.isCover
+                            ? "Capa atual"
+                            : "Definir capa"}
+                        </button>
+                      </form>
+
+                      <form action={moveAction}>
+                        <input
+                          type="hidden"
+                          name="code"
+                          value={code}
+                        />
+
+                        <input
+                          type="hidden"
+                          name="imageId"
+                          value={image.id}
+                        />
+
+                        <input
+                          type="hidden"
+                          name="direction"
+                          value="up"
+                        />
+
+                        <button
+                          type="submit"
+                          disabled={
+                            isPending ||
+                            index === 0
+                          }
+                          className={`${buttonClass} w-full`}
+                        >
+                          ↑ Subir
+                        </button>
+                      </form>
+
+                      <form action={moveAction}>
+                        <input
+                          type="hidden"
+                          name="code"
+                          value={code}
+                        />
+
+                        <input
+                          type="hidden"
+                          name="imageId"
+                          value={image.id}
+                        />
+
+                        <input
+                          type="hidden"
+                          name="direction"
+                          value="down"
+                        />
+
+                        <button
+                          type="submit"
+                          disabled={
+                            isPending ||
+                            index ===
+                              images.length - 1
+                          }
+                          className={`${buttonClass} w-full`}
+                        >
+                          ↓ Descer
+                        </button>
+                      </form>
+
+                      <form
+                        action={removeAction}
+                        onSubmit={(event) => {
+                          const confirmed =
+                            window.confirm(
+                              `Remover a foto ${index + 1} do cadastro do imóvel ${code}?`,
+                            );
+
+                          if (!confirmed) {
+                            event.preventDefault();
+                          }
+                        }}
                       >
-                        {image.isCover
-                          ? "Capa atual"
-                          : "Definir capa"}
-                      </button>
-                    </form>
+                        <input
+                          type="hidden"
+                          name="code"
+                          value={code}
+                        />
 
-                    <form action={moveAction}>
-                      <input
-                        type="hidden"
-                        name="code"
-                        value={code}
-                      />
+                        <input
+                          type="hidden"
+                          name="imageId"
+                          value={image.id}
+                        />
 
-                      <input
-                        type="hidden"
-                        name="imageId"
-                        value={image.id}
-                      />
-
-                      <input
-                        type="hidden"
-                        name="direction"
-                        value="up"
-                      />
-
-                      <button
-                        type="submit"
-                        disabled={
-                          isPending ||
-                          index === 0
-                        }
-                        className={`${buttonClass} w-full`}
-                      >
-                        ↑ Subir
-                      </button>
-                    </form>
-
-                    <form action={moveAction}>
-                      <input
-                        type="hidden"
-                        name="code"
-                        value={code}
-                      />
-
-                      <input
-                        type="hidden"
-                        name="imageId"
-                        value={image.id}
-                      />
-
-                      <input
-                        type="hidden"
-                        name="direction"
-                        value="down"
-                      />
-
-                      <button
-                        type="submit"
-                        disabled={
-                          isPending ||
-                          index ===
-                            images.length - 1
-                        }
-                        className={`${buttonClass} w-full`}
-                      >
-                        ↓ Descer
-                      </button>
-                    </form>
-
-                    <form
-                      action={removeAction}
-                      onSubmit={(event) => {
-                        const confirmed =
-                          window.confirm(
-                            `Remover a foto ${index + 1} do cadastro do imóvel ${code}?`,
-                          );
-
-                        if (!confirmed) {
-                          event.preventDefault();
-                        }
-                      }}
-                    >
-                      <input
-                        type="hidden"
-                        name="code"
-                        value={code}
-                      />
-
-                      <input
-                        type="hidden"
-                        name="imageId"
-                        value={image.id}
-                      />
-
-                      <button
-                        type="submit"
-                        disabled={isPending}
-                        className="inline-flex min-h-10 w-full items-center justify-center border border-red-500/20 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-red-300 transition hover:border-red-400 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        Remover
-                      </button>
-                    </form>
+                        <button
+                          type="submit"
+                          disabled={isPending}
+                          className="inline-flex min-h-10 w-full items-center justify-center border border-red-500/20 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-red-300 transition hover:border-red-400 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Remover
+                        </button>
+                      </form>
+                    </div>
                   </div>
-                </div>
-              </article>
-            ),
+                </article>
+              );
+            },
           )}
         </div>
       )}

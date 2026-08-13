@@ -43,6 +43,22 @@ function parseImageId(
   return id;
 }
 
+function parseImageIds(
+  values: FormDataEntryValue[],
+) {
+  return Array.from(
+    new Set(
+      values
+        .map((value) => Number(value))
+        .filter(
+          (id) =>
+            Number.isInteger(id) &&
+            id > 0,
+        ),
+    ),
+  );
+}
+
 function isVercelBlobUrl(
   value: string,
 ) {
@@ -106,6 +122,10 @@ async function normalizePositions(
       },
     });
 
+  if (images.length === 0) {
+    return;
+  }
+
   await prisma.$transaction(
     images.map((image, index) =>
       prisma.propertyImage.update({
@@ -119,6 +139,98 @@ async function normalizePositions(
       }),
     ),
   );
+}
+
+async function ensureCoverImage(
+  propertyId: number,
+) {
+  const currentCover =
+    await prisma.propertyImage.findFirst({
+      where: {
+        propertyId,
+        isCover: true,
+      },
+
+      select: {
+        id: true,
+      },
+    });
+
+  if (currentCover) {
+    return;
+  }
+
+  const firstImage =
+    await prisma.propertyImage.findFirst({
+      where: {
+        propertyId,
+      },
+
+      orderBy: [
+        {
+          position: "asc",
+        },
+        {
+          id: "asc",
+        },
+      ],
+
+      select: {
+        id: true,
+      },
+    });
+
+  if (!firstImage) {
+    return;
+  }
+
+  await prisma.propertyImage.update({
+    where: {
+      id: firstImage.id,
+    },
+
+    data: {
+      isCover: true,
+    },
+  });
+}
+
+async function removeBlobUrls(
+  urls: string[],
+) {
+  const blobUrls =
+    Array.from(
+      new Set(
+        urls.filter(
+          isVercelBlobUrl,
+        ),
+      ),
+    );
+
+  if (blobUrls.length === 0) {
+    return;
+  }
+
+  const deletionResults =
+    await Promise.allSettled(
+      blobUrls.map((url) =>
+        del(url),
+      ),
+    );
+
+  const failedDeletions =
+    deletionResults.filter(
+      (result) =>
+        result.status ===
+        "rejected",
+    );
+
+  if (failedDeletions.length > 0) {
+    console.error(
+      `${failedDeletions.length} arquivo(s) removido(s) do cadastro não puderam ser apagados do Vercel Blob.`,
+      failedDeletions,
+    );
+  }
 }
 
 function refreshPropertyPages(
@@ -476,9 +588,14 @@ export async function moveImageAction(
             image.propertyId,
         },
 
-        orderBy: {
-          position: "asc",
-        },
+        orderBy: [
+          {
+            position: "asc",
+          },
+          {
+            id: "asc",
+          },
+        ],
 
         select: {
           id: true,
@@ -631,59 +748,13 @@ export async function removeImageAction(
       image.propertyId,
     );
 
-    if (image.isCover) {
-      const firstImage =
-        await prisma.propertyImage.findFirst({
-          where: {
-            propertyId:
-              image.propertyId,
-          },
+    await ensureCoverImage(
+      image.propertyId,
+    );
 
-          orderBy: {
-            position: "asc",
-          },
-
-          select: {
-            id: true,
-          },
-        });
-
-      if (firstImage) {
-        await prisma.propertyImage.update({
-          where: {
-            id: firstImage.id,
-          },
-
-          data: {
-            isCover: true,
-          },
-        });
-      }
-    }
-
-    /*
-      As imagens antigas do BBC0001 estão em /public,
-      portanto não são apagadas fisicamente.
-
-      Somente arquivos hospedados no Vercel Blob
-      são removidos do armazenamento.
-    */
-    if (
-      isVercelBlobUrl(
-        image.url,
-      )
-    ) {
-      try {
-        await del(
-          image.url,
-        );
-      } catch (blobError) {
-        console.error(
-          "Registro removido, mas não foi possível apagar o arquivo do Vercel Blob:",
-          blobError,
-        );
-      }
-    }
+    await removeBlobUrls([
+      image.url,
+    ]);
 
     refreshPropertyPages(code);
 
@@ -702,6 +773,247 @@ export async function removeImageAction(
       success: false,
       message:
         "Não foi possível remover a imagem.",
+    };
+  }
+}
+
+export async function removeSelectedImagesAction(
+  _previousState: ImageActionState,
+  formData: FormData,
+): Promise<ImageActionState> {
+  const session = await auth();
+
+  if (!session?.user) {
+    return {
+      success: false,
+      message:
+        "Sessão expirada. Faça login novamente.",
+    };
+  }
+
+  const code =
+    normalizeCode(
+      formData.get("code"),
+    );
+
+  const imageIds =
+    parseImageIds(
+      formData.getAll(
+        "imageIds",
+      ),
+    );
+
+  if (!code) {
+    return {
+      success: false,
+      message:
+        "Código do imóvel não informado.",
+    };
+  }
+
+  if (imageIds.length === 0) {
+    return {
+      success: false,
+      message:
+        "Selecione pelo menos uma fotografia.",
+    };
+  }
+
+  const property =
+    await prisma.property.findUnique({
+      where: {
+        code,
+      },
+
+      select: {
+        id: true,
+      },
+    });
+
+  if (!property) {
+    return {
+      success: false,
+      message:
+        "Imóvel não encontrado.",
+    };
+  }
+
+  const selectedImages =
+    await prisma.propertyImage.findMany({
+      where: {
+        propertyId:
+          property.id,
+
+        id: {
+          in: imageIds,
+        },
+      },
+
+      select: {
+        id: true,
+        url: true,
+      },
+    });
+
+  if (
+    selectedImages.length === 0
+  ) {
+    return {
+      success: false,
+      message:
+        "Nenhuma das imagens selecionadas foi encontrada neste imóvel.",
+    };
+  }
+
+  try {
+    const result =
+      await prisma.propertyImage.deleteMany({
+        where: {
+          propertyId:
+            property.id,
+
+          id: {
+            in: selectedImages.map(
+              (image) =>
+                image.id,
+            ),
+          },
+        },
+      });
+
+    await normalizePositions(
+      property.id,
+    );
+
+    await ensureCoverImage(
+      property.id,
+    );
+
+    await removeBlobUrls(
+      selectedImages.map(
+        (image) =>
+          image.url,
+      ),
+    );
+
+    refreshPropertyPages(code);
+
+    return {
+      success: true,
+      message:
+        result.count === 1
+          ? "1 fotografia selecionada removida com sucesso."
+          : `${result.count} fotografias selecionadas removidas com sucesso.`,
+    };
+  } catch (error) {
+    console.error(
+      "Erro ao remover fotografias selecionadas:",
+      error,
+    );
+
+    return {
+      success: false,
+      message:
+        "Não foi possível remover as fotografias selecionadas.",
+    };
+  }
+}
+
+export async function removeAllImagesAction(
+  _previousState: ImageActionState,
+  formData: FormData,
+): Promise<ImageActionState> {
+  const session = await auth();
+
+  if (!session?.user) {
+    return {
+      success: false,
+      message:
+        "Sessão expirada. Faça login novamente.",
+    };
+  }
+
+  const code =
+    normalizeCode(
+      formData.get("code"),
+    );
+
+  if (!code) {
+    return {
+      success: false,
+      message:
+        "Código do imóvel não informado.",
+    };
+  }
+
+  const property =
+    await prisma.property.findUnique({
+      where: {
+        code,
+      },
+
+      select: {
+        id: true,
+
+        images: {
+          select: {
+            url: true,
+          },
+        },
+      },
+    });
+
+  if (!property) {
+    return {
+      success: false,
+      message:
+        "Imóvel não encontrado.",
+    };
+  }
+
+  if (property.images.length === 0) {
+    return {
+      success: false,
+      message:
+        "Este imóvel não possui imagens para remover.",
+    };
+  }
+
+  try {
+    const result =
+      await prisma.propertyImage.deleteMany({
+        where: {
+          propertyId:
+            property.id,
+        },
+      });
+
+    await removeBlobUrls(
+      property.images.map(
+        (image) =>
+          image.url,
+      ),
+    );
+
+    refreshPropertyPages(code);
+
+    return {
+      success: true,
+      message:
+        result.count === 1
+          ? "1 imagem removida do cadastro com sucesso."
+          : `${result.count} imagens removidas do cadastro com sucesso.`,
+    };
+  } catch (error) {
+    console.error(
+      "Erro ao remover todas as imagens:",
+      error,
+    );
+
+    return {
+      success: false,
+      message:
+        "Não foi possível remover todas as imagens.",
     };
   }
 }
