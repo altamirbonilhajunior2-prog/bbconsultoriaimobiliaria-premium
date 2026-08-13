@@ -224,7 +224,8 @@ function formatCurrency(
     {
       style: "currency",
       currency: "BRL",
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     },
   ).format(value);
 }
@@ -685,8 +686,7 @@ export default async function ComprarPage({
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
-      <Header
-      />
+      <Header />
 
       <section className="border-b border-white/10 bg-[#090909]">
         <div className="mx-auto max-w-[1720px] px-6 py-14 lg:px-10 xl:px-12">

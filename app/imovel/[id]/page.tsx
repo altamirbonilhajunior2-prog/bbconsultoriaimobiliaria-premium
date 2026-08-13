@@ -65,7 +65,8 @@ function formatCurrency(
     {
       style: "currency",
       currency: "BRL",
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     },
   ).format(number);
 }
