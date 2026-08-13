@@ -31,6 +31,30 @@ function getOptionalText(
   return value || null;
 }
 
+function getOptionalInteger(
+  formData: FormData,
+  field: string,
+) {
+  const raw = getText(
+    formData,
+    field,
+  );
+
+  if (!raw) {
+    return null;
+  }
+
+  const parsed =
+    Number.parseInt(
+      raw,
+      10,
+    );
+
+  return Number.isInteger(parsed)
+    ? parsed
+    : null;
+}
+
 function parseDecimal(
   value: string,
 ) {
@@ -202,32 +226,176 @@ export async function updatePropertyAction(
     };
   }
 
+  const access =
+    await getAccessContext();
+
   const originalCode =
     getText(
       formData,
       "originalCode",
     ).toUpperCase();
 
+  if (!originalCode) {
+    return {
+      success: false,
+      message:
+        "Não foi possível identificar o imóvel.",
+    };
+  }
+
+  const existingProperty =
+    await prisma.property.findUnique({
+      where: {
+        code: originalCode,
+      },
+
+      select: {
+        id: true,
+        captorId: true,
+        coCaptorId: true,
+      },
+    });
+
+  if (!existingProperty) {
+    return {
+      success: false,
+      message:
+        "O imóvel não foi encontrado no banco de dados.",
+    };
+  }
+
+  const requestedCaptorId =
+    getOptionalInteger(
+      formData,
+      "captorId",
+    );
+
+  const requestedCoCaptorId =
+    getOptionalInteger(
+      formData,
+      "coCaptorId",
+    );
+
+  let captorId: number | null =
+    existingProperty.captorId;
+
+  let coCaptorId: number | null =
+    existingProperty.coCaptorId;
+
+  if (access.isAdmin) {
+    captorId =
+      requestedCaptorId;
+
+    coCaptorId =
+      requestedCoCaptorId;
+  } else {
+    if (
+      !access.agentId ||
+      existingProperty.captorId !==
+        access.agentId
+    ) {
+      return {
+        success: false,
+        message:
+          "Somente o angariador principal pode alterar os dados de angariação deste imóvel.",
+      };
+    }
+
+    captorId =
+      existingProperty.captorId;
+
+    coCaptorId =
+      requestedCoCaptorId;
+  }
+
+  if (!captorId) {
+    return {
+      success: false,
+      message:
+        "Selecione o angariador principal do imóvel.",
+    };
+  }
+
+  if (
+    coCaptorId !== null &&
+    coCaptorId === captorId
+  ) {
+    return {
+      success: false,
+      message:
+        "O co-angariador deve ser diferente do angariador principal.",
+    };
+  }
+
+  const agentIds = [
+    captorId,
+    ...(coCaptorId !== null
+      ? [coCaptorId]
+      : []),
+  ];
+
+  const agents =
+    await prisma.agent.findMany({
+      where: {
+        id: {
+          in: agentIds,
+        },
+        active: true,
+      },
+
+      select: {
+        id: true,
+      },
+    });
+
+  const validAgentIds =
+    new Set(
+      agents.map(
+        (agent) =>
+          agent.id,
+      ),
+    );
+
+  if (
+    !validAgentIds.has(
+      captorId,
+    )
+  ) {
+    return {
+      success: false,
+      message:
+        "O angariador principal selecionado não está disponível.",
+    };
+  }
+
+  if (
+    coCaptorId !== null &&
+    !validAgentIds.has(
+      coCaptorId,
+    )
+  ) {
+    return {
+      success: false,
+      message:
+        "O co-angariador selecionado não está disponível.",
+    };
+  }
+
   const title = getText(
     formData,
     "title",
   );
 
-  const ownerIdRaw = formData.get("ownerId");
-
   const ownerId =
-    typeof ownerIdRaw === "string" &&
-    ownerIdRaw.trim() !== ""
-      ? Number(ownerIdRaw)
-      : null;
-  const access = await getAccessContext();
+    getOptionalInteger(
+      formData,
+      "ownerId",
+    );
 
-  let validatedOwnerId: number | null = null;
+  let validatedOwnerId:
+    number | null = null;
 
-  if (
-    ownerId !== null &&
-    Number.isInteger(ownerId)
-  ) {
+  if (ownerId !== null) {
     const allowedOwner =
       await prisma.owner.findFirst({
         where: {
@@ -257,16 +425,18 @@ export async function updatePropertyAction(
     validatedOwnerId =
       allowedOwner.id;
   }
+
   const neighborhood =
     getText(
       formData,
       "neighborhood",
     );
 
-  const category = getText(
-    formData,
-    "category",
-  );
+  const category =
+    getText(
+      formData,
+      "category",
+    );
 
   const purpose =
     mapPurpose(
@@ -291,14 +461,6 @@ export async function updatePropertyAction(
         "status",
       ),
     );
-
-  if (!originalCode) {
-    return {
-      success: false,
-      message:
-        "Não foi possível identificar o imóvel.",
-    };
-  }
 
   if (
     !title ||
@@ -412,25 +574,6 @@ export async function updatePropertyAction(
     };
   }
 
-  const existingProperty =
-    await prisma.property.findUnique({
-      where: {
-        code: originalCode,
-      },
-
-      select: {
-        id: true,
-      },
-    });
-
-  if (!existingProperty) {
-    return {
-      success: false,
-      message:
-        "O imóvel não foi encontrado no banco de dados.",
-    };
-  }
-
   const opportunityProfiles =
     formData
       .getAll(
@@ -506,7 +649,12 @@ export async function updatePropertyAction(
 
         neighborhood,
 
-        ownerId: validatedOwnerId,
+        ownerId:
+          validatedOwnerId,
+
+        captorId,
+
+        coCaptorId,
 
         development:
           getOptionalText(
@@ -674,6 +822,10 @@ export async function updatePropertyAction(
 
     revalidatePath(
       "/admin/imoveis",
+    );
+
+    revalidatePath(
+      `/admin/imoveis/${originalCode}`,
     );
 
     return {

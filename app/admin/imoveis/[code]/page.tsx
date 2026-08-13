@@ -56,40 +56,64 @@ export default async function EditarImovelPage({
   params,
 }: EditarImovelPageProps) {
   const { code } = await params;
-  const access = await getAccessContext();
 
-  const owners = await prisma.owner.findMany({
-    where: access.isAdmin
-      ? {}
-      : {
-          capturedById: access.agentId ?? -1,
-        },
+  const access =
+    await getAccessContext();
 
-    orderBy: {
-      name: "asc",
-    },
+  const owners =
+    await prisma.owner.findMany({
+      where: access.isAdmin
+        ? {}
+        : {
+            capturedById:
+              access.agentId ?? -1,
+          },
 
-    select: {
-      id: true,
-      name: true,
-      cpf: true,
-    },
-  });
+      orderBy: {
+        name: "asc",
+      },
+
+      select: {
+        id: true,
+        name: true,
+        cpf: true,
+      },
+    });
+
+  const agents =
+    await prisma.agent.findMany({
+      where: {
+        active: true,
+      },
+
+      orderBy: {
+        name: "asc",
+      },
+
+      select: {
+        id: true,
+        name: true,
+        role: true,
+      },
+    });
 
   const property =
     await prisma.property.findUnique({
       where: {
-        code: code.toUpperCase(),
+        code:
+          code.toUpperCase(),
       },
 
       include: {
         images: {
           orderBy: [
             {
-              position: "asc",
+              position:
+                "asc",
             },
             {
-              id: "asc",
+              id:
+                "asc",
             },
           ],
         },
@@ -103,18 +127,29 @@ export default async function EditarImovelPage({
   const images =
     property.images.map(
       (image) => ({
-        id: image.id,
-        url: image.url,
-        alt: image.alt,
-        position: image.position,
-        isCover: image.isCover,
+        id:
+          image.id,
+
+        url:
+          image.url,
+
+        alt:
+          image.alt,
+
+        position:
+          image.position,
+
+        isCover:
+          image.isCover,
       }),
     );
 
   const editableProperty = {
-    code: property.code,
+    code:
+      property.code,
 
-    title: property.title,
+    title:
+      property.title,
 
     purpose:
       purposeLabels[
@@ -161,6 +196,12 @@ export default async function EditarImovelPage({
 
     ownerId:
       property.ownerId,
+
+    captorId:
+      property.captorId,
+
+    coCaptorId:
+      property.coCaptorId,
 
     neighborhood:
       property.neighborhood,
@@ -291,38 +332,70 @@ export default async function EditarImovelPage({
           </p>
 
           <p className="mt-4 max-w-3xl leading-7 text-zinc-400">
-            Edite os dados administrativos e comerciais do imóvel.
-            As alterações serão gravadas diretamente no banco de dados.
+            Edite os dados
+            administrativos e
+            comerciais do imóvel. As
+            alterações serão gravadas
+            diretamente no banco de
+            dados.
           </p>
 
           <div className="mt-6 border border-amber-500/20 bg-amber-500/5 px-5 py-4">
             <p className="text-sm leading-6 text-amber-200">
-              Salvar alterações não publica o imóvel automaticamente.
-              A publicação e o gerenciamento das imagens continuam
-              protegidos em controles separados.
+              Salvar alterações não
+              publica o imóvel
+              automaticamente. A
+              publicação e o
+              gerenciamento das imagens
+              continuam protegidos em
+              controles separados.
             </p>
           </div>
         </div>
 
         <div className="mt-10">
           <EditPropertyForm
-            property={editableProperty}
-            owners={owners}
+            property={
+              editableProperty
+            }
+            owners={
+              owners
+            }
+            agents={
+              agents
+            }
+            isAdmin={
+              access.isAdmin
+            }
+            agentId={
+              access.agentId ??
+              null
+            }
           />
         </div>
 
         <div className="mt-10">
           <PublicationControl
-            code={property.code}
-            published={property.published}
-            publishedAt={publishedAt}
+            code={
+              property.code
+            }
+            published={
+              property.published
+            }
+            publishedAt={
+              publishedAt
+            }
           />
         </div>
 
         <div className="mt-10">
           <ImageManager
-            code={property.code}
-            images={images}
+            code={
+              property.code
+            }
+            images={
+              images
+            }
           />
         </div>
       </div>

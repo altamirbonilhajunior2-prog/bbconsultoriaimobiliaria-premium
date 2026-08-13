@@ -15,7 +15,8 @@ import {
   updatePropertyAction,
 } from "./actions";
 
-type PropertyType = keyof typeof propertyTypes;
+type PropertyType =
+  keyof typeof propertyTypes;
 
 const purposes = [
   "Venda",
@@ -23,7 +24,8 @@ const purposes = [
   "Venda e locação",
 ] as const;
 
-type Purpose = (typeof purposes)[number];
+type Purpose =
+  (typeof purposes)[number];
 
 const opportunityProfiles = [
   "Moradia",
@@ -59,7 +61,12 @@ type EditableProperty = {
 
   state: string;
   city: string;
+
   ownerId: number | null;
+
+  captorId: number | null;
+  coCaptorId: number | null;
+
   neighborhood: string;
 
   development: string | null;
@@ -108,13 +115,26 @@ type EditableProperty = {
   }[];
 };
 
+type AgentOption = {
+  id: number;
+  name: string;
+  role: "ADMIN" | "CAPTADOR";
+};
+
 type EditPropertyFormProps = {
   property: EditableProperty;
+
   owners: {
     id: number;
     name: string;
     cpf: string | null;
   }[];
+
+  agents: AgentOption[];
+
+  isAdmin: boolean;
+
+  agentId: number | null;
 };
 
 type FieldProps = {
@@ -149,8 +169,14 @@ function Field({
   className = "",
 }: FieldProps) {
   return (
-    <label className={`flex flex-col gap-2 ${className}`}>
-      <span className={labelTitleClass}>
+    <label
+      className={`flex flex-col gap-2 ${className}`}
+    >
+      <span
+        className={
+          labelTitleClass
+        }
+      >
         {label}
       </span>
 
@@ -162,6 +188,9 @@ function Field({
 export default function EditPropertyForm({
   property,
   owners,
+  agents,
+  isAdmin,
+  agentId,
 }: EditPropertyFormProps) {
   const [
     formState,
@@ -175,37 +204,128 @@ export default function EditPropertyForm({
   const [
     propertyType,
     setPropertyType,
-  ] = useState<PropertyType>(
-    property.propertyType,
-  );
+  ] =
+    useState<PropertyType>(
+      property.propertyType,
+    );
 
   const [
     purpose,
     setPurpose,
-  ] = useState<Purpose>(
-    property.purpose,
-  );
+  ] =
+    useState<Purpose>(
+      property.purpose,
+    );
 
   const [
     category,
     setCategory,
-  ] = useState<string>(
-    property.category,
-  );
+  ] =
+    useState<string>(
+      property.category,
+    );
 
   const [
     selectedProfiles,
     setSelectedProfiles,
-  ] = useState<string[]>(
-    property.opportunityProfiles,
-  );
+  ] =
+    useState<string[]>(
+      property.opportunityProfiles,
+    );
 
-  const categories = useMemo<string[]>(
-    () => [
-      ...propertyTypes[propertyType],
-    ],
-    [propertyType],
-  );
+  const [
+    selectedCaptorId,
+    setSelectedCaptorId,
+  ] =
+    useState<string>(
+      property.captorId
+        ? String(
+            property.captorId,
+          )
+        : "",
+    );
+
+  const [
+    selectedCoCaptorId,
+    setSelectedCoCaptorId,
+  ] =
+    useState<string>(
+      property.coCaptorId
+        ? String(
+            property.coCaptorId,
+          )
+        : "",
+    );
+
+  const categories =
+    useMemo<string[]>(
+      () => [
+        ...propertyTypes[
+          propertyType
+        ],
+      ],
+      [propertyType],
+    );
+
+  const principalCaptorId =
+    isAdmin
+      ? selectedCaptorId
+      : property.captorId
+        ? String(
+            property.captorId,
+          )
+        : agentId
+          ? String(
+              agentId,
+            )
+          : "";
+
+  const currentPrincipalCaptor =
+    useMemo(
+      () =>
+        agents.find(
+          (agent) =>
+            String(
+              agent.id,
+            ) ===
+            principalCaptorId,
+        ) ?? null,
+      [
+        agents,
+        principalCaptorId,
+      ],
+    );
+
+  const availableCoCaptors =
+    useMemo(
+      () =>
+        agents.filter(
+          (agent) =>
+            String(
+              agent.id,
+            ) !==
+            principalCaptorId,
+        ),
+      [
+        agents,
+        principalCaptorId,
+      ],
+    );
+
+  useEffect(() => {
+    if (
+      selectedCoCaptorId &&
+      selectedCoCaptorId ===
+        principalCaptorId
+    ) {
+      setSelectedCoCaptorId(
+        "",
+      );
+    }
+  }, [
+    principalCaptorId,
+    selectedCoCaptorId,
+  ]);
 
   useEffect(() => {
     if (!formState.message) {
@@ -216,17 +336,22 @@ export default function EditPropertyForm({
       top: 0,
       behavior: "smooth",
     });
-  }, [formState.message]);
+  }, [
+    formState.message,
+  ]);
 
   function toggleProfile(
     profile: string,
   ) {
     setSelectedProfiles(
       (current) =>
-        current.includes(profile)
+        current.includes(
+          profile,
+        )
           ? current.filter(
               (item) =>
-                item !== profile,
+                item !==
+                profile,
             )
           : [
               ...current,
@@ -236,16 +361,23 @@ export default function EditPropertyForm({
   }
 
   function handlePropertyTypeChange(
-    event: ChangeEvent<HTMLSelectElement>,
+    event:
+      ChangeEvent<HTMLSelectElement>,
   ) {
     const nextType =
-      event.target.value as PropertyType;
+      event.target
+        .value as PropertyType;
 
-    const nextCategories: string[] = [
-      ...propertyTypes[nextType],
-    ];
+    const nextCategories:
+      string[] = [
+        ...propertyTypes[
+          nextType
+        ],
+      ];
 
-    setPropertyType(nextType);
+    setPropertyType(
+      nextType,
+    );
 
     if (
       !nextCategories.includes(
@@ -253,7 +385,9 @@ export default function EditPropertyForm({
       )
     ) {
       setCategory(
-        nextCategories[0] ?? "",
+        nextCategories[
+          0
+        ] ?? "",
       );
     }
   }
@@ -275,36 +409,54 @@ export default function EditPropertyForm({
                 : "text-red-300"
             }`}
           >
-            {formState.message}
+            {
+              formState.message
+            }
           </p>
         </div>
       ) : null}
 
       <form
-        action={formAction}
+        action={
+          formAction
+        }
         className="space-y-10"
       >
         <input
           type="hidden"
           name="originalCode"
-          value={property.code}
+          value={
+            property.code
+          }
         />
 
-        <section className={sectionClass}>
-          <p className={sectionTitleClass}>
+        <section
+          className={
+            sectionClass
+          }
+        >
+          <p
+            className={
+              sectionTitleClass
+            }
+          >
             01. Identificação
           </p>
 
           <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             <Field label="Código">
               <input
-                value={property.code}
+                value={
+                  property.code
+                }
                 readOnly
                 className={`${inputClass} cursor-not-allowed text-zinc-500`}
               />
 
               <span className="text-[10px] leading-5 text-zinc-600">
-                O código não pode ser alterado nesta etapa.
+                O código não pode
+                ser alterado nesta
+                etapa.
               </span>
             </Field>
 
@@ -316,25 +468,43 @@ export default function EditPropertyForm({
                 name="title"
                 type="text"
                 required
-                maxLength={200}
-                defaultValue={property.title}
-                className={inputClass}
+                maxLength={
+                  200
+                }
+                defaultValue={
+                  property.title
+                }
+                className={
+                  inputClass
+                }
               />
             </Field>
 
             <Field label="Status">
               <select
                 name="status"
-                defaultValue={property.status}
-                className={inputClass}
+                defaultValue={
+                  property.status
+                }
+                className={
+                  inputClass
+                }
               >
                 {statuses.map(
-                  (status) => (
+                  (
+                    status,
+                  ) => (
                     <option
-                      key={status}
-                      value={status}
+                      key={
+                        status
+                      }
+                      value={
+                        status
+                      }
                     >
-                      {status}
+                      {
+                        status
+                      }
                     </option>
                   ),
                 )}
@@ -346,9 +516,12 @@ export default function EditPropertyForm({
                 name="tag"
                 type="text"
                 defaultValue={
-                  property.tag ?? ""
+                  property.tag ??
+                  ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -363,7 +536,9 @@ export default function EditPropertyForm({
                   property.consultantScore ??
                   ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -378,37 +553,202 @@ export default function EditPropertyForm({
               />
 
               <span className="text-sm text-zinc-300">
-                Exibir este imóvel como destaque no portal
+                Exibir este imóvel
+                como destaque no
+                portal
               </span>
             </label>
           </div>
+
+          <div className="mt-8 border-t border-white/10 pt-7">
+            <p
+              className={
+                labelTitleClass
+              }
+            >
+              Angariação
+            </p>
+
+            <p className="mt-2 text-sm leading-6 text-zinc-500">
+              Defina o corretor
+              responsável pela
+              angariação do imóvel
+              e, quando houver, um
+              co-angariador.
+            </p>
+
+            <div className="mt-5 grid gap-5 md:grid-cols-2">
+              {isAdmin ? (
+                <Field label="Angariador principal *">
+                  <select
+                    name="captorId"
+                    required
+                    value={
+                      selectedCaptorId
+                    }
+                    onChange={(
+                      event,
+                    ) =>
+                      setSelectedCaptorId(
+                        event
+                          .target
+                          .value,
+                      )
+                    }
+                    className={
+                      inputClass
+                    }
+                  >
+                    <option value="">
+                      Selecione o
+                      angariador
+                      principal
+                    </option>
+
+                    {agents.map(
+                      (
+                        agent,
+                      ) => (
+                        <option
+                          key={
+                            agent.id
+                          }
+                          value={
+                            agent.id
+                          }
+                        >
+                          {
+                            agent.name
+                          }
+                        </option>
+                      ),
+                    )}
+                  </select>
+                </Field>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <span
+                    className={
+                      labelTitleClass
+                    }
+                  >
+                    Angariador
+                    principal *
+                  </span>
+
+                  <input
+                    type="hidden"
+                    name="captorId"
+                    value={
+                      principalCaptorId
+                    }
+                  />
+
+                  <div className="flex h-14 items-center border border-amber-500/20 bg-amber-500/5 px-4 text-sm text-amber-200">
+                    {currentPrincipalCaptor
+                      ?.name ??
+                      "Angariador principal"}
+                  </div>
+                </div>
+              )}
+
+              <Field label="Co-angariador">
+                <select
+                  name="coCaptorId"
+                  value={
+                    selectedCoCaptorId
+                  }
+                  onChange={(
+                    event,
+                  ) =>
+                    setSelectedCoCaptorId(
+                      event
+                        .target
+                        .value,
+                    )
+                  }
+                  className={
+                    inputClass
+                  }
+                >
+                  <option value="">
+                    Sem
+                    co-angariador
+                  </option>
+
+                  {availableCoCaptors.map(
+                    (
+                      agent,
+                    ) => (
+                      <option
+                        key={
+                          agent.id
+                        }
+                        value={
+                          agent.id
+                        }
+                      >
+                        {
+                          agent.name
+                        }
+                      </option>
+                    ),
+                  )}
+                </select>
+              </Field>
+            </div>
+          </div>
         </section>
 
-        <section className={sectionClass}>
-          <p className={sectionTitleClass}>
-            02. Classificação comercial
+        <section
+          className={
+            sectionClass
+          }
+        >
+          <p
+            className={
+              sectionTitleClass
+            }
+          >
+            02. Classificação
+            comercial
           </p>
 
           <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             <Field label="Finalidade">
               <select
                 name="purpose"
-                value={purpose}
-                onChange={(event) =>
+                value={
+                  purpose
+                }
+                onChange={(
+                  event,
+                ) =>
                   setPurpose(
-                    event.target
+                    event
+                      .target
                       .value as Purpose,
                   )
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               >
                 {purposes.map(
-                  (item) => (
+                  (
+                    item,
+                  ) => (
                     <option
-                      key={item}
-                      value={item}
+                      key={
+                        item
+                      }
+                      value={
+                        item
+                      }
                     >
-                      {item}
+                      {
+                        item
+                      }
                     </option>
                   ),
                 )}
@@ -418,21 +758,33 @@ export default function EditPropertyForm({
             <Field label="Tipo">
               <select
                 name="propertyType"
-                value={propertyType}
+                value={
+                  propertyType
+                }
                 onChange={
                   handlePropertyTypeChange
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               >
                 {Object.keys(
                   propertyTypes,
                 ).map(
-                  (type) => (
+                  (
+                    type,
+                  ) => (
                     <option
-                      key={type}
-                      value={type}
+                      key={
+                        type
+                      }
+                      value={
+                        type
+                      }
                     >
-                      {type}
+                      {
+                        type
+                      }
                     </option>
                   ),
                 )}
@@ -442,21 +794,37 @@ export default function EditPropertyForm({
             <Field label="Categoria">
               <select
                 name="category"
-                value={category}
-                onChange={(event) =>
+                value={
+                  category
+                }
+                onChange={(
+                  event,
+                ) =>
                   setCategory(
-                    event.target.value,
+                    event
+                      .target
+                      .value,
                   )
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               >
                 {categories.map(
-                  (item) => (
+                  (
+                    item,
+                  ) => (
                     <option
-                      key={item}
-                      value={item}
+                      key={
+                        item
+                      }
+                      value={
+                        item
+                      }
                     >
-                      {item}
+                      {
+                        item
+                      }
                     </option>
                   ),
                 )}
@@ -465,13 +833,20 @@ export default function EditPropertyForm({
           </div>
 
           <div className="mt-8">
-            <p className={labelTitleClass}>
-              Perfil da oportunidade
+            <p
+              className={
+                labelTitleClass
+              }
+            >
+              Perfil da
+              oportunidade
             </p>
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {opportunityProfiles.map(
-                (profile) => {
+                (
+                  profile,
+                ) => {
                   const selected =
                     selectedProfiles.includes(
                       profile,
@@ -479,7 +854,9 @@ export default function EditPropertyForm({
 
                   return (
                     <label
-                      key={profile}
+                      key={
+                        profile
+                      }
                       className={`flex min-h-14 cursor-pointer items-center gap-3 border px-4 transition ${
                         selected
                           ? "border-amber-500 bg-amber-500/10"
@@ -489,8 +866,12 @@ export default function EditPropertyForm({
                       <input
                         type="checkbox"
                         name="opportunityProfile"
-                        value={profile}
-                        checked={selected}
+                        value={
+                          profile
+                        }
+                        checked={
+                          selected
+                        }
                         onChange={() =>
                           toggleProfile(
                             profile,
@@ -500,7 +881,9 @@ export default function EditPropertyForm({
                       />
 
                       <span className="text-sm text-zinc-300">
-                        {profile}
+                        {
+                          profile
+                        }
                       </span>
                     </label>
                   );
@@ -510,8 +893,16 @@ export default function EditPropertyForm({
           </div>
         </section>
 
-        <section className={sectionClass}>
-          <p className={sectionTitleClass}>
+        <section
+          className={
+            sectionClass
+          }
+        >
+          <p
+            className={
+              sectionTitleClass
+            }
+          >
             03. Localização
           </p>
 
@@ -520,9 +911,15 @@ export default function EditPropertyForm({
               <input
                 name="state"
                 required
-                maxLength={2}
-                defaultValue={property.state}
-                className={inputClass}
+                maxLength={
+                  2
+                }
+                defaultValue={
+                  property.state
+                }
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -530,8 +927,12 @@ export default function EditPropertyForm({
               <input
                 name="city"
                 required
-                defaultValue={property.city}
-                className={inputClass}
+                defaultValue={
+                  property.city
+                }
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -539,27 +940,43 @@ export default function EditPropertyForm({
               <select
                 name="ownerId"
                 defaultValue={
-                  property.ownerId?.toString() ?? ""
+                  property.ownerId?.toString() ??
+                  ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               >
                 <option value="">
-                  Nenhum proprietário vinculado
+                  Nenhum
+                  proprietário
+                  vinculado
                 </option>
 
-                {owners.map((owner) => (
-                  <option
-                    key={owner.id}
-                    value={owner.id}
-                  >
-                    {owner.name}
-                    {owner.cpf
-                      ? ` — CPF ${owner.cpf}`
-                      : ""}
-                  </option>
-                ))}
+                {owners.map(
+                  (
+                    owner,
+                  ) => (
+                    <option
+                      key={
+                        owner.id
+                      }
+                      value={
+                        owner.id
+                      }
+                    >
+                      {
+                        owner.name
+                      }
+                      {owner.cpf
+                        ? ` — CPF ${owner.cpf}`
+                        : ""}
+                    </option>
+                  ),
+                )}
               </select>
             </Field>
+
             <Field label="Bairro">
               <input
                 name="neighborhood"
@@ -567,7 +984,9 @@ export default function EditPropertyForm({
                 defaultValue={
                   property.neighborhood
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -578,7 +997,9 @@ export default function EditPropertyForm({
                   property.development ??
                   ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -589,9 +1010,12 @@ export default function EditPropertyForm({
               <input
                 name="address"
                 defaultValue={
-                  property.address ?? ""
+                  property.address ??
+                  ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -599,9 +1023,12 @@ export default function EditPropertyForm({
               <input
                 name="zipCode"
                 defaultValue={
-                  property.zipCode ?? ""
+                  property.zipCode ??
+                  ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -612,17 +1039,29 @@ export default function EditPropertyForm({
               <input
                 name="location"
                 defaultValue={
-                  property.location ?? ""
+                  property.location ??
+                  ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
           </div>
         </section>
 
-        <section className={sectionClass}>
-          <p className={sectionTitleClass}>
-            04. Mapa e geolocalização
+        <section
+          className={
+            sectionClass
+          }
+        >
+          <p
+            className={
+              sectionTitleClass
+            }
+          >
+            04. Mapa e
+            geolocalização
           </p>
 
           <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
@@ -630,9 +1069,12 @@ export default function EditPropertyForm({
               <input
                 name="latitude"
                 defaultValue={
-                  property.latitude ?? ""
+                  property.latitude ??
+                  ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -643,7 +1085,9 @@ export default function EditPropertyForm({
                   property.longitude ??
                   ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -658,31 +1102,46 @@ export default function EditPropertyForm({
                   property.googleMapsUrl ??
                   ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
           </div>
         </section>
 
-        <section className={sectionClass}>
-          <p className={sectionTitleClass}>
+        <section
+          className={
+            sectionClass
+          }
+        >
+          <p
+            className={
+              sectionTitleClass
+            }
+          >
             05. Valores
           </p>
 
           <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            {purpose !== "Locação" ? (
+            {purpose !==
+            "Locação" ? (
               <Field label="Valor de venda">
                 <input
                   name="price"
                   defaultValue={
-                    property.price ?? ""
+                    property.price ??
+                    ""
                   }
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </Field>
             ) : null}
 
-            {purpose !== "Venda" ? (
+            {purpose !==
+            "Venda" ? (
               <Field label="Valor de locação">
                 <input
                   name="rentalPrice"
@@ -690,7 +1149,9 @@ export default function EditPropertyForm({
                     property.rentalPrice ??
                     ""
                   }
-                  className={inputClass}
+                  className={
+                    inputClass
+                  }
                 />
               </Field>
             ) : null}
@@ -702,7 +1163,9 @@ export default function EditPropertyForm({
                   property.condominium ??
                   ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -710,17 +1173,29 @@ export default function EditPropertyForm({
               <input
                 name="iptu"
                 defaultValue={
-                  property.iptu ?? ""
+                  property.iptu ??
+                  ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
           </div>
         </section>
 
-        <section className={sectionClass}>
-          <p className={sectionTitleClass}>
-            06. Áreas e ambientes
+        <section
+          className={
+            sectionClass
+          }
+        >
+          <p
+            className={
+              sectionTitleClass
+            }
+          >
+            06. Áreas e
+            ambientes
           </p>
 
           <div className="mt-7 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
@@ -728,9 +1203,12 @@ export default function EditPropertyForm({
               <input
                 name="area"
                 defaultValue={
-                  property.area ?? ""
+                  property.area ??
+                  ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -738,9 +1216,12 @@ export default function EditPropertyForm({
               <input
                 name="landArea"
                 defaultValue={
-                  property.landArea ?? ""
+                  property.landArea ??
+                  ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -752,7 +1233,9 @@ export default function EditPropertyForm({
                 defaultValue={
                   property.bedrooms
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -764,7 +1247,9 @@ export default function EditPropertyForm({
                 defaultValue={
                   property.suites
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -776,7 +1261,9 @@ export default function EditPropertyForm({
                 defaultValue={
                   property.bathrooms
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -788,47 +1275,74 @@ export default function EditPropertyForm({
                 defaultValue={
                   property.parking
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
           </div>
         </section>
 
-        <section className={sectionClass}>
-          <p className={sectionTitleClass}>
-            07. Apresentação do imóvel
+        <section
+          className={
+            sectionClass
+          }
+        >
+          <p
+            className={
+              sectionTitleClass
+            }
+          >
+            07. Apresentação do
+            imóvel
           </p>
 
           <div className="mt-7 space-y-6">
             <Field label="Descrição comercial">
               <textarea
                 name="description"
-                rows={10}
+                rows={
+                  10
+                }
                 defaultValue={
                   property.description ??
                   ""
                 }
-                className={textareaClass}
+                className={
+                  textareaClass
+                }
               />
             </Field>
 
             <Field label="Características e diferenciais">
               <textarea
                 name="features"
-                rows={8}
+                rows={
+                  8
+                }
                 defaultValue={
                   property.features.join(
                     "\n",
                   )
                 }
-                className={textareaClass}
+                className={
+                  textareaClass
+                }
               />
             </Field>
           </div>
         </section>
 
-<section className={sectionClass}>
-          <p className={sectionTitleClass}>
+        <section
+          className={
+            sectionClass
+          }
+        >
+          <p
+            className={
+              sectionTitleClass
+            }
+          >
             08. Vídeo e materiais
           </p>
 
@@ -838,9 +1352,12 @@ export default function EditPropertyForm({
                 name="video"
                 type="url"
                 defaultValue={
-                  property.video ?? ""
+                  property.video ??
+                  ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -852,7 +1369,9 @@ export default function EditPropertyForm({
                   property.virtualTour ??
                   ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
 
@@ -864,17 +1383,29 @@ export default function EditPropertyForm({
                 name="brochure"
                 type="url"
                 defaultValue={
-                  property.brochure ?? ""
+                  property.brochure ??
+                  ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
           </div>
         </section>
 
-        <section className={sectionClass}>
-          <p className={sectionTitleClass}>
-            09. SEO e compartilhamento
+        <section
+          className={
+            sectionClass
+          }
+        >
+          <p
+            className={
+              sectionTitleClass
+            }
+          >
+            09. SEO e
+            compartilhamento
           </p>
 
           <div className="mt-7 space-y-5">
@@ -882,24 +1413,35 @@ export default function EditPropertyForm({
               <input
                 name="seoTitle"
                 type="text"
-                maxLength={200}
-                defaultValue={
-                  property.seoTitle ?? ""
+                maxLength={
+                  200
                 }
-                className={inputClass}
+                defaultValue={
+                  property.seoTitle ??
+                  ""
+                }
+                className={
+                  inputClass
+                }
               />
             </Field>
 
             <Field label="Descrição SEO">
               <textarea
                 name="seoDescription"
-                rows={4}
-                maxLength={300}
+                rows={
+                  4
+                }
+                maxLength={
+                  300
+                }
                 defaultValue={
                   property.seoDescription ??
                   ""
                 }
-                className={textareaClass}
+                className={
+                  textareaClass
+                }
               />
             </Field>
 
@@ -908,16 +1450,27 @@ export default function EditPropertyForm({
                 name="seoImage"
                 type="text"
                 defaultValue={
-                  property.seoImage ?? ""
+                  property.seoImage ??
+                  ""
                 }
-                className={inputClass}
+                className={
+                  inputClass
+                }
               />
             </Field>
           </div>
         </section>
 
-        <section className={sectionClass}>
-          <p className={sectionTitleClass}>
+        <section
+          className={
+            sectionClass
+          }
+        >
+          <p
+            className={
+              sectionTitleClass
+            }
+          >
             10. Publicação
           </p>
 
@@ -933,7 +1486,8 @@ export default function EditPropertyForm({
             </p>
 
             <p className="mt-2 text-sm leading-7 text-zinc-500">
-              Salvar este formulário não publica o imóvel
+              Salvar este formulário
+              não publica o imóvel
               automaticamente.
             </p>
           </div>
@@ -949,7 +1503,9 @@ export default function EditPropertyForm({
 
           <button
             type="submit"
-            disabled={isPending}
+            disabled={
+              isPending
+            }
             className="inline-flex min-h-14 items-center justify-center bg-amber-500 px-8 text-xs font-bold uppercase tracking-[0.16em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isPending
