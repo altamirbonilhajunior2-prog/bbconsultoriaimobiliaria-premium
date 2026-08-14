@@ -174,6 +174,21 @@ export default function PropertySearch({
     propertyType === "Apartamento";
 
   useEffect(() => {
+    const purposeFromUrl =
+      searchParams.get("finalidade");
+
+    if (
+      purposeFromUrl &&
+      isPropertyPurpose(purposeFromUrl)
+    ) {
+      setPurpose(purposeFromUrl);
+      return;
+    }
+
+    setPurpose(defaultPurpose);
+  }, [defaultPurpose, searchParams]);
+
+  useEffect(() => {
     if (!shouldShowBedrooms) {
       setBedroom(allBedroomsLabel);
     }
@@ -241,7 +256,12 @@ export default function PropertySearch({
   function handleSearch() {
     const params = new URLSearchParams();
 
-    params.set("finalidade", purpose);
+    const effectivePurpose =
+      showPurpose
+        ? purpose
+        : defaultPurpose;
+
+    params.set("finalidade", effectivePurpose);
     params.set("estado", state);
 
     if (city) {
@@ -283,7 +303,9 @@ export default function PropertySearch({
     }
 
     const destination =
-      purpose === "Locação" ? "/alugar" : "/comprar";
+      effectivePurpose === "Locação"
+        ? "/alugar"
+        : "/comprar";
 
     router.push(
       `${destination}?${params.toString()}`,
