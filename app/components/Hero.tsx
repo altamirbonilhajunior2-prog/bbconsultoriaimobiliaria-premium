@@ -3,6 +3,7 @@ import Link from "next/link";
 
 const benefits = [
   {
+    number: "01",
     title: "Atendimento personalizado",
     description: "Foco total nas suas necessidades",
     icon: (
@@ -28,6 +29,7 @@ const benefits = [
     ),
   },
   {
+    number: "02",
     title: "Imóveis selecionados",
     description: "Curadoria criteriosa e exclusiva",
     icon: (
@@ -51,6 +53,7 @@ const benefits = [
     ),
   },
   {
+    number: "03",
     title: "Decisões seguras",
     description: "Análise técnica e estratégica",
     icon: (
@@ -69,6 +72,7 @@ const benefits = [
     ),
   },
   {
+    number: "04",
     title: "Conhecimento local",
     description: "Especialistas em São José dos Campos",
     icon: (
@@ -196,26 +200,26 @@ export default function Hero() {
           <div className="mx-auto max-w-[1500px] px-4 sm:px-6">
             <div className="rounded-xl border border-[#d5a85a]/45 bg-[#080808]/95 p-4 shadow-[0_28px_80px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:p-6 lg:p-7">
               <div className="grid grid-cols-3 border-b border-white/10">
-                <button
-                  type="button"
-                  className="flex min-h-12 items-center justify-center gap-2 border-b-2 border-[#d5a85a] px-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white sm:min-h-14 sm:text-xs sm:tracking-[0.12em]"
+                <Link
+                  href="/comprar"
+                  className="flex min-h-12 items-center justify-center gap-2 border-b-2 border-[#d5a85a] px-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white transition hover:text-[#d5a85a] sm:min-h-14 sm:text-xs sm:tracking-[0.12em]"
                 >
                   Comprar
-                </button>
+                </Link>
 
-                <button
-                  type="button"
-                  className="flex min-h-12 items-center justify-center gap-2 border-b-2 border-transparent px-1 text-[10px] font-bold uppercase tracking-[0.08em] text-zinc-300 transition hover:text-[#d5a85a] sm:min-h-14 sm:text-xs sm:tracking-[0.12em]"
+                <Link
+                  href="/alugar"
+                  className="flex min-h-12 items-center justify-center gap-2 border-b-2 border-transparent px-1 text-[10px] font-bold uppercase tracking-[0.08em] text-zinc-300 transition hover:border-[#d5a85a] hover:text-[#d5a85a] sm:min-h-14 sm:text-xs sm:tracking-[0.12em]"
                 >
                   Alugar
-                </button>
+                </Link>
 
-                <button
-                  type="button"
-                  className="flex min-h-12 items-center justify-center gap-2 border-b-2 border-transparent px-1 text-[10px] font-bold uppercase tracking-[0.08em] text-zinc-300 transition hover:text-[#d5a85a] sm:min-h-14 sm:text-xs sm:tracking-[0.12em]"
+                <Link
+                  href="/lancamentos"
+                  className="flex min-h-12 items-center justify-center gap-2 border-b-2 border-transparent px-1 text-[10px] font-bold uppercase tracking-[0.08em] text-zinc-300 transition hover:border-[#d5a85a] hover:text-[#d5a85a] sm:min-h-14 sm:text-xs sm:tracking-[0.12em]"
                 >
                   Lançamentos
-                </button>
+                </Link>
               </div>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:mt-6 lg:grid-cols-[1fr_1.15fr_1fr_180px] lg:gap-4">
