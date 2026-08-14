@@ -47,6 +47,7 @@ async function main() {
       where: {
         code: "BBC0001",
       },
+
       select: {
         id: true,
         code: true,
@@ -62,130 +63,156 @@ async function main() {
   }
 
   const property =
-    await prisma.$transaction(
-      async (transaction) => {
-        return transaction.property.create({
-          data: {
-            code: "BBC0001",
+    await prisma.property.create({
+      data: {
+        code: "BBC0001",
 
-            title:
-              "Casa contemporânea no Alphaville II",
+        title:
+          "Casa contemporânea no Alphaville II",
 
-            slug:
-              "bbc0001-casa-contemporanea-no-alphaville-ii",
+        slug:
+          "bbc0001-casa-contemporanea-no-alphaville-ii",
 
-            purpose: "VENDA",
+        purpose: "VENDA",
 
-            opportunityProfiles: [
-              "MORADIA",
-              "VALORIZACAO",
-            ],
+        opportunityProfiles: [
+          "MORADIA",
+          "VALORIZACAO",
+        ],
 
-            propertyType: "CASA",
+        propertyType: "CASA",
 
-            category: "Sobrado",
+        category: "Sobrado",
 
-            status: "DISPONIVEL",
+        status: "DISPONIVEL",
 
-            highlight: true,
+        highlight: true,
 
-            published: false,
+        published: false,
 
-            consultantScore: 9.5,
+        internalNotes:
+          "Nota consultiva anterior: 9,5.",
 
-            tag: "Exclusivo",
+        tag: "Exclusivo",
 
-            state: "SP",
+        state: "SP",
 
-            city:
-              "São José dos Campos",
+        city:
+          "São José dos Campos",
 
-            neighborhood: "Urbanova",
+        neighborhood:
+          "Urbanova",
 
-            development:
-              "Alphaville II",
+        development:
+          "Alphaville II",
 
-            location:
-              "Urbanova • São José dos Campos/SP",
+        location:
+          "Urbanova • São José dos Campos/SP",
 
-            price: 3300000,
+        price:
+          3300000,
 
-            condominium: 940,
+        condominium:
+          940,
 
-            iptu: 2800,
+        iptu:
+          2800,
 
-            area: 310,
+        area:
+          310,
 
-            landArea: 479,
+        landArea:
+          479,
 
-            bedrooms: 4,
+        bedrooms:
+          4,
 
-            suites: 4,
+        suites:
+          4,
 
-            bathrooms: 5,
+        bathrooms:
+          5,
 
-            parking: 4,
+        parking:
+          4,
 
-            description:
-              "Casa contemporânea de alto padrão localizada no Condomínio Alphaville II, no Urbanova, uma das regiões mais valorizadas de São José dos Campos.",
+        description:
+          "Casa contemporânea de alto padrão localizada no Condomínio Alphaville II, no Urbanova, uma das regiões mais valorizadas de São José dos Campos.",
 
-            features,
+        features,
 
-            images: {
-              create: gallery.map(
-                (url, index) => ({
-                  url,
+        images: {
+          create:
+            gallery.map(
+              (
+                url,
+                index,
+              ) => ({
+                url,
 
-                  alt:
-                    index === 0
-                      ? "Fachada principal da Casa contemporânea no Alphaville II"
-                      : `Foto ${index + 1} da Casa contemporânea no Alphaville II`,
+                alt:
+                  index === 0
+                    ? "Fachada principal da Casa contemporânea no Alphaville II"
+                    : `Foto ${index + 1} da Casa contemporânea no Alphaville II`,
 
-                  position: index,
+                position:
+                  index,
 
-                  isCover: index === 0,
-                }),
-              ),
-            },
-          },
+                isCover:
+                  index === 0,
+              }),
+            ),
+        },
+      },
 
+      select: {
+        id: true,
+        code: true,
+        title: true,
+
+        images: {
           select: {
             id: true,
-            code: true,
-            title: true,
-
-            images: {
-              select: {
-                id: true,
-              },
-            },
           },
-        });
+        },
       },
-    );
+    });
 
   console.log(
     "MIGRACAO PREPARADA COM SUCESSO:",
   );
 
   console.log({
-    id: property.id,
-    code: property.code,
-    title: property.title,
+    id:
+      property.id,
+
+    code:
+      property.code,
+
+    title:
+      property.title,
+
     imagens:
       property.images.length,
   });
 }
 
 main()
-  .catch((error) => {
-    console.error(
-      "ERRO NA MIGRACAO DO BBC0001:",
+  .catch(
+    (
       error,
-    );
+    ) => {
+      console.error(
+        "ERRO NA MIGRACAO DO BBC0001:",
+        error,
+      );
 
-    process.exitCode = 1;
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+      process.exitCode =
+        1;
+    },
+  )
+  .finally(
+    async () => {
+      await prisma.$disconnect();
+    },
+  );

@@ -180,10 +180,8 @@ export default async function EditarImovelPage({
     highlight:
       property.highlight,
 
-    consultantScore:
-      decimalToString(
-        property.consultantScore,
-      ),
+    internalNotes:
+      property.internalNotes,
 
     tag:
       property.tag,

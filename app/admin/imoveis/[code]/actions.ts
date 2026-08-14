@@ -494,27 +494,11 @@ export async function updatePropertyAction(
     };
   }
 
-  const consultantScore =
-    parseDecimal(
-      getText(
-        formData,
-        "consultantScore",
-      ),
+  const internalNotes =
+    getOptionalText(
+      formData,
+      "internalNotes",
     );
-
-  if (
-    consultantScore !== null &&
-    (
-      consultantScore < 0 ||
-      consultantScore > 10
-    )
-  ) {
-    return {
-      success: false,
-      message:
-        "A nota consultiva deve estar entre 0 e 10.",
-    };
-  }
 
   const latitude =
     parseDecimal(
@@ -629,7 +613,7 @@ export async function updatePropertyAction(
             "highlight",
           ) === "on",
 
-        consultantScore,
+        internalNotes,
 
         tag:
           getOptionalText(

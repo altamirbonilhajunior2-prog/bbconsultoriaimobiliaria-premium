@@ -50,10 +50,10 @@ model Property {
   propertyType PropertyType
   category     String       @db.VarChar(100)
 
-  status          PropertyStatus @default(EM_ANALISE)
-  highlight       Boolean        @default(false)
-  published       Boolean        @default(false)
-  consultantScore Decimal?       @db.Decimal(3, 1)
+  status        PropertyStatus @default(EM_ANALISE)
+  highlight     Boolean        @default(false)
+  published     Boolean        @default(false)
+  internalNotes String?        @db.Text
 
   tag String? @db.VarChar(100)
 
