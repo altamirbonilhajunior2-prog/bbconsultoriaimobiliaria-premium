@@ -185,8 +185,14 @@ export default function PropertySearch({
       return;
     }
 
-    setPurpose(defaultPurpose);
-  }, [defaultPurpose, searchParams]);
+    if (!showPurpose) {
+      setPurpose(defaultPurpose);
+    }
+  }, [
+    defaultPurpose,
+    showPurpose,
+    searchParams,
+  ]);
 
   useEffect(() => {
     if (!shouldShowBedrooms) {
