@@ -150,6 +150,7 @@ export async function generateMetadata({
     return {
       title:
         "Imóvel não encontrado | B&B Consultoria Imobiliária",
+
       robots: {
         index: false,
         follow: false,
@@ -160,7 +161,8 @@ export async function generateMetadata({
   const coverImage =
     property.seoImage ||
     property.images.find(
-      (image) => image.isCover,
+      (image) =>
+        image.isCover,
     )?.url ||
     property.images[0]?.url;
 
@@ -202,18 +204,23 @@ export default async function PropertyPage({
   const property =
     await prisma.property.findFirst({
       where: {
-        code: id.toUpperCase(),
-        published: true,
+        code:
+          id.toUpperCase(),
+
+        published:
+          true,
       },
 
       include: {
         images: {
           orderBy: [
             {
-              position: "asc",
+              position:
+                "asc",
             },
             {
-              id: "asc",
+              id:
+                "asc",
             },
           ],
         },
@@ -230,7 +237,8 @@ export default async function PropertyPage({
         published: true,
 
         code: {
-          not: property.code,
+          not:
+            property.code,
         },
 
         purpose:
@@ -254,10 +262,12 @@ export default async function PropertyPage({
         images: {
           orderBy: [
             {
-              position: "asc",
+              position:
+                "asc",
             },
             {
-              id: "asc",
+              id:
+                "asc",
             },
           ],
         },
@@ -265,25 +275,30 @@ export default async function PropertyPage({
 
       orderBy: [
         {
-          highlight: "desc",
+          highlight:
+            "desc",
         },
         {
-          publishedAt: "desc",
+          publishedAt:
+            "desc",
         },
       ],
 
-      take: 4,
+      take:
+        4,
     });
 
   const coverImage =
     property.images.find(
-      (image) => image.isCover,
+      (image) =>
+        image.isCover,
     );
 
   const galleryImages =
     coverImage
       ? [
           coverImage.url,
+
           ...property.images
             .filter(
               (image) =>
@@ -303,7 +318,9 @@ export default async function PropertyPage({
   const safeGalleryImages =
     galleryImages.length > 0
       ? galleryImages
-      : ["/hero-clean.png"];
+      : [
+          "/hero-clean.png",
+        ];
 
   const features =
     property.features.length > 0
@@ -320,9 +337,11 @@ export default async function PropertyPage({
 
   const tag =
     property.tag ||
-    (property.highlight
-      ? "Destaque"
-      : "Selecionado");
+    (
+      property.highlight
+        ? "Destaque"
+        : "Selecionado"
+    );
 
   const isRentalOnly =
     property.purpose ===
@@ -348,11 +367,19 @@ export default async function PropertyPage({
       `Olá, gostaria de receber mais informações sobre o imóvel ${property.code} — ${property.title}.`,
     );
 
+  const schedulePurpose =
+    property.purpose ===
+    "LOCACAO"
+      ? "locacao"
+      : "venda";
+
   const scheduleUrl =
     `/agendar-visita?imovel=${encodeURIComponent(
       property.code,
     )}&titulo=${encodeURIComponent(
       property.title,
+    )}&finalidade=${encodeURIComponent(
+      schedulePurpose,
     )}`;
 
   const relatedCards =
@@ -384,9 +411,11 @@ export default async function PropertyPage({
               );
 
         return {
-          code: item.code,
+          code:
+            item.code,
 
-          title: item.title,
+          title:
+            item.title,
 
           location:
             relatedLocation,
@@ -400,9 +429,11 @@ export default async function PropertyPage({
 
           tag:
             item.tag ||
-            (item.highlight
-              ? "Destaque"
-              : "Selecionado"),
+            (
+              item.highlight
+                ? "Destaque"
+                : "Selecionado"
+            ),
 
           area:
             formatArea(
@@ -429,7 +460,9 @@ export default async function PropertyPage({
       <section className="border-b border-white/10 bg-[#090909]">
         <div className="mx-auto max-w-[1720px] px-6 py-8 lg:px-10 xl:px-12">
           <Link
-            href={backUrl}
+            href={
+              backUrl
+            }
             className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-400 transition hover:text-amber-300"
           >
             ← Voltar para imóveis
@@ -447,7 +480,9 @@ export default async function PropertyPage({
               title={
                 property.title
               }
-              tag={tag}
+              tag={
+                tag
+              }
             />
           </div>
 
@@ -457,7 +492,9 @@ export default async function PropertyPage({
             </p>
 
             <h1 className="mt-4 font-serif text-4xl font-normal leading-[1.08]">
-              {property.title}
+              {
+                property.title
+              }
             </h1>
 
             <p className="mt-4 text-sm leading-7 text-zinc-400">
@@ -493,7 +530,9 @@ export default async function PropertyPage({
 
               <div>
                 <strong className="block font-serif text-2xl font-normal">
-                  {property.parking}
+                  {
+                    property.parking
+                  }
                 </strong>
 
                 <span className="mt-2 block text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-500">
@@ -521,7 +560,9 @@ export default async function PropertyPage({
                 </span>
 
                 <strong className="mt-2 block font-medium text-white">
-                  {property.bedrooms}
+                  {
+                    property.bedrooms
+                  }
                 </strong>
               </div>
 
@@ -576,8 +617,11 @@ export default async function PropertyPage({
                 <span className="text-zinc-500">
                   Referência:
                 </span>{" "}
+
                 <strong className="font-medium text-white">
-                  {property.code}
+                  {
+                    property.code
+                  }
                 </strong>
               </p>
 
@@ -585,6 +629,7 @@ export default async function PropertyPage({
                 <span className="text-zinc-500">
                   Localização:
                 </span>{" "}
+
                 <strong className="font-medium text-white">
                   {location}
                 </strong>
@@ -622,7 +667,9 @@ export default async function PropertyPage({
             </p>
 
             <Link
-              href={scheduleUrl}
+              href={
+                scheduleUrl
+              }
               className="mt-6 inline-flex min-h-16 w-full items-center justify-center bg-amber-500 px-7 text-center text-xs font-bold uppercase tracking-[0.18em] text-black transition hover:bg-amber-400"
             >
               Agendar visita
@@ -653,7 +700,9 @@ export default async function PropertyPage({
           </p>
 
           <h2 className="mt-3 font-serif text-4xl font-normal">
-            {property.title}
+            {
+              property.title
+            }
           </h2>
 
           <div className="mt-7 whitespace-pre-line text-base leading-8 text-zinc-400">
@@ -671,7 +720,9 @@ export default async function PropertyPage({
             {analyzedDifferentials.map(
               (item) => (
                 <div
-                  key={item}
+                  key={
+                    item
+                  }
                   className="flex items-center gap-4 border-b border-white/10 pb-4 last:border-0 last:pb-0"
                 >
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-amber-500 text-xs text-amber-400">
@@ -702,7 +753,9 @@ export default async function PropertyPage({
             {features.map(
               (feature) => (
                 <div
-                  key={feature}
+                  key={
+                    feature
+                  }
                   className="flex min-h-20 items-center gap-4 border border-white/10 bg-black/30 px-5 py-4"
                 >
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-amber-500/60 text-sm text-amber-400">
@@ -731,7 +784,9 @@ export default async function PropertyPage({
             </h2>
 
             <Link
-              href={backUrl}
+              href={
+                backUrl
+              }
               className="hidden border-b border-amber-500 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400 sm:inline-flex"
             >
               Ver todos →
@@ -742,16 +797,30 @@ export default async function PropertyPage({
             {relatedCards.map(
               (item) => (
                 <PropertyCard
-                  key={item.code}
-                  code={item.code}
-                  title={item.title}
+                  key={
+                    item.code
+                  }
+                  code={
+                    item.code
+                  }
+                  title={
+                    item.title
+                  }
                   location={
                     item.location
                   }
-                  price={item.price}
-                  image={item.image}
-                  tag={item.tag}
-                  area={item.area}
+                  price={
+                    item.price
+                  }
+                  image={
+                    item.image
+                  }
+                  tag={
+                    item.tag
+                  }
+                  area={
+                    item.area
+                  }
                   bedrooms={
                     item.bedrooms
                   }
