@@ -450,26 +450,27 @@ export default function NovoImovelPage() {
                 />
               </label>
 
-              <label className="flex flex-col gap-2">
+              <label className="flex flex-col gap-2 md:col-span-2 xl:col-span-3">
                 <span
                   className={
                     labelTitleClass
                   }
                 >
-                  Nota consultiva
+                  Observações internas
                 </span>
 
-                <input
-                  name="consultantScore"
-                  type="number"
-                  min="0"
-                  max="10"
-                  step="0.1"
-                  placeholder="0 a 10"
+                <textarea
+                  name="internalNotes"
+                  rows={5}
+                  placeholder="Anotações visíveis somente no CRM/ADM. Ex.: condições de negociação, comissão, disponibilidade para visitas, documentação ou observações do proprietário."
                   className={
-                    inputClass
+                    textareaClass
                   }
                 />
+
+                <span className="text-[10px] leading-5 text-zinc-600">
+                  Uso interno da imobiliária. Este conteúdo não é exibido no portal público.
+                </span>
               </label>
 
               <label className="flex min-h-14 items-center gap-3 border border-white/10 bg-[#111111] px-4 md:col-span-2">
