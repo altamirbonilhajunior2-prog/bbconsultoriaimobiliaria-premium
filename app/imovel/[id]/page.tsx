@@ -362,6 +362,11 @@ export default async function PropertyPage({
       property.rentalPrice,
     );
 
+  const isLaunch =
+    property.opportunityProfiles.includes(
+      "LANCAMENTO",
+    );
+
   const whatsappMessage =
     encodeURIComponent(
       `Olá, gostaria de receber mais informações sobre o imóvel ${property.code} — ${property.title}.`,
@@ -644,7 +649,9 @@ export default async function PropertyPage({
                 </p>
 
                 <p className="mt-2 font-serif text-3xl text-amber-400">
-                  {salePrice}
+                  {isLaunch
+                    ? `A partir de ${salePrice}*`
+                    : salePrice}
                 </p>
               </div>
             ) : null}
