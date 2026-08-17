@@ -347,6 +347,10 @@ export default async function PropertyPage({
     property.purpose ===
     "LOCACAO";
 
+  const isApartment =
+    property.propertyType ===
+    "APARTAMENTO";
+
   const backUrl =
     isRentalOnly
       ? "/alugar"
@@ -407,7 +411,7 @@ export default async function PropertyPage({
             item.location,
           );
 
-        const relatedPrice =
+        const relatedBasePrice =
           item.purpose ===
           "LOCACAO"
             ? formatCurrency(
@@ -416,6 +420,14 @@ export default async function PropertyPage({
             : formatCurrency(
                 item.price,
               );
+
+        const relatedPrice =
+          item.purpose !== "LOCACAO" &&
+          item.opportunityProfiles.includes(
+            "LANCAMENTO",
+          )
+            ? `A partir de ${relatedBasePrice}*`
+            : relatedBasePrice;
 
         return {
           code:
@@ -549,17 +561,19 @@ export default async function PropertyPage({
             </div>
 
             <div className="mt-7 grid grid-cols-2 gap-x-5 gap-y-5 text-sm">
-              <div className="border-b border-white/10 pb-4">
-                <span className="block text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-500">
-                  Área do terreno
-                </span>
+              {!isApartment ? (
+                <div className="border-b border-white/10 pb-4">
+                  <span className="block text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+                    Área do terreno
+                  </span>
 
-                <strong className="mt-2 block font-medium text-white">
-                  {formatArea(
-                    property.landArea,
-                  )}
-                </strong>
-              </div>
+                  <strong className="mt-2 block font-medium text-white">
+                    {formatArea(
+                      property.landArea,
+                    )}
+                  </strong>
+                </div>
+              ) : null}
 
               <div className="border-b border-white/10 pb-4">
                 <span className="block text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-500">

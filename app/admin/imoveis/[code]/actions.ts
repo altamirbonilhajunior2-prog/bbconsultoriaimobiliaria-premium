@@ -122,6 +122,28 @@ function parseInteger(
     : 0;
 }
 
+function createSlug(
+  code: string,
+  title: string,
+) {
+  return `${code}-${title}`
+    .normalize("NFD")
+    .replace(
+      /[\u0300-\u036f]/g,
+      "",
+    )
+    .toLowerCase()
+    .replace(
+      /[^a-z0-9]+/g,
+      "-",
+    )
+    .replace(
+      /^-+|-+$/g,
+      "",
+    )
+    .slice(0, 220);
+}
+
 function mapPurpose(
   value: string,
 ) {
@@ -589,6 +611,35 @@ export async function updatePropertyAction(
       )
       .filter(Boolean);
 
+  const normalizedCode =
+    originalCode === "BBC0001"
+      ? "BBC001"
+      : originalCode;
+
+  if (
+    normalizedCode !==
+    originalCode
+  ) {
+    const codeAlreadyExists =
+      await prisma.property.findUnique({
+        where: {
+          code: normalizedCode,
+        },
+
+        select: {
+          id: true,
+        },
+      });
+
+    if (codeAlreadyExists) {
+      return {
+        success: false,
+        message:
+          `Não foi possível padronizar o código para ${normalizedCode}, pois ele já existe no banco de dados.`,
+      };
+    }
+  }
+
   try {
     await prisma.property.update({
       where: {
@@ -596,7 +647,16 @@ export async function updatePropertyAction(
       },
 
       data: {
+        code:
+          normalizedCode,
+
         title,
+
+        slug:
+          createSlug(
+            normalizedCode,
+            title,
+          ),
 
         purpose,
 
@@ -812,10 +872,41 @@ export async function updatePropertyAction(
       `/admin/imoveis/${originalCode}`,
     );
 
+    revalidatePath(
+      `/admin/imoveis/${normalizedCode}`,
+    );
+
+    revalidatePath(
+      `/imovel/${originalCode.toLowerCase()}`,
+    );
+
+    revalidatePath(
+      `/imovel/${normalizedCode.toLowerCase()}`,
+    );
+
+    revalidatePath(
+      "/",
+    );
+
+    revalidatePath(
+      "/comprar",
+    );
+
+    revalidatePath(
+      "/alugar",
+    );
+
+    revalidatePath(
+      "/lancamentos",
+    );
+
     return {
       success: true,
       message:
-        `Imóvel ${originalCode} atualizado com sucesso no banco de dados.`,
+        normalizedCode !==
+        originalCode
+          ? `Imóvel ${originalCode} atualizado e código padronizado para ${normalizedCode}.`
+          : `Imóvel ${originalCode} atualizado com sucesso no banco de dados.`,
     };
   } catch (error) {
     console.error(
