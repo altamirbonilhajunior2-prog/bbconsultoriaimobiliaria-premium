@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   useActionState,
   useEffect,
@@ -192,6 +193,9 @@ export default function EditPropertyForm({
   isAdmin,
   agentId,
 }: EditPropertyFormProps) {
+  const router =
+    useRouter();
+
   const [
     formState,
     formAction,
@@ -332,12 +336,24 @@ export default function EditPropertyForm({
       return;
     }
 
+    if (formState.success) {
+      router.replace(
+        "/admin/imoveis",
+      );
+
+      router.refresh();
+
+      return;
+    }
+
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
   }, [
     formState.message,
+    formState.success,
+    router,
   ]);
 
   function toggleProfile(
