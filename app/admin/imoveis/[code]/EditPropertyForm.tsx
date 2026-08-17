@@ -420,9 +420,7 @@ export default function EditPropertyForm({
                 : "text-red-300"
             }`}
           >
-            {
-              formState.message
-            }
+            {formState.message}
           </p>
         </div>
       ) : null}
@@ -451,9 +449,7 @@ export default function EditPropertyForm({
               />
 
               <span className="text-[10px] leading-5 text-zinc-600">
-                O código não pode
-                ser alterado nesta
-                etapa.
+                O código não pode ser alterado nesta etapa.
               </span>
             </Field>
 
@@ -533,9 +529,7 @@ export default function EditPropertyForm({
               />
 
               <span className="text-sm text-zinc-300">
-                Exibir este imóvel
-                como destaque no
-                portal
+                Exibir este imóvel como destaque no portal
               </span>
             </label>
           </div>
@@ -546,11 +540,7 @@ export default function EditPropertyForm({
             </p>
 
             <p className="mt-2 text-sm leading-6 text-zinc-500">
-              Defina o corretor
-              responsável pela
-              angariação do imóvel
-              e, quando houver, um
-              co-angariador.
+              Defina o corretor responsável pela angariação do imóvel e, quando houver, um co-angariador.
             </p>
 
             <div className="mt-5 grid gap-5 md:grid-cols-2">
@@ -566,17 +556,13 @@ export default function EditPropertyForm({
                       event,
                     ) =>
                       setSelectedCaptorId(
-                        event
-                          .target
-                          .value,
+                        event.target.value,
                       )
                     }
                     className={inputClass}
                   >
                     <option value="">
-                      Selecione o
-                      angariador
-                      principal
+                      Selecione o angariador principal
                     </option>
 
                     {agents.map(
@@ -596,8 +582,7 @@ export default function EditPropertyForm({
                   <span
                     className={labelTitleClass}
                   >
-                    Angariador
-                    principal *
+                    Angariador principal *
                   </span>
 
                   <input
@@ -626,16 +611,13 @@ export default function EditPropertyForm({
                     event,
                   ) =>
                     setSelectedCoCaptorId(
-                      event
-                        .target
-                        .value,
+                      event.target.value,
                     )
                   }
                   className={inputClass}
                 >
                   <option value="">
-                    Sem
-                    co-angariador
+                    Sem co-angariador
                   </option>
 
                   {availableCoCaptors.map(
@@ -1035,53 +1017,58 @@ export default function EditPropertyForm({
               </Field>
             ) : null}
 
-            <Field label="Dormitórios">
-              <input
-                name="bedrooms"
-                type="number"
-                min="0"
-                defaultValue={
-                  property.bedrooms
-                }
-                className={inputClass}
-              />
-            </Field>
+            {propertyType !==
+            "Terreno" ? (
+              <>
+                <Field label="Dormitórios">
+                  <input
+                    name="bedrooms"
+                    type="number"
+                    min="0"
+                    defaultValue={
+                      property.bedrooms
+                    }
+                    className={inputClass}
+                  />
+                </Field>
 
-            <Field label="Suítes">
-              <input
-                name="suites"
-                type="number"
-                min="0"
-                defaultValue={
-                  property.suites
-                }
-                className={inputClass}
-              />
-            </Field>
+                <Field label="Suítes">
+                  <input
+                    name="suites"
+                    type="number"
+                    min="0"
+                    defaultValue={
+                      property.suites
+                    }
+                    className={inputClass}
+                  />
+                </Field>
 
-            <Field label="Banheiros">
-              <input
-                name="bathrooms"
-                type="number"
-                min="0"
-                defaultValue={
-                  property.bathrooms
-                }
-                className={inputClass}
-              />
-            </Field>
+                <Field label="Banheiros">
+                  <input
+                    name="bathrooms"
+                    type="number"
+                    min="0"
+                    defaultValue={
+                      property.bathrooms
+                    }
+                    className={inputClass}
+                  />
+                </Field>
 
-            <Field label="Vagas">
-              <input
-                name="parking"
-                type="number"
-                min="0"
-                defaultValue={
-                  property.parking
-                }
-                className={inputClass}
-              />
-            </Field>
+                <Field label="Vagas">
+                  <input
+                    name="parking"
+                    type="number"
+                    min="0"
+                    defaultValue={
+                      property.parking
+                    }
+                    className={inputClass}
+                  />
+                </Field>
+              </>
+            ) : null}
           </div>
         </section>
 
@@ -1228,9 +1215,7 @@ export default function EditPropertyForm({
             </p>
 
             <p className="mt-2 text-sm leading-7 text-zinc-500">
-              Salvar este formulário
-              não publica o imóvel
-              automaticamente.
+              Salvar este formulário não publica o imóvel automaticamente.
             </p>
           </div>
         </section>
