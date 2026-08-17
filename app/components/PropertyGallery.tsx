@@ -16,7 +16,7 @@ function Watermark({
 }) {
   return (
     <div
-      className={`pointer-events-none absolute z-30 opacity-30 mix-blend-screen ${
+      className={`pointer-events-none absolute z-30 opacity-55 ${
         lightbox
           ? "bottom-8 right-8 h-20 w-48 sm:bottom-10 sm:right-10 sm:h-24 sm:w-56"
           : "bottom-20 right-5 h-16 w-40 sm:right-6 sm:h-[72px] sm:w-44"
@@ -352,8 +352,7 @@ export default function PropertyGallery({
                 selectedImage
               }
               alt={`${title} — foto ampliada ${
-                selectedIndex +
-                1
+                selectedIndex + 1
               }`}
               fill
               priority
