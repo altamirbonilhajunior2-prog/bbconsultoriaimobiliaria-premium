@@ -153,7 +153,12 @@ export default async function Home() {
             .filter(Boolean)
             .join(" • ");
 
-        const price =
+        const isLaunch =
+          property.opportunityProfiles.includes(
+            "LANCAMENTO",
+          );
+
+        const basePrice =
           property.purpose ===
           "LOCACAO"
             ? formatCurrency(
@@ -163,6 +168,12 @@ export default async function Home() {
                 property.price,
               );
 
+        const price =
+          property.purpose !== "LOCACAO" &&
+          isLaunch
+            ? `A partir de ${basePrice}*`
+            : basePrice;
+
         const tag =
           property.tag ||
           (property.highlight
@@ -170,9 +181,7 @@ export default async function Home() {
             : property.purpose ===
                 "LOCACAO"
               ? "Locação"
-              : property.opportunityProfiles.includes(
-                    "LANCAMENTO",
-                  )
+              : isLaunch
                 ? "Lançamento"
                 : "Selecionado");
 
