@@ -506,6 +506,13 @@ export default async function PropertyPage({
               {location}
             </p>
 
+            <div className="mt-4 border border-red-500/50 bg-red-950/30 p-3 text-xs text-red-300">
+              TESTE PERFIS:{" "}
+              {property.opportunityProfiles.length > 0
+                ? property.opportunityProfiles.join(" | ")
+                : "NENHUM PERFIL"}
+            </div>
+
             <div className="mt-8 grid grid-cols-3 gap-4 border-y border-white/10 py-6">
               <div>
                 <strong className="block font-serif text-2xl font-normal">
