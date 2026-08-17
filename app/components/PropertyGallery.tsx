@@ -16,26 +16,24 @@ function Watermark({
 }) {
   return (
     <div
-      className={`pointer-events-none absolute z-30 flex items-center justify-center bg-white/80 backdrop-blur-sm ${
+      className={`pointer-events-none absolute z-30 opacity-30 mix-blend-screen ${
         lightbox
-          ? "bottom-5 right-5 h-16 w-36 p-2 sm:bottom-8 sm:right-8 sm:h-[72px] sm:w-40"
-          : "bottom-20 right-5 h-14 w-32 p-2"
+          ? "bottom-8 right-8 h-20 w-48 sm:bottom-10 sm:right-10 sm:h-24 sm:w-56"
+          : "bottom-20 right-5 h-16 w-40 sm:right-6 sm:h-[72px] sm:w-44"
       }`}
       aria-hidden="true"
     >
-      <div className="relative h-full w-full">
-        <Image
-          src="/logo-bb.png"
-          alt=""
-          fill
-          sizes={
-            lightbox
-              ? "160px"
-              : "128px"
-          }
-          className="object-contain"
-        />
-      </div>
+      <Image
+        src="/logo-bb.png"
+        alt=""
+        fill
+        sizes={
+          lightbox
+            ? "224px"
+            : "176px"
+        }
+        className="object-contain"
+      />
     </div>
   );
 }
@@ -283,8 +281,7 @@ export default function PropertyGallery({
                       image
                     }
                     alt={`${title} — miniatura ${
-                      index +
-                      1
+                      index + 1
                     }`}
                     fill
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
