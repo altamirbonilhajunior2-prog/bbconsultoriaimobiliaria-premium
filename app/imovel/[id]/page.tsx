@@ -362,10 +362,12 @@ export default async function PropertyPage({
       property.rentalPrice,
     );
 
-  const isLaunch =
+  const displayedSalePrice =
     property.opportunityProfiles.includes(
       "LANCAMENTO",
-    );
+    )
+      ? `A partir de ${salePrice}*`
+      : salePrice;
 
   const whatsappMessage =
     encodeURIComponent(
@@ -505,13 +507,6 @@ export default async function PropertyPage({
             <p className="mt-4 text-sm leading-7 text-zinc-400">
               {location}
             </p>
-
-            <div className="mt-4 border border-red-500/50 bg-red-950/30 p-3 text-xs text-red-300">
-              TESTE PERFIS:{" "}
-              {property.opportunityProfiles.length > 0
-                ? property.opportunityProfiles.join(" | ")
-                : "NENHUM PERFIL"}
-            </div>
 
             <div className="mt-8 grid grid-cols-3 gap-4 border-y border-white/10 py-6">
               <div>
@@ -656,9 +651,7 @@ export default async function PropertyPage({
                 </p>
 
                 <p className="mt-2 font-serif text-3xl text-amber-400">
-                  {isLaunch
-                    ? `A partir de ${salePrice}*`
-                    : salePrice}
+                  {displayedSalePrice}
                 </p>
               </div>
             ) : null}
