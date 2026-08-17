@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { auth } from "../../../../auth";
 import { getAccessContext } from "../../../../lib/admin/access";
 import { prisma } from "../../../../lib/prisma";
@@ -557,6 +558,13 @@ export async function createPropertyAction(
     };
   }
 
+  let createdProperty:
+    | {
+        id: number;
+        code: string;
+      }
+    | null = null;
+
   try {
     const agents =
       await prisma.agent.findMany({
@@ -609,7 +617,7 @@ export async function createPropertyAction(
       };
     }
 
-    const property =
+    createdProperty =
       await prisma.$transaction(
         async (tx) => {
           const prefix =
@@ -894,22 +902,6 @@ export async function createPropertyAction(
             "Serializable",
         },
       );
-
-    revalidatePath(
-      "/admin",
-    );
-
-    revalidatePath(
-      "/admin/imoveis",
-    );
-
-    return {
-      success: true,
-      propertyId:
-        property.id,
-      message:
-        `Imóvel ${property.code} cadastrado com sucesso no banco de dados.`,
-    };
   } catch (error) {
     console.error(
       "Erro ao cadastrar imóvel:",
@@ -922,4 +914,20 @@ export async function createPropertyAction(
         "Não foi possível cadastrar o imóvel. Verifique os dados e tente novamente.",
     };
   }
+
+  revalidatePath(
+    "/admin",
+  );
+
+  revalidatePath(
+    "/admin/imoveis",
+  );
+
+  revalidatePath(
+    `/admin/imoveis/${createdProperty.code}`,
+  );
+
+  redirect(
+    `/admin/imoveis/${createdProperty.code}`,
+  );
 }
