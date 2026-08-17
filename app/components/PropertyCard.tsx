@@ -24,7 +24,8 @@ export default function PropertyCard({
   bedrooms,
   parking,
 }: PropertyCardProps) {
-  const propertyUrl = `/imovel/${code.toLowerCase()}`;
+  const propertyUrl =
+    `/imovel/${code.toLowerCase()}`;
 
   return (
     <article className="group flex h-full flex-col overflow-hidden border border-white/10 bg-[#0a0a0a] transition-all duration-500 hover:-translate-y-1 hover:border-amber-500/60 hover:shadow-[0_24px_70px_rgba(0,0,0,0.5)]">
@@ -44,11 +45,24 @@ export default function PropertyCard({
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10" />
 
-          <span className="absolute left-4 top-4 border border-amber-500 bg-black/80 px-3 py-2 text-[9px] font-bold uppercase tracking-[0.2em] text-amber-400 backdrop-blur-sm">
+          <span className="absolute left-4 top-4 z-20 border border-amber-500 bg-black/80 px-3 py-2 text-[9px] font-bold uppercase tracking-[0.2em] text-amber-400 backdrop-blur-sm">
             {tag}
           </span>
 
-          <span className="absolute bottom-4 left-4 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/75">
+          <div
+            className="pointer-events-none absolute bottom-4 right-4 z-20 h-14 w-32 opacity-70"
+            aria-hidden="true"
+          >
+            <Image
+              src="/logo-bb.png"
+              alt=""
+              fill
+              sizes="128px"
+              className="object-contain"
+            />
+          </div>
+
+          <span className="absolute bottom-4 left-4 z-20 text-[9px] font-semibold uppercase tracking-[0.16em] text-white/75">
             Ref. {code}
           </span>
         </div>
@@ -63,16 +77,31 @@ export default function PropertyCard({
           </h3>
 
           <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-white/10 py-3 text-[11px] text-zinc-400">
-            <span>{area}</span>
-            <span className="text-amber-500/70">•</span>
             <span>
-          {bedrooms}{" "}
-          {bedrooms === "1"
-            ? "dormitório"
-            : "dormitórios"}
-        </span>
-            <span className="text-amber-500/70">•</span>
-            <span>{parking} vagas</span>
+              {area}
+            </span>
+
+            <span className="text-amber-500/70">
+              •
+            </span>
+
+            <span>
+              {bedrooms}{" "}
+              {bedrooms === "1"
+                ? "dormitório"
+                : "dormitórios"}
+            </span>
+
+            <span className="text-amber-500/70">
+              •
+            </span>
+
+            <span>
+              {parking}{" "}
+              {parking === "1"
+                ? "vaga"
+                : "vagas"}
+            </span>
           </div>
 
           <div className="mt-4">
