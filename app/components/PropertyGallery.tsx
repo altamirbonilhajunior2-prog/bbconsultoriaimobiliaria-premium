@@ -107,6 +107,16 @@ export default function PropertyGallery({
             {tag}
           </span>
 
+          <div className="pointer-events-none absolute bottom-20 right-5 z-30 h-20 w-48 opacity-70 sm:right-6 sm:h-24 sm:w-52">
+            <Image
+              src="/logo-bb.png"
+              alt=""
+              fill
+              sizes="208px"
+              className="object-contain"
+            />
+          </div>
+
           <span className="pointer-events-none absolute bottom-5 right-5 z-20 border border-white/20 bg-black/75 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white backdrop-blur-sm">
             {formattedCurrentIndex} / {formattedTotalImages}
           </span>
@@ -217,6 +227,16 @@ export default function PropertyGallery({
               sizes="100vw"
               className="object-contain"
             />
+
+            <div className="pointer-events-none absolute bottom-8 right-8 z-30 h-24 w-60 opacity-70 sm:bottom-10 sm:right-10 sm:h-28 sm:w-64">
+              <Image
+                src="/logo-bb.png"
+                alt=""
+                fill
+                sizes="256px"
+                className="object-contain"
+              />
+            </div>
 
             {safeImages.length > 1 && (
               <>
