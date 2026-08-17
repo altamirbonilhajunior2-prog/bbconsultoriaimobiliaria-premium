@@ -16,10 +16,10 @@ function Watermark({
 }) {
   return (
     <div
-      className={`pointer-events-none absolute z-30 opacity-55 ${
+      className={`pointer-events-none absolute z-30 opacity-70 ${
         lightbox
-          ? "bottom-8 right-8 h-20 w-48 sm:bottom-10 sm:right-10 sm:h-24 sm:w-56"
-          : "bottom-20 right-5 h-16 w-40 sm:right-6 sm:h-[72px] sm:w-44"
+          ? "bottom-8 right-8 h-24 w-60 sm:bottom-10 sm:right-10 sm:h-28 sm:w-64"
+          : "bottom-20 right-5 h-20 w-48 sm:right-6 sm:h-24 sm:w-52"
       }`}
       aria-hidden="true"
     >
@@ -29,8 +29,8 @@ function Watermark({
         fill
         sizes={
           lightbox
-            ? "224px"
-            : "176px"
+            ? "256px"
+            : "208px"
         }
         className="object-contain"
       />
