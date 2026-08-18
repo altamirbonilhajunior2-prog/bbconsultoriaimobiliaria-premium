@@ -34,7 +34,7 @@ const neighborhoods = [
   {
     title: "Vila Ema",
     slug: "vila-ema",
-    image: "/hero-clean.png",
+    image: "/bairros/vila-ema.webp",
     highlight:
       "Gastronomia, charme urbano e praticidade no dia a dia.",
     description:
