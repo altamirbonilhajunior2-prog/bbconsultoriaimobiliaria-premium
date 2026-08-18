@@ -16,7 +16,7 @@ const neighborhoods = [
   {
     title: "Jardim Aquarius",
     slug: "jardim-aquarius",
-    image: "/hero-clean.png",
+    image: "/bairros/jardim-aquarius.jpg",
     highlight:
       "Vida urbana completa, conveniência e excelente mobilidade.",
     description:
