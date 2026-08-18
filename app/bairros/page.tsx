@@ -16,7 +16,7 @@ const neighborhoods = [
   {
     title: "Jardim Aquarius",
     slug: "jardim-aquarius",
-    image: "/bairros/jardim-aquarius.jpg",
+    image: "/hero-clean.png",
     highlight:
       "Vida urbana completa, conveniência e excelente mobilidade.",
     description:
@@ -25,7 +25,7 @@ const neighborhoods = [
   {
     title: "Colinas",
     slug: "colinas",
-    image: "/bairros/colinas.jpg",
+    image: "/hero-clean.png",
     highlight:
       "Tradição, sofisticação e localização estratégica.",
     description:
@@ -34,7 +34,7 @@ const neighborhoods = [
   {
     title: "Vila Ema",
     slug: "vila-ema",
-    image: "/bairros/vila-ema.jpg",
+    image: "/hero-clean.png",
     highlight:
       "Gastronomia, charme urbano e praticidade no dia a dia.",
     description:
@@ -43,7 +43,7 @@ const neighborhoods = [
   {
     title: "Parque Industrial",
     slug: "parque-industrial",
-    image: "/bairros/parque-industrial.jpg",
+    image: "/hero-clean.png",
     highlight:
       "Infraestrutura consolidada, mobilidade e boa relação entre localização e conveniência.",
     description:
@@ -52,7 +52,7 @@ const neighborhoods = [
   {
     title: "Altos do Esplanada",
     slug: "altos-do-esplanada",
-    image: "/bairros/altos-do-esplanada.jpg",
+    image: "/hero-clean.png",
     highlight:
       "Exclusividade, tranquilidade e imóveis de padrão elevado.",
     description:
@@ -61,7 +61,7 @@ const neighborhoods = [
   {
     title: "Vila Adyana",
     slug: "vila-adyana",
-    image: "/bairros/vila-adyana.jpg",
+    image: "/hero-clean.png",
     highlight:
       "Qualidade de vida, áreas verdes e conveniência em uma região central.",
     description:
@@ -70,7 +70,7 @@ const neighborhoods = [
   {
     title: "Jardim Esplanada",
     slug: "jardim-esplanada",
-    image: "/bairros/jardim-esplanada.jpg",
+    image: "/hero-clean.png",
     highlight:
       "Ambiente residencial, localização privilegiada e fácil acesso à cidade.",
     description:
@@ -79,7 +79,7 @@ const neighborhoods = [
   {
     title: "Bosque dos Eucaliptos",
     slug: "bosque-dos-eucaliptos",
-    image: "/bairros/bosque-dos-eucaliptos.jpg",
+    image: "/hero-clean.png",
     highlight:
       "Perfil familiar, infraestrutura completa e boa mobilidade.",
     description:
@@ -88,7 +88,7 @@ const neighborhoods = [
   {
     title: "Jardim das Indústrias",
     slug: "jardim-das-industrias",
-    image: "/bairros/jardim-das-industrias.jpg",
+    image: "/hero-clean.png",
     highlight:
       "Localização estratégica, serviços e ampla oferta residencial.",
     description:
@@ -147,9 +147,6 @@ export default function BairrosPage() {
                   alt={bairro.title}
                   fill
                   className="object-cover"
-                  onError={(event) => {
-                    event.currentTarget.src = "/hero-clean.png";
-                  }}
                 />
               </div>
 
