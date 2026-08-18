@@ -43,7 +43,7 @@ const neighborhoods = [
   {
     title: "Parque Industrial",
     slug: "parque-industrial",
-    image: "/hero-clean.png",
+    image: "/bairros/parque-industrial.jpg",
     highlight:
       "Infraestrutura consolidada, mobilidade e boa relação entre localização e conveniência.",
     description:
