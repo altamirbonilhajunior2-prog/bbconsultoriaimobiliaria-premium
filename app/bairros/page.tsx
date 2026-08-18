@@ -1,81 +1,104 @@
 import Image from "next/image";
 import Link from "next/link";
-
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 
 const neighborhoods = [
   {
     title: "Urbanova",
-    image: "/hero-clean.png",
+    slug: "urbanova",
+    image: "/bairros/urbanova.webp",
+    highlight:
+      "Natureza, segurança e qualidade de vida em uma das regiões mais valorizadas da cidade.",
     description:
-      "Condomínios fechados, áreas verdes, segurança e imóveis de médio e alto padrão. Região muito procurada por famílias que valorizam tranquilidade, qualidade de vida e boa infraestrutura de comércio e serviços.",
-    href: "/comprar?bairro=Urbanova",
+      "Região consolidada de condomínios fechados, áreas verdes e imóveis de médio e alto padrão. O Urbanova oferece supermercados, padarias, farmácias, academias, escolas, restaurantes e serviços, além de espaços para lazer e atividades ao ar livre. É uma das regiões mais procuradas por famílias que valorizam segurança, tranquilidade e qualidade de vida.",
   },
   {
     title: "Jardim Aquarius",
-    image: "/hero-clean.png",
+    slug: "jardim-aquarius",
+    image: "/bairros/jardim-aquarius.jpg",
+    highlight:
+      "Vida urbana completa, conveniência e excelente mobilidade.",
     description:
-      "Bairro completo, com ampla oferta de restaurantes, supermercados, academias, serviços e comércio, além de apartamentos modernos e excelente mobilidade.",
-    href: "/comprar?bairro=Jardim%20Aquarius",
+      "Bairro completo, com ampla oferta de restaurantes, supermercados, academias, serviços e comércio, além de apartamentos modernos e excelente mobilidade. É uma das regiões mais valorizadas para quem busca praticidade no dia a dia sem abrir mão de conforto e qualidade de vida.",
   },
   {
     title: "Colinas",
-    image: "/hero-clean.png",
+    slug: "colinas",
+    image: "/bairros/colinas.jpg",
+    highlight:
+      "Tradição, sofisticação e localização estratégica.",
     description:
-      "Região tradicional e valorizada, próxima a centros comerciais, serviços, escolas, restaurantes e importantes vias da cidade. Reúne imóveis de bom padrão e localização estratégica.",
-    href: "/comprar?bairro=Colinas",
+      "Região tradicional e valorizada, próxima a centros comerciais, serviços, escolas, restaurantes e importantes vias da cidade. Reúne imóveis de bom padrão e localização estratégica, atendendo quem busca conveniência e perfil residencial qualificado.",
   },
   {
     title: "Vila Ema",
-    image: "/hero-clean.png",
+    slug: "vila-ema",
+    image: "/bairros/vila-ema.jpg",
+    highlight:
+      "Gastronomia, charme urbano e praticidade no dia a dia.",
     description:
-      "Um dos bairros mais tradicionais e desejados de São José dos Campos, com forte presença de gastronomia, cafés, comércio e serviços. Oferece principalmente apartamentos e boa conexão com regiões centrais.",
-    href: "/comprar?bairro=Vila%20Ema",
+      "Um dos bairros mais tradicionais e desejados de São José dos Campos, com forte presença de gastronomia, cafés, comércio e serviços. Oferece principalmente apartamentos e boa conexão com regiões centrais, sendo muito procurado por quem valoriza um estilo de vida urbano e funcional.",
   },
   {
     title: "Parque Industrial",
-    image: "/hero-clean.png",
+    slug: "parque-industrial",
+    image: "/bairros/parque-industrial.jpg",
+    highlight:
+      "Infraestrutura consolidada, mobilidade e boa relação entre localização e conveniência.",
     description:
-      "Região com infraestrutura consolidada, supermercados, comércio, serviços, escolas e acesso facilitado às principais vias da cidade. Possui perfil residencial diversificado e boa oferta de apartamentos e casas.",
-    href: "/comprar?bairro=Parque%20Industrial",
+      "Região com infraestrutura consolidada, supermercados, comércio, serviços, escolas e acesso facilitado às principais vias da cidade. Possui perfil residencial diversificado e boa oferta de apartamentos e casas, atraindo famílias e compradores em busca de praticidade.",
   },
   {
     title: "Altos do Esplanada",
-    image: "/hero-clean.png",
+    slug: "altos-do-esplanada",
+    image: "/bairros/altos-do-esplanada.jpg",
+    highlight:
+      "Exclusividade, tranquilidade e imóveis de padrão elevado.",
     description:
-      "Região residencial valorizada, tranquila e estratégica, com fácil acesso a comércio, serviços e áreas importantes da cidade. Destaca-se por imóveis de padrão elevado e ambiente mais reservado.",
-    href: "/comprar?bairro=Altos%20do%20Esplanada",
+      "Região residencial valorizada, tranquila e estratégica, com fácil acesso a comércio, serviços e áreas importantes da cidade. Destaca-se por imóveis de padrão elevado, ambiente mais reservado e perfil voltado a quem busca sofisticação e qualidade de vida.",
   },
   {
     title: "Vila Adyana",
-    image: "/hero-clean.png",
+    slug: "vila-adyana",
+    image: "/bairros/vila-adyana.jpg",
+    highlight:
+      "Qualidade de vida, áreas verdes e conveniência em uma região central.",
     description:
-      "Região tradicional, arborizada e muito bem servida por restaurantes, supermercados, escolas, academias, clínicas e serviços. Sua localização central e a proximidade de áreas de lazer tornam o bairro bastante procurado.",
-    href: "/comprar?bairro=Vila%20Adyana",
+      "Bairro tradicional e muito valorizado, conhecido pela boa arborização, qualidade de vida e proximidade com o Parque Vicentina Aranha, além de comércio, serviços e gastronomia. Reúne um perfil residencial qualificado e localização estratégica.",
   },
   {
     title: "Jardim Esplanada",
-    image: "/hero-clean.png",
+    slug: "jardim-esplanada",
+    image: "/bairros/jardim-esplanada.jpg",
+    highlight:
+      "Ambiente residencial, localização privilegiada e fácil acesso à cidade.",
     description:
-      "Bairro residencial valorizado, com ruas arborizadas, boa infraestrutura e localização privilegiada. A região oferece fácil acesso a comércio, escolas, restaurantes, serviços e importantes eixos da cidade.",
-    href: "/comprar?bairro=Jardim%20Esplanada",
+      "Região bastante valorizada, com perfil residencial e excelente localização. Possui acesso facilitado a escolas, serviços, comércio e vias importantes da cidade, sendo muito procurada por quem busca conforto, conveniência e imóveis de bom padrão.",
   },
   {
     title: "Bosque dos Eucaliptos",
-    image: "/hero-clean.png",
+    slug: "bosque-dos-eucaliptos",
+    image: "/bairros/bosque-dos-eucaliptos.jpg",
+    highlight:
+      "Perfil familiar, infraestrutura completa e boa mobilidade.",
     description:
-      "Região residencial consolidada, com supermercados, escolas, comércio, serviços e áreas de lazer. Reúne casas e apartamentos para diferentes perfis de famílias, com boa mobilidade para outras regiões da cidade.",
-    href: "/comprar?bairro=Bosque%20dos%20Eucaliptos",
+      "Bairro consolidado, com comércio variado, supermercados, escolas, farmácias e serviços no entorno. Apresenta perfil predominantemente familiar, boa mobilidade e oferta diversificada de apartamentos e casas para diferentes perfis de compradores.",
   },
   {
     title: "Jardim das Indústrias",
-    image: "/hero-clean.png",
+    slug: "jardim-das-industrias",
+    image: "/bairros/jardim-das-industrias.jpg",
+    highlight:
+      "Localização estratégica, serviços e ampla oferta residencial.",
     description:
-      "Bairro com localização estratégica, infraestrutura completa de comércio e serviços e acesso facilitado às principais vias de São José dos Campos. Possui boa oferta de apartamentos, casas e condomínios residenciais.",
-    href: "/comprar?bairro=Jardim%20das%20Ind%C3%BAstrias",
+      "Região com localização estratégica e fácil acesso às principais vias da cidade e à Rodovia Presidente Dutra. Conta com boa oferta de comércio, serviços e imóveis residenciais, sendo procurada por quem valoriza mobilidade e praticidade no cotidiano.",
   },
 ];
+
+function buildNeighborhoodLink(neighborhood: string) {
+  return `/comprar?bairro=${encodeURIComponent(neighborhood)}`;
+}
 
 export default function BairrosPage() {
   return (
@@ -85,7 +108,7 @@ export default function BairrosPage() {
       <section className="relative h-[520px] overflow-hidden">
         <Image
           src="/hero-clean.png"
-          alt="Bairros Premium em São José dos Campos"
+          alt="Bairros Premium"
           fill
           priority
           className="object-cover"
@@ -104,9 +127,8 @@ export default function BairrosPage() {
             </h1>
 
             <p className="mt-6 text-lg leading-8 text-zinc-300">
-              Conheça algumas das regiões onde concentramos nossa atuação em
-              São José dos Campos e entenda o perfil, a infraestrutura e os
-              diferenciais de cada bairro.
+              Conheça as regiões onde concentramos nossa atuação e descubra as
+              características de cada bairro.
             </p>
           </div>
         </div>
@@ -122,23 +144,28 @@ export default function BairrosPage() {
               <div className="relative h-72">
                 <Image
                   src={bairro.image}
-                  alt={`${bairro.title} em São José dos Campos`}
+                  alt={bairro.title}
                   fill
                   className="object-cover"
+                  onError={(event) => {
+                    event.currentTarget.src = "/hero-clean.png";
+                  }}
                 />
               </div>
 
               <div className="p-8">
-                <h2 className="font-serif text-3xl">
-                  {bairro.title}
-                </h2>
+                <h2 className="font-serif text-3xl">{bairro.title}</h2>
+
+                <p className="mt-4 text-sm font-semibold uppercase tracking-[0.16em] text-amber-400">
+                  {bairro.highlight}
+                </p>
 
                 <p className="mt-5 leading-8 text-zinc-400">
                   {bairro.description}
                 </p>
 
                 <Link
-                  href={bairro.href}
+                  href={buildNeighborhoodLink(bairro.title)}
                   className="mt-8 inline-flex border border-amber-500 px-6 py-3 text-xs font-bold uppercase tracking-[0.15em] text-amber-400 transition hover:bg-amber-500 hover:text-black"
                 >
                   Conhecer imóveis
@@ -146,6 +173,23 @@ export default function BairrosPage() {
               </div>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 pb-20">
+        <div className="border border-white/10 bg-[#0b0b0b] p-8 text-center">
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-amber-400">
+            Curadoria B&amp;B
+          </p>
+
+          <p className="mx-auto mt-4 max-w-4xl text-lg leading-8 text-zinc-300">
+            Nós atuamos com análise, curadoria e orientação estratégica para
+            decisões imobiliárias mais seguras em São José dos Campos.
+          </p>
+
+          <p className="mt-6 font-serif text-3xl text-white">
+            Mais que imóveis. Estratégia para grandes decisões.
+          </p>
         </div>
       </section>
 
