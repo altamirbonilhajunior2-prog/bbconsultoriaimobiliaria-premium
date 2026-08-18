@@ -52,7 +52,7 @@ const neighborhoods = [
   {
     title: "Altos do Esplanada",
     slug: "altos-do-esplanada",
-    image: "/hero-clean.png",
+    image: "/bairros/altos-do-esplanada.webp",
     highlight:
       "Exclusividade, tranquilidade e imóveis de padrão elevado.",
     description:
