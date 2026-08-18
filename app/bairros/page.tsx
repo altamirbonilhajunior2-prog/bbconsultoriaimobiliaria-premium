@@ -61,7 +61,7 @@ const neighborhoods = [
   {
     title: "Vila Adyana",
     slug: "vila-adyana",
-    image: "/hero-clean.png",
+    image: "/bairros/vila-adyana.webp",
     highlight:
       "Qualidade de vida, áreas verdes e conveniência em uma região central.",
     description:
