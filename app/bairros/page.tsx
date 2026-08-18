@@ -25,7 +25,7 @@ const neighborhoods = [
   {
     title: "Colinas",
     slug: "colinas",
-    image: "/hero-clean.png",
+    image: "/bairros/colinas.jpeg",
     highlight:
       "Tradição, sofisticação e localização estratégica.",
     description:
