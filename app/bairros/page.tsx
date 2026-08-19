@@ -79,7 +79,7 @@ const neighborhoods = [
   {
     title: "Bosque dos Eucaliptos",
     slug: "bosque-dos-eucaliptos",
-    image: "/hero-clean.png",
+    image: "/bairros/bosque-dos-eucaliptos.jpg",
     highlight:
       "Perfil familiar, infraestrutura completa e boa mobilidade.",
     description:
