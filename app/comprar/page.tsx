@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import ComprarFilters from "../components/ComprarFilters";
@@ -8,10 +9,11 @@ import { prisma } from "../../lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Comprar | B&B Consultoria Imobiliária",
+export const metadata: Metadata = {
+  title:
+    "Imóveis à Venda em São José dos Campos e Região | B&B Consultoria Imobiliária",
   description:
-    "Imóveis selecionados para compra em São José dos Campos.",
+    "Encontre imóveis à venda em São José dos Campos e região com curadoria, análise estratégica e atendimento consultivo da B&B Consultoria Imobiliária.",
 };
 
 type ComprarPageProps = {
@@ -697,18 +699,13 @@ export default async function ComprarPage({
           <div className="mt-5 flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-[1250px]">
               <h1 className="font-serif text-[38px] font-normal leading-[1.08] tracking-[-0.025em] text-white sm:text-[44px] lg:text-[50px] xl:text-[56px]">
-                Imóveis selecionados
-                para decisões seguras.
+                Imóveis à venda em São José dos Campos e região.
               </h1>
 
               <p className="mt-5 max-w-3xl text-base leading-8 text-zinc-400 sm:text-lg">
-                Nós analisamos
-                localização, padrão
-                construtivo, liquidez,
-                valorização e adequação
-                ao seu objetivo antes
-                de apresentar cada
-                oportunidade.
+                Selecionamos imóveis com análise de localização, padrão
+                construtivo, liquidez, valorização e adequação ao seu objetivo
+                para tornar sua decisão de compra mais segura.
               </p>
             </div>
 
