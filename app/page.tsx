@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import ConsultoriaSection from "./components/ConsultoriaSection";
@@ -10,6 +11,12 @@ import PropertySearch from "./components/PropertySearch";
 import { prisma } from "../lib/prisma";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Imobiliária em São José dos Campos | B&B Consultoria Imobiliária",
+  description:
+    "Imóveis para comprar e alugar em São José dos Campos com curadoria, análise estratégica e atendimento consultivo da B&B Consultoria Imobiliária.",
+};
 
 const benefits = [
   {

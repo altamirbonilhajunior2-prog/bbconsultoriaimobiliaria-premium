@@ -105,7 +105,7 @@ export default function Hero() {
       <div className="relative lg:min-h-[calc(100vh-128px)]">
         <Image
           src="/hero-clean.png"
-          alt="Residência contemporânea de alto padrão"
+          alt="Imóveis de alto padrão em São José dos Campos"
           fill
           priority
           sizes="100vw"
@@ -122,7 +122,7 @@ export default function Hero() {
             </p>
 
             <h1 className="mt-4 font-serif text-[36px] font-normal leading-[1.02] tracking-[-0.03em] text-white sm:mt-5 sm:text-[50px] sm:leading-[0.98] lg:text-[68px]">
-              Mais que imóveis.
+              Imóveis em São José dos Campos.
               <span className="mt-2 block text-[#d5a85a]">
                 Estratégia para
                 <br />
@@ -131,9 +131,9 @@ export default function Hero() {
             </h1>
 
             <p className="mt-5 max-w-[560px] text-sm leading-7 text-zinc-200 sm:mt-6 sm:text-lg sm:leading-8">
-              Nós unimos conhecimento de mercado, curadoria e experiência para
-              conectar você às melhores oportunidades de São José dos Campos e
-              região.
+              Curadoria imobiliária, conhecimento de mercado e atendimento
+              consultivo para comprar, vender ou alugar imóveis em São José dos
+              Campos com mais segurança.
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:gap-4">
