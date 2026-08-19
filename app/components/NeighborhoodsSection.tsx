@@ -5,28 +5,28 @@ const neighborhoods = [
   {
     name: "Urbanova",
     slug: "urbanova",
-    image: "/hero-clean.png",
+    image: "/bairros/urbanova.webp",
     description:
       "Condomínios fechados, imóveis de alto padrão e excelente qualidade de vida.",
   },
   {
     name: "Jardim Aquarius",
     slug: "jardim-aquarius",
-    image: "/hero-clean.png",
+    image: "/bairros/jardim-aquarius.webp",
     description:
       "Apartamentos modernos, comércio completo e localização estratégica.",
   },
   {
     name: "Colinas",
     slug: "colinas",
-    image: "/hero-clean.png",
+    image: "/bairros/colinas.jpeg",
     description:
       "Elegância, tradição e proximidade aos melhores serviços da cidade.",
   },
   {
     name: "Altos do Esplanada",
     slug: "altos-do-esplanada",
-    image: "/hero-clean.png",
+    image: "/bairros/altos-do-esplanada.webp",
     description:
       "Exclusividade, tranquilidade e imóveis de alto padrão.",
   },
