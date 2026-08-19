@@ -88,7 +88,7 @@ const neighborhoods = [
   {
     title: "Jardim das Indústrias",
     slug: "jardim-das-industrias",
-    image: "/hero-clean.png",
+    image: "/bairros/jardim-das-industrias.jpg",
     highlight:
       "Localização estratégica, serviços e ampla oferta residencial.",
     description:
