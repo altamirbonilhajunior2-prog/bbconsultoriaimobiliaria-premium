@@ -70,7 +70,7 @@ const neighborhoods = [
   {
     title: "Jardim Esplanada",
     slug: "jardim-esplanada",
-    image: "/hero-clean.png",
+    image: "/bairros/jardim-esplanada.jpg",
     highlight:
       "Ambiente residencial, localização privilegiada e fácil acesso à cidade.",
     description:
