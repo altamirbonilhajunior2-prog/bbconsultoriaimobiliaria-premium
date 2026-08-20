@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ChangeEvent,
+  FormEvent,
   useEffect,
   useMemo,
   useState,
@@ -27,6 +28,7 @@ type PropertyPurpose =
 type PropertySearchProps = {
   showPurpose?: boolean;
   defaultPurpose?: PropertyPurpose;
+  showCustomSearchCTA?: boolean;
 };
 
 const opportunityProfiles = [
@@ -35,6 +37,29 @@ const opportunityProfiles = [
   "Renda",
   "Valorização",
   "Lançamento",
+] as const;
+
+const customPropertyTypes = [
+  "Casa",
+  "Apartamento",
+  "Terreno",
+  "Comercial",
+] as const;
+
+const customValueRanges = [
+  "Até R$ 500 mil",
+  "De R$ 500 mil a R$ 1 milhão",
+  "De R$ 1 milhão a R$ 2 milhões",
+  "De R$ 2 milhões a R$ 3 milhões",
+  "Acima de R$ 3 milhões",
+  "Ainda não defini",
+] as const;
+
+const customObjectives = [
+  "Moradia",
+  "Investimento",
+  "Renda",
+  "Outro",
 ] as const;
 
 const allPropertyTypesLabel = "Todos os tipos";
@@ -69,6 +94,7 @@ function isPropertyPurpose(
 export default function PropertySearch({
   showPurpose = true,
   defaultPurpose = "Venda",
+  showCustomSearchCTA = false,
 }: PropertySearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -133,6 +159,9 @@ export default function PropertySearch({
     searchParams.get("valor") ||
       allValuesLabel,
   );
+
+  const [isCustomSearchOpen, setIsCustomSearchOpen] =
+    useState(false);
 
   const cities = useMemo(
     () => [...getCities(state as "SP")],
@@ -199,6 +228,34 @@ export default function PropertySearch({
       setBedroom(allBedroomsLabel);
     }
   }, [shouldShowBedrooms]);
+
+  useEffect(() => {
+    if (!isCustomSearchOpen) {
+      return;
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsCustomSearchOpen(false);
+      }
+    }
+
+    document.addEventListener(
+      "keydown",
+      handleEscape,
+    );
+
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener(
+        "keydown",
+        handleEscape,
+      );
+
+      document.body.style.overflow = "";
+    };
+  }, [isCustomSearchOpen]);
 
   function handleStateChange(
     event: ChangeEvent<HTMLSelectElement>,
@@ -318,217 +375,127 @@ export default function PropertySearch({
     );
   }
 
+  function handleCustomSearchSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    const formData =
+      new FormData(event.currentTarget);
+
+    const customType =
+      String(
+        formData.get("customType") || "",
+      );
+
+    const customRegion =
+      String(
+        formData.get("customRegion") || "",
+      );
+
+    const customValue =
+      String(
+        formData.get("customValue") || "",
+      );
+
+    const customObjective =
+      String(
+        formData.get("customObjective") || "",
+      );
+
+    const customDetails =
+      String(
+        formData.get("customDetails") || "",
+      ).trim();
+
+    const message = [
+      "Olá, gostaria que a B&B me ajudasse a encontrar um imóvel.",
+      "",
+      `Tipo de imóvel: ${customType}`,
+      `Bairro ou região: ${customRegion}`,
+      `Faixa de valor: ${customValue}`,
+      `Objetivo: ${customObjective}`,
+      "",
+      "Detalhes adicionais:",
+      customDetails || "Não informado.",
+    ].join("\n");
+
+    const whatsappUrl =
+      `https://wa.me/5512978140636?text=${encodeURIComponent(
+        message,
+      )}`;
+
+    window.open(
+      whatsappUrl,
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }
+
   return (
-    <section className="border-b border-white/10 bg-black">
-      <div className="mx-auto max-w-[1720px] px-6 py-8 lg:px-10 xl:px-12">
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
-          {showPurpose && (
-            <label className="flex min-w-0 flex-col gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
-                Finalidade
-              </span>
+    <>
+      <section className="border-b border-white/10 bg-black">
+        <div className="mx-auto max-w-[1720px] px-6 py-8 lg:px-10 xl:px-12">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
+            {showPurpose && (
+              <label className="flex min-w-0 flex-col gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                  Finalidade
+                </span>
 
-              <select
-                value={purpose}
-                onChange={handlePurposeChange}
-                className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
-              >
-                <option value="Venda">Venda</option>
-
-                <option value="Locação">
-                  Locação
-                </option>
-
-                <option value="Venda e locação">
-                  Venda e locação
-                </option>
-              </select>
-            </label>
-          )}
-
-          <label className="flex min-w-0 flex-col gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
-              Perfil da oportunidade
-            </span>
-
-            <select
-              value={opportunityProfile}
-              onChange={(event) =>
-                setOpportunityProfile(event.target.value)
-              }
-              className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
-            >
-              <option value={allProfilesLabel}>
-                {allProfilesLabel}
-              </option>
-
-              {opportunityProfiles.map((profile) => (
-                <option key={profile} value={profile}>
-                  {profile}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex min-w-0 flex-col gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
-              Estado
-            </span>
-
-            <select
-              value={state}
-              onChange={handleStateChange}
-              className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
-            >
-              {stateOptions.map((item) => (
-                <option
-                  key={item.value}
-                  value={item.value}
+                <select
+                  value={purpose}
+                  onChange={handlePurposeChange}
+                  className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
                 >
-                  {item.label}
-                </option>
-              ))}
-            </select>
-          </label>
+                  <option value="Venda">Venda</option>
 
-          <label className="flex min-w-0 flex-col gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
-              Cidade
-            </span>
-
-            <select
-              value={city}
-              onChange={handleCityChange}
-              className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
-            >
-              {cities.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex min-w-0 flex-col gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
-              Bairro
-            </span>
-
-            <select
-              value={neighborhood}
-              onChange={handleNeighborhoodChange}
-              className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
-            >
-              <option value={allNeighborhoodsLabel}>
-                {allNeighborhoodsLabel}
-              </option>
-
-              {neighborhoods.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex min-w-0 flex-col gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
-              Condomínio ou edifício
-            </span>
-
-            <select
-              value={development}
-              onChange={(event) =>
-                setDevelopment(event.target.value)
-              }
-              disabled={
-                neighborhood === allNeighborhoodsLabel
-              }
-              className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500 disabled:cursor-not-allowed disabled:text-zinc-600"
-            >
-              <option value={allDevelopmentsLabel}>
-                {neighborhood === allNeighborhoodsLabel
-                  ? "Selecione o bairro primeiro"
-                  : allDevelopmentsLabel}
-              </option>
-
-              {developments.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex min-w-0 flex-col gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
-              Tipo de imóvel
-            </span>
-
-            <select
-              value={propertyType}
-              onChange={handlePropertyTypeChange}
-              className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
-            >
-              <option value={allPropertyTypesLabel}>
-                {allPropertyTypesLabel}
-              </option>
-
-              {Object.keys(propertyTypes).map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className="flex min-w-0 flex-col gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
-              Categoria
-            </span>
-
-            <select
-              value={category}
-              onChange={(event) =>
-                setCategory(event.target.value)
-              }
-              disabled={
-                propertyType === allPropertyTypesLabel
-              }
-              className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500 disabled:cursor-not-allowed disabled:text-zinc-600"
-            >
-              {propertyType === allPropertyTypesLabel ? (
-                <option value={allCategoriesLabel}>
-                  Selecione o tipo primeiro
-                </option>
-              ) : (
-                categories.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
+                  <option value="Locação">
+                    Locação
                   </option>
-                ))
-              )}
-            </select>
-          </label>
 
-          {shouldShowBedrooms && (
+                  <option value="Venda e locação">
+                    Venda e locação
+                  </option>
+                </select>
+              </label>
+            )}
+
             <label className="flex min-w-0 flex-col gap-2">
               <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
-                Dormitórios
+                Perfil da oportunidade
               </span>
 
               <select
-                value={bedroom}
+                value={opportunityProfile}
                 onChange={(event) =>
-                  setBedroom(event.target.value)
+                  setOpportunityProfile(event.target.value)
                 }
                 className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
               >
-                <option value={allBedroomsLabel}>
-                  {allBedroomsLabel}
+                <option value={allProfilesLabel}>
+                  {allProfilesLabel}
                 </option>
 
-                {bedroomOptions.map((item) => (
+                {opportunityProfiles.map((profile) => (
+                  <option key={profile} value={profile}>
+                    {profile}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex min-w-0 flex-col gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                Estado
+              </span>
+
+              <select
+                value={state}
+                onChange={handleStateChange}
+                className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
+              >
+                {stateOptions.map((item) => (
                   <option
                     key={item.value}
                     value={item.value}
@@ -538,46 +505,396 @@ export default function PropertySearch({
                 ))}
               </select>
             </label>
-          )}
 
-          <label className="flex min-w-0 flex-col gap-2">
-            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
-              Valor
-            </span>
+            <label className="flex min-w-0 flex-col gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                Cidade
+              </span>
 
-            <select
-              value={value}
-              onChange={(event) =>
-                setValue(event.target.value)
-              }
-              className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
-            >
-              <option value={allValuesLabel}>
-                {allValuesLabel}
-              </option>
-
-              {values
-                .filter(
-                  (item) =>
-                    item !== "Todos os valores",
-                )
-                .map((item) => (
+              <select
+                value={city}
+                onChange={handleCityChange}
+                className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
+              >
+                {cities.map((item) => (
                   <option key={item} value={item}>
                     {item}
                   </option>
                 ))}
-            </select>
-          </label>
+              </select>
+            </label>
 
-          <button
-            type="button"
-            onClick={handleSearch}
-            className="min-h-14 bg-amber-500 px-7 text-sm font-bold uppercase tracking-[0.16em] text-black transition hover:bg-amber-400 md:self-end"
-          >
-            Buscar imóveis
-          </button>
+            <label className="flex min-w-0 flex-col gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                Bairro
+              </span>
+
+              <select
+                value={neighborhood}
+                onChange={handleNeighborhoodChange}
+                className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
+              >
+                <option value={allNeighborhoodsLabel}>
+                  {allNeighborhoodsLabel}
+                </option>
+
+                {neighborhoods.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex min-w-0 flex-col gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                Condomínio ou edifício
+              </span>
+
+              <select
+                value={development}
+                onChange={(event) =>
+                  setDevelopment(event.target.value)
+                }
+                disabled={
+                  neighborhood === allNeighborhoodsLabel
+                }
+                className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500 disabled:cursor-not-allowed disabled:text-zinc-600"
+              >
+                <option value={allDevelopmentsLabel}>
+                  {neighborhood === allNeighborhoodsLabel
+                    ? "Selecione o bairro primeiro"
+                    : allDevelopmentsLabel}
+                </option>
+
+                {developments.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex min-w-0 flex-col gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                Tipo de imóvel
+              </span>
+
+              <select
+                value={propertyType}
+                onChange={handlePropertyTypeChange}
+                className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
+              >
+                <option value={allPropertyTypesLabel}>
+                  {allPropertyTypesLabel}
+                </option>
+
+                {Object.keys(propertyTypes).map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex min-w-0 flex-col gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                Categoria
+              </span>
+
+              <select
+                value={category}
+                onChange={(event) =>
+                  setCategory(event.target.value)
+                }
+                disabled={
+                  propertyType === allPropertyTypesLabel
+                }
+                className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500 disabled:cursor-not-allowed disabled:text-zinc-600"
+              >
+                {propertyType === allPropertyTypesLabel ? (
+                  <option value={allCategoriesLabel}>
+                    Selecione o tipo primeiro
+                  </option>
+                ) : (
+                  categories.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))
+                )}
+              </select>
+            </label>
+
+            {shouldShowBedrooms && (
+              <label className="flex min-w-0 flex-col gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                  Dormitórios
+                </span>
+
+                <select
+                  value={bedroom}
+                  onChange={(event) =>
+                    setBedroom(event.target.value)
+                  }
+                  className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
+                >
+                  <option value={allBedroomsLabel}>
+                    {allBedroomsLabel}
+                  </option>
+
+                  {bedroomOptions.map((item) => (
+                    <option
+                      key={item.value}
+                      value={item.value}
+                    >
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            <label className="flex min-w-0 flex-col gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                Valor
+              </span>
+
+              <select
+                value={value}
+                onChange={(event) =>
+                  setValue(event.target.value)
+                }
+                className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
+              >
+                <option value={allValuesLabel}>
+                  {allValuesLabel}
+                </option>
+
+                {values
+                  .filter(
+                    (item) =>
+                      item !== "Todos os valores",
+                  )
+                  .map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+              </select>
+            </label>
+
+            {showCustomSearchCTA ? (
+              <div className="grid gap-5 md:col-span-2 xl:col-span-3 xl:grid-cols-2 2xl:col-span-5">
+                <div className="flex items-end">
+                  <button
+                    type="button"
+                    onClick={handleSearch}
+                    className="min-h-14 w-full bg-amber-500 px-7 text-sm font-bold uppercase tracking-[0.16em] text-black transition hover:bg-amber-400"
+                  >
+                    Buscar imóveis
+                  </button>
+                </div>
+
+                <div className="border border-amber-500/30 bg-[#0a0a0a] p-5 sm:p-6">
+                  <p className="font-serif text-xl font-normal text-white sm:text-2xl">
+                    Não encontrou o imóvel que procura?
+                  </p>
+
+                  <p className="mt-1 font-serif text-xl font-normal text-amber-400 sm:text-2xl">
+                    Nós encontramos para você.
+                  </p>
+
+                  <p className="mt-3 text-sm leading-6 text-zinc-400">
+                    Conte o que busca e a B&amp;B faz a curadoria das
+                    melhores oportunidades.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIsCustomSearchOpen(true)
+                    }
+                    className="mt-5 min-h-12 w-full border border-amber-500 px-5 text-[11px] font-bold uppercase tracking-[0.16em] text-amber-400 transition hover:bg-amber-500 hover:text-black"
+                  >
+                    Encontrar meu imóvel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleSearch}
+                className="min-h-14 bg-amber-500 px-7 text-sm font-bold uppercase tracking-[0.16em] text-black transition hover:bg-amber-400 md:self-end"
+              >
+                Buscar imóveis
+              </button>
+            )}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      {isCustomSearchOpen ? (
+        <div
+          className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/85 px-4 py-6 backdrop-blur-sm sm:px-6 sm:py-10"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="custom-search-title"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setIsCustomSearchOpen(false);
+            }
+          }}
+        >
+          <div className="my-auto w-full max-w-3xl border border-amber-500/30 bg-[#080808] shadow-2xl">
+            <div className="flex items-start justify-between gap-6 border-b border-white/10 p-6 sm:p-8">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-400">
+                  Busca personalizada B&amp;B
+                </p>
+
+                <h2
+                  id="custom-search-title"
+                  className="mt-3 font-serif text-3xl font-normal text-white sm:text-4xl"
+                >
+                  Conte o que você procura.
+                </h2>
+
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-400">
+                  Responda algumas perguntas rápidas e nossa equipe recebe
+                  sua busca pelo WhatsApp.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setIsCustomSearchOpen(false)
+                }
+                aria-label="Fechar questionário"
+                className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/15 text-xl text-zinc-400 transition hover:border-amber-500 hover:text-amber-400"
+              >
+                ×
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleCustomSearchSubmit}
+              className="p-6 sm:p-8"
+            >
+              <div className="grid gap-6 md:grid-cols-2">
+                <label className="flex flex-col gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                    1. Qual tipo de imóvel você procura?
+                  </span>
+
+                  <select
+                    name="customType"
+                    required
+                    defaultValue=""
+                    className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
+                  >
+                    <option value="" disabled>
+                      Selecione
+                    </option>
+
+                    {customPropertyTypes.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                    2. Em qual bairro ou região?
+                  </span>
+
+                  <input
+                    type="text"
+                    name="customRegion"
+                    required
+                    placeholder="Ex.: Urbanova, Aquarius..."
+                    className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none placeholder:text-zinc-600 transition focus:border-amber-500"
+                  />
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                    3. Qual faixa de valor?
+                  </span>
+
+                  <select
+                    name="customValue"
+                    required
+                    defaultValue=""
+                    className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
+                  >
+                    <option value="" disabled>
+                      Selecione
+                    </option>
+
+                    {customValueRanges.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="flex flex-col gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                    4. Qual é o seu objetivo?
+                  </span>
+
+                  <select
+                    name="customObjective"
+                    required
+                    defaultValue=""
+                    className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
+                  >
+                    <option value="" disabled>
+                      Selecione
+                    </option>
+
+                    {customObjectives.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <label className="mt-6 flex flex-col gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                  Conte um pouco mais sobre o imóvel que procura
+                </span>
+
+                <textarea
+                  name="customDetails"
+                  rows={5}
+                  placeholder="Metragem, dormitórios, condomínio específico, prazo, preferências etc."
+                  className="w-full resize-y border border-white/10 bg-[#111111] px-4 py-4 text-sm leading-6 text-white outline-none placeholder:text-zinc-600 transition focus:border-amber-500"
+                />
+              </label>
+
+              <button
+                type="submit"
+                className="mt-7 min-h-14 w-full bg-amber-500 px-7 text-xs font-bold uppercase tracking-[0.16em] text-black transition hover:bg-amber-400"
+              >
+                Enviar minha busca para a B&amp;B
+              </button>
+
+              <p className="mt-4 text-center text-[10px] leading-5 text-zinc-500">
+                Suas respostas serão enviadas para o WhatsApp da B&amp;B
+                Consultoria Imobiliária.
+              </p>
+            </form>
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
