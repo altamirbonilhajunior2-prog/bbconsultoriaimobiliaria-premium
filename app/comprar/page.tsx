@@ -637,6 +637,21 @@ export default async function ComprarPage({
             property.price,
           );
 
+        const basePrice =
+          formatCurrency(
+            numericPrice,
+          );
+
+        const isLaunch =
+          property.opportunityProfiles.includes(
+            "LANCAMENTO",
+          );
+
+        const price =
+          isLaunch
+            ? `A partir de ${basePrice}*`
+            : basePrice;
+
         return {
           code:
             property.code,
@@ -653,10 +668,7 @@ export default async function ComprarPage({
               .filter(Boolean)
               .join(" • "),
 
-          price:
-            formatCurrency(
-              numericPrice,
-            ),
+          price,
 
           image:
             coverImage?.url ??
