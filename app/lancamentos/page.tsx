@@ -158,7 +158,10 @@ export default async function LancamentosPage() {
 
           area:
             formatArea(
-              property.area,
+              property.propertyType ===
+              "TERRENO"
+                ? property.landArea
+                : property.area,
             ),
 
           bedrooms:

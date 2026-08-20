@@ -459,7 +459,10 @@ export default async function PropertyPage({
 
           area:
             formatArea(
-              item.area,
+              item.propertyType ===
+              "TERRENO"
+                ? item.landArea
+                : item.area,
             ),
 
           bedrooms:

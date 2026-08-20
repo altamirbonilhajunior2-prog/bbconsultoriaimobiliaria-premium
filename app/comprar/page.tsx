@@ -673,7 +673,10 @@ export default async function ComprarPage({
 
           area:
             formatArea(
-              property.area,
+              property.propertyType ===
+              "TERRENO"
+                ? property.landArea
+                : property.area,
             ),
 
           bedrooms:

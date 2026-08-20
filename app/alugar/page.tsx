@@ -630,7 +630,10 @@ export default async function AlugarPage({
 
           area:
             formatArea(
-              property.area,
+              property.propertyType ===
+              "TERRENO"
+                ? property.landArea
+                : property.area,
             ),
 
           bedrooms:
