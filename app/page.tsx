@@ -220,6 +220,11 @@ export default async function Home() {
               property.bedrooms,
             ),
 
+          suites:
+            String(
+              property.suites,
+            ),
+
           parking:
             String(
               property.parking,
@@ -280,6 +285,7 @@ export default async function Home() {
                   tag={property.tag}
                   area={property.area}
                   bedrooms={property.bedrooms}
+                  suites={property.suites}
                   parking={property.parking}
                 />
               ),

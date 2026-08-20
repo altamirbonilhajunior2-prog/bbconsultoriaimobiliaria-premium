@@ -678,6 +678,11 @@ export default async function ComprarPage({
               property.bedrooms,
             ),
 
+          suites:
+            String(
+              property.suites,
+            ),
+
           parking:
             String(
               property.parking,
@@ -795,6 +800,9 @@ export default async function ComprarPage({
                   }
                   bedrooms={
                     property.bedrooms
+                  }
+                  suites={
+                    property.suites
                   }
                   parking={
                     property.parking

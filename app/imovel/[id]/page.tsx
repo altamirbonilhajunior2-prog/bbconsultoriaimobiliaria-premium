@@ -464,6 +464,11 @@ export default async function PropertyPage({
               item.bedrooms,
             ),
 
+          suites:
+            String(
+              item.suites,
+            ),
+
           parking:
             String(
               item.parking,
@@ -844,6 +849,9 @@ export default async function PropertyPage({
                   }
                   bedrooms={
                     item.bedrooms
+                  }
+                  suites={
+                    item.suites
                   }
                   parking={
                     item.parking

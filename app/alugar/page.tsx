@@ -635,6 +635,11 @@ export default async function AlugarPage({
               property.bedrooms,
             ),
 
+          suites:
+            String(
+              property.suites,
+            ),
+
           parking:
             String(
               property.parking,
@@ -760,6 +765,9 @@ export default async function AlugarPage({
                   }
                   bedrooms={
                     property.bedrooms
+                  }
+                  suites={
+                    property.suites
                   }
                   parking={
                     property.parking
