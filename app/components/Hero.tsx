@@ -230,21 +230,21 @@ export default function Hero({
 
   return (
     <section className="relative overflow-hidden bg-black">
-      <div className="relative lg:min-h-[calc(100vh-128px)]">
-        <Image
-          src="/hero-clean.png"
-          alt="Imóveis de alto padrão em São José dos Campos e região"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center"
-        />
+      <Image
+        src="/hero-clean.png"
+        alt="Imóveis de alto padrão em São José dos Campos e região"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-center"
+      />
 
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.65)_38%,rgba(0,0,0,0.08)_75%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.65)_38%,rgba(0,0,0,0.08)_75%)]" />
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/15" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/15" />
 
-        <div className="relative z-10 mx-auto flex min-h-[560px] max-w-[1720px] flex-col justify-center px-5 pb-10 pt-10 sm:min-h-[620px] sm:px-6 sm:pb-12 sm:pt-14 lg:min-h-[calc(100vh-128px)] lg:px-10 lg:pb-72 lg:pt-16 xl:px-12">
+      <div className="relative z-10">
+        <div className="mx-auto flex min-h-[540px] max-w-[1720px] flex-col justify-center px-5 py-12 sm:min-h-[580px] sm:px-6 sm:py-14 lg:min-h-[600px] lg:px-10 lg:py-14 xl:px-12">
           <div className="max-w-[650px]">
             <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-amber-400 sm:text-xs">
               Conexões que constroem patrimônio.
@@ -266,10 +266,10 @@ export default function Hero({
               Campos e região com mais segurança.
             </p>
 
-            <div className="mt-7 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:gap-4">
+            <div className="mt-9 flex flex-col gap-4 sm:flex-row sm:gap-5">
               <Link
                 href="/comprar"
-                className="inline-flex min-h-14 items-center justify-center gap-3 rounded-sm bg-[#ddb461] px-8 text-xs font-bold uppercase tracking-[0.12em] text-black transition hover:bg-[#edc876]"
+                className="inline-flex min-h-[62px] min-w-[220px] items-center justify-center gap-3 rounded-sm bg-[#ddb461] px-10 text-[13px] font-bold uppercase tracking-[0.14em] text-black shadow-[0_14px_38px_rgba(221,180,97,0.32)] transition duration-200 hover:-translate-y-0.5 hover:bg-[#edc876] hover:shadow-[0_18px_46px_rgba(221,180,97,0.4)]"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -300,7 +300,7 @@ export default function Hero({
                 href="https://wa.me/5512978140636?text=Ol%C3%A1%2C%20gostaria%20de%20falar%20com%20a%20B%26B%20Consultoria%20Imobili%C3%A1ria."
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-14 items-center justify-center gap-3 rounded-sm border border-[#d5a85a] bg-black/35 px-8 text-xs font-bold uppercase tracking-[0.12em] text-white backdrop-blur-sm transition hover:bg-[#d5a85a] hover:text-black"
+                className="inline-flex min-h-[62px] min-w-[240px] items-center justify-center gap-3 rounded-sm border-2 border-[#d5a85a] bg-[#d5a85a]/15 px-10 text-[13px] font-bold uppercase tracking-[0.14em] text-white shadow-[0_14px_38px_rgba(213,168,90,0.18)] backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#d5a85a] hover:text-black hover:shadow-[0_18px_46px_rgba(213,168,90,0.3)]"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -328,27 +328,27 @@ export default function Hero({
           </div>
         </div>
 
-        <div className="relative z-20 pb-6 lg:absolute lg:inset-x-0 lg:bottom-[104px] lg:pb-0">
-          <div className="mx-auto max-w-[1500px] px-4 sm:px-6">
-            <div className="rounded-xl border border-[#d5a85a]/45 bg-[#080808]/95 p-4 shadow-[0_28px_80px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:p-6 lg:p-7">
+        <div className="pb-8">
+          <div className="mx-auto max-w-[1180px] px-4 sm:px-6">
+            <div className="rounded-lg border border-[#d5a85a]/45 bg-[#080808]/95 p-3.5 shadow-[0_22px_60px_rgba(0,0,0,0.62)] backdrop-blur-xl sm:p-4">
               <div className="grid grid-cols-3 border-b border-white/10">
                 <Link
                   href="/comprar"
-                  className="flex min-h-12 items-center justify-center gap-2 border-b-2 border-[#d5a85a] px-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white transition hover:text-[#d5a85a] sm:min-h-14 sm:text-xs sm:tracking-[0.12em]"
+                  className="flex min-h-10 items-center justify-center border-b-2 border-[#d5a85a] px-1 text-[10px] font-bold uppercase tracking-[0.1em] text-white transition hover:text-[#d5a85a] sm:min-h-11 sm:text-[11px]"
                 >
                   Comprar
                 </Link>
 
                 <Link
                   href="/alugar"
-                  className="flex min-h-12 items-center justify-center gap-2 border-b-2 border-transparent px-1 text-[10px] font-bold uppercase tracking-[0.08em] text-zinc-300 transition hover:border-[#d5a85a] hover:text-[#d5a85a] sm:min-h-14 sm:text-xs sm:tracking-[0.12em]"
+                  className="flex min-h-10 items-center justify-center border-b-2 border-transparent px-1 text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-300 transition hover:border-[#d5a85a] hover:text-[#d5a85a] sm:min-h-11 sm:text-[11px]"
                 >
                   Alugar
                 </Link>
 
                 <Link
                   href="/lancamentos"
-                  className="flex min-h-12 items-center justify-center gap-2 border-b-2 border-transparent px-1 text-[10px] font-bold uppercase tracking-[0.08em] text-zinc-300 transition hover:border-[#d5a85a] hover:text-[#d5a85a] sm:min-h-14 sm:text-xs sm:tracking-[0.12em]"
+                  className="flex min-h-10 items-center justify-center border-b-2 border-transparent px-1 text-[10px] font-bold uppercase tracking-[0.1em] text-zinc-300 transition hover:border-[#d5a85a] hover:text-[#d5a85a] sm:min-h-11 sm:text-[11px]"
                 >
                   Lançamentos
                 </Link>
@@ -356,10 +356,10 @@ export default function Hero({
 
               <form
                 onSubmit={handleSearch}
-                className="mt-4 grid gap-3 sm:grid-cols-2 lg:mt-6 lg:grid-cols-[1fr_1.15fr_1fr_180px] lg:gap-4"
+                className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-[0.95fr_1.1fr_0.95fr_150px]"
               >
-                <label className="border border-white/10 bg-white/[0.035] px-4 py-3">
-                  <span className="block text-[9px] uppercase tracking-[0.12em] text-zinc-500">
+                <label className="border border-white/10 bg-white/[0.035] px-3.5 py-2">
+                  <span className="block text-[8px] uppercase tracking-[0.12em] text-zinc-500">
                     Tipo de imóvel
                   </span>
 
@@ -372,7 +372,7 @@ export default function Hero({
                             .value as HomeSearchState["propertyType"],
                       })
                     }
-                    className="mt-1 h-7 w-full bg-transparent text-sm text-zinc-300 outline-none"
+                    className="mt-0.5 h-6 w-full bg-transparent text-[13px] text-zinc-300 outline-none"
                   >
                     <option
                       value="Todos os tipos"
@@ -425,8 +425,8 @@ export default function Hero({
                   </select>
                 </label>
 
-                <label className="border border-white/10 bg-white/[0.035] px-4 py-3">
-                  <span className="block text-[9px] uppercase tracking-[0.12em] text-zinc-500">
+                <label className="border border-white/10 bg-white/[0.035] px-3.5 py-2">
+                  <span className="block text-[8px] uppercase tracking-[0.12em] text-zinc-500">
                     Cidade ou bairro
                   </span>
 
@@ -439,7 +439,7 @@ export default function Hero({
                             .value as HomeSearchState["location"],
                       })
                     }
-                    className="mt-1 h-7 w-full bg-transparent text-sm text-zinc-300 outline-none"
+                    className="mt-0.5 h-6 w-full bg-transparent text-[13px] text-zinc-300 outline-none"
                   >
                     <option
                       value="São José dos Campos"
@@ -478,8 +478,8 @@ export default function Hero({
                   </select>
                 </label>
 
-                <label className="border border-white/10 bg-white/[0.035] px-4 py-3">
-                  <span className="block text-[9px] uppercase tracking-[0.12em] text-zinc-500">
+                <label className="border border-white/10 bg-white/[0.035] px-3.5 py-2">
+                  <span className="block text-[8px] uppercase tracking-[0.12em] text-zinc-500">
                     Faixa de preço
                   </span>
 
@@ -492,7 +492,7 @@ export default function Hero({
                             .value as HomeSearchState["priceRange"],
                       })
                     }
-                    className="mt-1 h-7 w-full bg-transparent text-sm text-zinc-300 outline-none"
+                    className="mt-0.5 h-6 w-full bg-transparent text-[13px] text-zinc-300 outline-none"
                   >
                     <option
                       value="Qualquer valor"
@@ -533,7 +533,7 @@ export default function Hero({
 
                 <button
                   type="submit"
-                  className="inline-flex min-h-14 items-center justify-center gap-3 rounded-sm bg-[#ddb461] px-6 text-xs font-bold uppercase tracking-[0.12em] text-black transition hover:bg-[#edc876]"
+                  className="inline-flex min-h-[48px] items-center justify-center rounded-sm bg-[#ddb461] px-5 text-[12px] font-bold uppercase tracking-[0.14em] text-black shadow-[0_10px_26px_rgba(221,180,97,0.22)] transition duration-200 hover:bg-[#edc876] hover:shadow-[0_12px_30px_rgba(221,180,97,0.3)]"
                 >
                   Buscar
                 </button>
@@ -542,7 +542,7 @@ export default function Hero({
           </div>
         </div>
 
-        <div className="relative z-20 border-t border-white/10 bg-black/90 lg:absolute lg:inset-x-0 lg:bottom-0">
+        <div className="border-t border-white/10 bg-black/90">
           <div className="mx-auto grid max-w-[1720px] grid-cols-2 px-4 sm:px-6 lg:grid-cols-4 lg:px-10 xl:px-12">
             {benefits.map(
               (benefit, index) => (
