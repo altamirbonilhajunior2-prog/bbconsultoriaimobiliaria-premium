@@ -19,6 +19,14 @@ const statusLabels: Record<string, string> = {
   EM_ANALISE: "Em análise",
 };
 
+const propertyCodeOrder = [
+  "BBC",
+  "BBA",
+  "BBT",
+  "BBM",
+  "BBR",
+] as const;
+
 function formatCurrency(
   value: { toString(): string } | null,
 ) {
@@ -114,13 +122,121 @@ function getStatusClass(
   return "border-amber-500/50 bg-amber-500/10 text-amber-400";
 }
 
+function getPropertyCodePrefix(
+  code: string,
+) {
+  return code
+    .trim()
+    .toUpperCase()
+    .slice(0, 3);
+}
+
+function getPropertyCodeNumber(
+  code: string,
+) {
+  const numericPart =
+    code
+      .trim()
+      .toUpperCase()
+      .slice(3);
+
+  const number =
+    Number.parseInt(
+      numericPart,
+      10,
+    );
+
+  return Number.isFinite(number)
+    ? number
+    : Number.MAX_SAFE_INTEGER;
+}
+
+function comparePropertyCodes(
+  codeA: string,
+  codeB: string,
+) {
+  const prefixA =
+    getPropertyCodePrefix(
+      codeA,
+    );
+
+  const prefixB =
+    getPropertyCodePrefix(
+      codeB,
+    );
+
+  const orderA =
+    propertyCodeOrder.indexOf(
+      prefixA as (
+        typeof propertyCodeOrder
+      )[number],
+    );
+
+  const orderB =
+    propertyCodeOrder.indexOf(
+      prefixB as (
+        typeof propertyCodeOrder
+      )[number],
+    );
+
+  const normalizedOrderA =
+    orderA === -1
+      ? propertyCodeOrder.length
+      : orderA;
+
+  const normalizedOrderB =
+    orderB === -1
+      ? propertyCodeOrder.length
+      : orderB;
+
+  if (
+    normalizedOrderA !==
+    normalizedOrderB
+  ) {
+    return (
+      normalizedOrderA -
+      normalizedOrderB
+    );
+  }
+
+  if (
+    prefixA !== prefixB
+  ) {
+    return prefixA.localeCompare(
+      prefixB,
+      "pt-BR",
+    );
+  }
+
+  const numberA =
+    getPropertyCodeNumber(
+      codeA,
+    );
+
+  const numberB =
+    getPropertyCodeNumber(
+      codeB,
+    );
+
+  if (
+    numberA !== numberB
+  ) {
+    return numberA - numberB;
+  }
+
+  return codeA.localeCompare(
+    codeB,
+    "pt-BR",
+    {
+      numeric: true,
+      sensitivity: "base",
+    },
+  );
+}
+
 export default async function AdminImoveisPage() {
   const properties =
     await prisma.property.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-
       select: {
         id: true,
         code: true,
@@ -137,6 +253,14 @@ export default async function AdminImoveisPage() {
         rentalPrice: true,
       },
     });
+
+  properties.sort(
+    (propertyA, propertyB) =>
+      comparePropertyCodes(
+        propertyA.code,
+        propertyB.code,
+      ),
+  );
 
   const totalAvailable =
     properties.filter(
