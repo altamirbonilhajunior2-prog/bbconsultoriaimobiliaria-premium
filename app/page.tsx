@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
 import ConsultoriaSection from "./components/ConsultoriaSection";
 import Footer from "./components/Footer";
 import Header from "./components/Header";
-import Hero from "./components/Hero";
+import HomeSearchExperience from "./components/HomeSearchExperience";
 import NeighborhoodsSection from "./components/NeighborhoodsSection";
 import PropertyCard from "./components/PropertyCard";
-import PropertySearch from "./components/PropertySearch";
 import { prisma } from "../lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -177,7 +175,8 @@ export default async function Home() {
               );
 
         const price =
-          property.purpose !== "LOCACAO" &&
+          property.purpose !==
+            "LOCACAO" &&
           isLaunch
             ? `A partir de ${basePrice}*`
             : basePrice;
@@ -243,21 +242,7 @@ export default async function Home() {
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
       <Header />
 
-      <Hero />
-
-      <Suspense
-        fallback={
-          <section className="border-b border-white/10 bg-black">
-            <div className="mx-auto max-w-[1720px] px-6 py-8 lg:px-10 xl:px-12">
-              <div className="h-40 animate-pulse border border-white/10 bg-[#111111]" />
-            </div>
-          </section>
-        }
-      >
-        <PropertySearch
-          showCustomSearchCTA
-        />
-      </Suspense>
+      <HomeSearchExperience />
 
       <section className="mx-auto max-w-[1720px] px-5 pb-20 pt-20 sm:px-6 lg:px-8 xl:px-10">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -291,11 +276,19 @@ export default async function Home() {
                   price={property.price}
                   image={property.image}
                   tag={property.tag}
-                  propertyType={property.propertyType}
+                  propertyType={
+                    property.propertyType
+                  }
                   area={property.area}
-                  bedrooms={property.bedrooms}
-                  suites={property.suites}
-                  parking={property.parking}
+                  bedrooms={
+                    property.bedrooms
+                  }
+                  suites={
+                    property.suites
+                  }
+                  parking={
+                    property.parking
+                  }
                 />
               ),
             )}

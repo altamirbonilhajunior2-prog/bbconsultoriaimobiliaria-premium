@@ -17,6 +17,9 @@ import {
   stateOptions,
   values,
 } from "../data/searchOptions";
+import type {
+  HomeSearchState,
+} from "./HomeSearchExperience";
 
 type PropertyType = keyof typeof propertyTypes;
 
@@ -29,6 +32,7 @@ type PropertySearchProps = {
   showPurpose?: boolean;
   defaultPurpose?: PropertyPurpose;
   showCustomSearchCTA?: boolean;
+  searchState?: HomeSearchState;
 };
 
 const opportunityProfiles = [
@@ -77,7 +81,9 @@ const bedroomOptions = [
   { value: "4+", label: "04 ou mais" },
 ];
 
-function isPropertyType(value: string): value is PropertyType {
+function isPropertyType(
+  value: string,
+): value is PropertyType {
   return value in propertyTypes;
 }
 
@@ -95,26 +101,33 @@ export default function PropertySearch({
   showPurpose = true,
   defaultPurpose = "Venda",
   showCustomSearchCTA = false,
+  searchState,
 }: PropertySearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const initialType =
-    searchParams.get("tipo") || allPropertyTypesLabel;
+    searchParams.get("tipo") ||
+    allPropertyTypesLabel;
 
   const initialPurpose =
-    searchParams.get("finalidade") || defaultPurpose;
+    searchParams.get("finalidade") ||
+    defaultPurpose;
 
-  const [purpose, setPurpose] = useState<PropertyPurpose>(
-    isPropertyPurpose(initialPurpose)
-      ? initialPurpose
-      : defaultPurpose,
-  );
-
-  const [opportunityProfile, setOpportunityProfile] =
-    useState(
-      searchParams.get("perfil") || allProfilesLabel,
+  const [purpose, setPurpose] =
+    useState<PropertyPurpose>(
+      isPropertyPurpose(initialPurpose)
+        ? initialPurpose
+        : defaultPurpose,
     );
+
+  const [
+    opportunityProfile,
+    setOpportunityProfile,
+  ] = useState(
+    searchParams.get("perfil") ||
+      allProfilesLabel,
+  );
 
   const [state, setState] = useState(
     searchParams.get("estado") ||
@@ -127,95 +140,151 @@ export default function PropertySearch({
       "São José dos Campos",
   );
 
-  const [neighborhood, setNeighborhood] = useState(
+  const [
+    neighborhood,
+    setNeighborhood,
+  ] = useState(
     searchParams.get("bairro") ||
       allNeighborhoodsLabel,
   );
 
-  const [development, setDevelopment] = useState(
+  const [
+    development,
+    setDevelopment,
+  ] = useState(
     searchParams.get("empreendimento") ||
       allDevelopmentsLabel,
   );
 
-  const [propertyType, setPropertyType] = useState<
-    PropertyType | typeof allPropertyTypesLabel
+  const [
+    propertyType,
+    setPropertyType,
+  ] = useState<
+    PropertyType |
+      typeof allPropertyTypesLabel
   >(
     isPropertyType(initialType)
       ? initialType
       : allPropertyTypesLabel,
   );
 
-  const [category, setCategory] = useState(
-    searchParams.get("categoria") ||
-      allCategoriesLabel,
-  );
+  const [category, setCategory] =
+    useState(
+      searchParams.get("categoria") ||
+        allCategoriesLabel,
+    );
 
-  const [bedroom, setBedroom] = useState(
-    searchParams.get("dormitorios") ||
-      allBedroomsLabel,
-  );
+  const [bedroom, setBedroom] =
+    useState(
+      searchParams.get("dormitorios") ||
+        allBedroomsLabel,
+    );
 
-  const [value, setValue] = useState(
-    searchParams.get("valor") ||
-      allValuesLabel,
-  );
+  const [value, setValue] =
+    useState(
+      searchParams.get("valor") ||
+        allValuesLabel,
+    );
 
-  const [isCustomSearchOpen, setIsCustomSearchOpen] =
-    useState(false);
+  const [
+    isCustomSearchOpen,
+    setIsCustomSearchOpen,
+  ] = useState(false);
 
   const cities = useMemo(
-    () => [...getCities(state as "SP")],
+    () => [
+      ...getCities(
+        state as "SP",
+      ),
+    ],
     [state],
   );
 
-  const neighborhoods = useMemo(
-    () => [...getNeighborhoods(city)],
-    [city],
-  );
-
-  const categories = useMemo(() => {
-    if (propertyType === allPropertyTypesLabel) {
-      return [];
-    }
-
-    return [...propertyTypes[propertyType]];
-  }, [propertyType]);
-
-  const developments = useMemo(() => {
-    if (neighborhood === allNeighborhoodsLabel) {
-      return [];
-    }
-
-    const condominiums = [
-      ...getCondominiums(neighborhood),
-    ];
-
-    const buildings = [...getBuildings(neighborhood)];
-
-    return Array.from(
-      new Set([...condominiums, ...buildings]),
+  const neighborhoods =
+    useMemo(
+      () => [
+        ...getNeighborhoods(
+          city,
+        ),
+      ],
+      [city],
     );
-  }, [neighborhood]);
+
+  const categories =
+    useMemo(() => {
+      if (
+        propertyType ===
+        allPropertyTypesLabel
+      ) {
+        return [];
+      }
+
+      return [
+        ...propertyTypes[
+          propertyType
+        ],
+      ];
+    }, [propertyType]);
+
+  const developments =
+    useMemo(() => {
+      if (
+        neighborhood ===
+        allNeighborhoodsLabel
+      ) {
+        return [];
+      }
+
+      const condominiums = [
+        ...getCondominiums(
+          neighborhood,
+        ),
+      ];
+
+      const buildings = [
+        ...getBuildings(
+          neighborhood,
+        ),
+      ];
+
+      return Array.from(
+        new Set([
+          ...condominiums,
+          ...buildings,
+        ]),
+      );
+    }, [neighborhood]);
 
   const shouldShowBedrooms =
-    propertyType === allPropertyTypesLabel ||
+    propertyType ===
+      allPropertyTypesLabel ||
     propertyType === "Casa" ||
-    propertyType === "Apartamento";
+    propertyType ===
+      "Apartamento";
 
   useEffect(() => {
     const purposeFromUrl =
-      searchParams.get("finalidade");
+      searchParams.get(
+        "finalidade",
+      );
 
     if (
       purposeFromUrl &&
-      isPropertyPurpose(purposeFromUrl)
+      isPropertyPurpose(
+        purposeFromUrl,
+      )
     ) {
-      setPurpose(purposeFromUrl);
+      setPurpose(
+        purposeFromUrl,
+      );
+
       return;
     }
 
     if (!showPurpose) {
-      setPurpose(defaultPurpose);
+      setPurpose(
+        defaultPurpose,
+      );
     }
   }, [
     defaultPurpose,
@@ -224,19 +293,97 @@ export default function PropertySearch({
   ]);
 
   useEffect(() => {
-    if (!shouldShowBedrooms) {
-      setBedroom(allBedroomsLabel);
-    }
-  }, [shouldShowBedrooms]);
-
-  useEffect(() => {
-    if (!isCustomSearchOpen) {
+    if (!searchState) {
       return;
     }
 
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setIsCustomSearchOpen(false);
+    if (
+      searchState.propertyType ===
+      "Cobertura"
+    ) {
+      setPropertyType(
+        "Apartamento",
+      );
+
+      setCategory(
+        "Cobertura",
+      );
+    } else if (
+      searchState.propertyType ===
+      allPropertyTypesLabel
+    ) {
+      setPropertyType(
+        allPropertyTypesLabel,
+      );
+
+      setCategory(
+        allCategoriesLabel,
+      );
+    } else if (
+      isPropertyType(
+        searchState.propertyType,
+      )
+    ) {
+      setPropertyType(
+        searchState.propertyType,
+      );
+
+      setCategory(
+        allCategoriesLabel,
+      );
+    }
+
+    if (
+      searchState.location ===
+      "São José dos Campos"
+    ) {
+      setNeighborhood(
+        allNeighborhoodsLabel,
+      );
+    } else {
+      setNeighborhood(
+        searchState.location,
+      );
+    }
+
+    setDevelopment(
+      allDevelopmentsLabel,
+    );
+
+    setValue(
+      searchState.priceRange,
+    );
+  }, [searchState]);
+
+  useEffect(() => {
+    if (
+      !shouldShowBedrooms
+    ) {
+      setBedroom(
+        allBedroomsLabel,
+      );
+    }
+  }, [
+    shouldShowBedrooms,
+  ]);
+
+  useEffect(() => {
+    if (
+      !isCustomSearchOpen
+    ) {
+      return;
+    }
+
+    function handleEscape(
+      event: KeyboardEvent,
+    ) {
+      if (
+        event.key ===
+        "Escape"
+      ) {
+        setIsCustomSearchOpen(
+          false,
+        );
       }
     }
 
@@ -245,7 +392,8 @@ export default function PropertySearch({
       handleEscape,
     );
 
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow =
+      "hidden";
 
     return () => {
       document.removeEventListener(
@@ -253,120 +401,228 @@ export default function PropertySearch({
         handleEscape,
       );
 
-      document.body.style.overflow = "";
+      document.body.style.overflow =
+        "";
     };
-  }, [isCustomSearchOpen]);
+  }, [
+    isCustomSearchOpen,
+  ]);
 
   function handleStateChange(
     event: ChangeEvent<HTMLSelectElement>,
   ) {
-    const selectedState = event.target.value;
+    const selectedState =
+      event.target.value;
 
     const nextCities = [
-      ...getCities(selectedState as "SP"),
+      ...getCities(
+        selectedState as "SP",
+      ),
     ];
 
-    const nextCity = nextCities[0] || "";
+    const nextCity =
+      nextCities[0] || "";
 
-    setState(selectedState);
-    setCity(nextCity);
-    setNeighborhood(allNeighborhoodsLabel);
-    setDevelopment(allDevelopmentsLabel);
+    setState(
+      selectedState,
+    );
+
+    setCity(
+      nextCity,
+    );
+
+    setNeighborhood(
+      allNeighborhoodsLabel,
+    );
+
+    setDevelopment(
+      allDevelopmentsLabel,
+    );
   }
 
   function handleCityChange(
     event: ChangeEvent<HTMLSelectElement>,
   ) {
-    setCity(event.target.value);
-    setNeighborhood(allNeighborhoodsLabel);
-    setDevelopment(allDevelopmentsLabel);
+    setCity(
+      event.target.value,
+    );
+
+    setNeighborhood(
+      allNeighborhoodsLabel,
+    );
+
+    setDevelopment(
+      allDevelopmentsLabel,
+    );
   }
 
   function handleNeighborhoodChange(
     event: ChangeEvent<HTMLSelectElement>,
   ) {
-    setNeighborhood(event.target.value);
-    setDevelopment(allDevelopmentsLabel);
+    setNeighborhood(
+      event.target.value,
+    );
+
+    setDevelopment(
+      allDevelopmentsLabel,
+    );
   }
 
   function handlePropertyTypeChange(
     event: ChangeEvent<HTMLSelectElement>,
   ) {
-    const selectedType = event.target.value;
+    const selectedType =
+      event.target.value;
 
-    if (selectedType === allPropertyTypesLabel) {
-      setPropertyType(allPropertyTypesLabel);
-      setCategory(allCategoriesLabel);
+    if (
+      selectedType ===
+      allPropertyTypesLabel
+    ) {
+      setPropertyType(
+        allPropertyTypesLabel,
+      );
+
+      setCategory(
+        allCategoriesLabel,
+      );
+
       return;
     }
 
-    if (isPropertyType(selectedType)) {
-      setPropertyType(selectedType);
-      setCategory(propertyTypes[selectedType][0]);
+    if (
+      isPropertyType(
+        selectedType,
+      )
+    ) {
+      setPropertyType(
+        selectedType,
+      );
+
+      setCategory(
+        allCategoriesLabel,
+      );
     }
   }
 
   function handlePurposeChange(
     event: ChangeEvent<HTMLSelectElement>,
   ) {
-    const selectedPurpose = event.target.value;
+    const selectedPurpose =
+      event.target.value;
 
-    if (isPropertyPurpose(selectedPurpose)) {
-      setPurpose(selectedPurpose);
+    if (
+      isPropertyPurpose(
+        selectedPurpose,
+      )
+    ) {
+      setPurpose(
+        selectedPurpose,
+      );
     }
   }
 
   function handleSearch() {
-    const params = new URLSearchParams();
+    const params =
+      new URLSearchParams();
 
     const effectivePurpose =
       showPurpose
         ? purpose
         : defaultPurpose;
 
-    params.set("finalidade", effectivePurpose);
-    params.set("estado", state);
+    params.set(
+      "finalidade",
+      effectivePurpose,
+    );
+
+    params.set(
+      "estado",
+      state,
+    );
 
     if (city) {
-      params.set("cidade", city);
-    }
-
-    if (opportunityProfile !== allProfilesLabel) {
-      params.set("perfil", opportunityProfile);
-    }
-
-    if (neighborhood !== allNeighborhoodsLabel) {
-      params.set("bairro", neighborhood);
-    }
-
-    if (development !== allDevelopmentsLabel) {
-      params.set("empreendimento", development);
-    }
-
-    if (propertyType !== allPropertyTypesLabel) {
-      params.set("tipo", propertyType);
+      params.set(
+        "cidade",
+        city,
+      );
     }
 
     if (
-      propertyType !== allPropertyTypesLabel &&
-      category !== allCategoriesLabel
+      opportunityProfile !==
+      allProfilesLabel
     ) {
-      params.set("categoria", category);
+      params.set(
+        "perfil",
+        opportunityProfile,
+      );
+    }
+
+    if (
+      neighborhood !==
+      allNeighborhoodsLabel
+    ) {
+      params.set(
+        "bairro",
+        neighborhood,
+      );
+    }
+
+    if (
+      development !==
+      allDevelopmentsLabel
+    ) {
+      params.set(
+        "empreendimento",
+        development,
+      );
+    }
+
+    if (
+      propertyType !==
+      allPropertyTypesLabel
+    ) {
+      params.set(
+        "tipo",
+        propertyType,
+      );
+    }
+
+    if (
+      propertyType !==
+        allPropertyTypesLabel &&
+      category !==
+        allCategoriesLabel
+    ) {
+      params.set(
+        "categoria",
+        category,
+      );
     }
 
     if (
       shouldShowBedrooms &&
-      bedroom !== allBedroomsLabel
+      bedroom !==
+        allBedroomsLabel
     ) {
-      params.set("dormitorios", bedroom);
+      params.set(
+        "dormitorios",
+        bedroom,
+      );
     }
 
-    if (value !== allValuesLabel) {
-      params.set("valor", value);
+    if (
+      value !==
+      allValuesLabel
+    ) {
+      params.set(
+        "valor",
+        value,
+      );
     }
 
     const destination =
-      effectivePurpose === "Locação"
+      effectivePurpose ===
+      "Locação"
         ? "/alugar"
         : "/comprar";
 
@@ -381,31 +637,43 @@ export default function PropertySearch({
     event.preventDefault();
 
     const formData =
-      new FormData(event.currentTarget);
+      new FormData(
+        event.currentTarget,
+      );
 
     const customType =
       String(
-        formData.get("customType") || "",
+        formData.get(
+          "customType",
+        ) || "",
       );
 
     const customRegion =
       String(
-        formData.get("customRegion") || "",
+        formData.get(
+          "customRegion",
+        ) || "",
       );
 
     const customValue =
       String(
-        formData.get("customValue") || "",
+        formData.get(
+          "customValue",
+        ) || "",
       );
 
     const customObjective =
       String(
-        formData.get("customObjective") || "",
+        formData.get(
+          "customObjective",
+        ) || "",
       );
 
     const customDetails =
       String(
-        formData.get("customDetails") || "",
+        formData.get(
+          "customDetails",
+        ) || "",
       ).trim();
 
     const message = [
@@ -417,7 +685,8 @@ export default function PropertySearch({
       `Objetivo: ${customObjective}`,
       "",
       "Detalhes adicionais:",
-      customDetails || "Não informado.",
+      customDetails ||
+        "Não informado.",
     ].join("\n");
 
     const whatsappUrl =
@@ -444,11 +713,17 @@ export default function PropertySearch({
                 </span>
 
                 <select
-                  value={purpose}
-                  onChange={handlePurposeChange}
+                  value={
+                    purpose
+                  }
+                  onChange={
+                    handlePurposeChange
+                  }
                   className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
                 >
-                  <option value="Venda">Venda</option>
+                  <option value="Venda">
+                    Venda
+                  </option>
 
                   <option value="Locação">
                     Locação
@@ -467,21 +742,36 @@ export default function PropertySearch({
               </span>
 
               <select
-                value={opportunityProfile}
+                value={
+                  opportunityProfile
+                }
                 onChange={(event) =>
-                  setOpportunityProfile(event.target.value)
+                  setOpportunityProfile(
+                    event.target.value,
+                  )
                 }
                 className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
               >
-                <option value={allProfilesLabel}>
-                  {allProfilesLabel}
+                <option
+                  value={
+                    allProfilesLabel
+                  }
+                >
+                  {
+                    allProfilesLabel
+                  }
                 </option>
 
-                {opportunityProfiles.map((profile) => (
-                  <option key={profile} value={profile}>
-                    {profile}
-                  </option>
-                ))}
+                {opportunityProfiles.map(
+                  (profile) => (
+                    <option
+                      key={profile}
+                      value={profile}
+                    >
+                      {profile}
+                    </option>
+                  ),
+                )}
               </select>
             </label>
 
@@ -492,17 +782,27 @@ export default function PropertySearch({
 
               <select
                 value={state}
-                onChange={handleStateChange}
+                onChange={
+                  handleStateChange
+                }
                 className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
               >
-                {stateOptions.map((item) => (
-                  <option
-                    key={item.value}
-                    value={item.value}
-                  >
-                    {item.label}
-                  </option>
-                ))}
+                {stateOptions.map(
+                  (item) => (
+                    <option
+                      key={
+                        item.value
+                      }
+                      value={
+                        item.value
+                      }
+                    >
+                      {
+                        item.label
+                      }
+                    </option>
+                  ),
+                )}
               </select>
             </label>
 
@@ -513,14 +813,21 @@ export default function PropertySearch({
 
               <select
                 value={city}
-                onChange={handleCityChange}
+                onChange={
+                  handleCityChange
+                }
                 className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
               >
-                {cities.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
+                {cities.map(
+                  (item) => (
+                    <option
+                      key={item}
+                      value={item}
+                    >
+                      {item}
+                    </option>
+                  ),
+                )}
               </select>
             </label>
 
@@ -530,19 +837,34 @@ export default function PropertySearch({
               </span>
 
               <select
-                value={neighborhood}
-                onChange={handleNeighborhoodChange}
+                value={
+                  neighborhood
+                }
+                onChange={
+                  handleNeighborhoodChange
+                }
                 className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
               >
-                <option value={allNeighborhoodsLabel}>
-                  {allNeighborhoodsLabel}
+                <option
+                  value={
+                    allNeighborhoodsLabel
+                  }
+                >
+                  {
+                    allNeighborhoodsLabel
+                  }
                 </option>
 
-                {neighborhoods.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
+                {neighborhoods.map(
+                  (item) => (
+                    <option
+                      key={item}
+                      value={item}
+                    >
+                      {item}
+                    </option>
+                  ),
+                )}
               </select>
             </label>
 
@@ -552,26 +874,41 @@ export default function PropertySearch({
               </span>
 
               <select
-                value={development}
+                value={
+                  development
+                }
                 onChange={(event) =>
-                  setDevelopment(event.target.value)
+                  setDevelopment(
+                    event.target.value,
+                  )
                 }
                 disabled={
-                  neighborhood === allNeighborhoodsLabel
+                  neighborhood ===
+                  allNeighborhoodsLabel
                 }
                 className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500 disabled:cursor-not-allowed disabled:text-zinc-600"
               >
-                <option value={allDevelopmentsLabel}>
-                  {neighborhood === allNeighborhoodsLabel
+                <option
+                  value={
+                    allDevelopmentsLabel
+                  }
+                >
+                  {neighborhood ===
+                  allNeighborhoodsLabel
                     ? "Selecione o bairro primeiro"
                     : allDevelopmentsLabel}
                 </option>
 
-                {developments.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
+                {developments.map(
+                  (item) => (
+                    <option
+                      key={item}
+                      value={item}
+                    >
+                      {item}
+                    </option>
+                  ),
+                )}
               </select>
             </label>
 
@@ -581,19 +918,36 @@ export default function PropertySearch({
               </span>
 
               <select
-                value={propertyType}
-                onChange={handlePropertyTypeChange}
+                value={
+                  propertyType
+                }
+                onChange={
+                  handlePropertyTypeChange
+                }
                 className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
               >
-                <option value={allPropertyTypesLabel}>
-                  {allPropertyTypesLabel}
+                <option
+                  value={
+                    allPropertyTypesLabel
+                  }
+                >
+                  {
+                    allPropertyTypesLabel
+                  }
                 </option>
 
-                {Object.keys(propertyTypes).map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
+                {Object.keys(
+                  propertyTypes,
+                ).map(
+                  (type) => (
+                    <option
+                      key={type}
+                      value={type}
+                    >
+                      {type}
+                    </option>
+                  ),
+                )}
               </select>
             </label>
 
@@ -603,25 +957,52 @@ export default function PropertySearch({
               </span>
 
               <select
-                value={category}
+                value={
+                  category
+                }
                 onChange={(event) =>
-                  setCategory(event.target.value)
+                  setCategory(
+                    event.target.value,
+                  )
                 }
                 disabled={
-                  propertyType === allPropertyTypesLabel
+                  propertyType ===
+                  allPropertyTypesLabel
                 }
                 className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500 disabled:cursor-not-allowed disabled:text-zinc-600"
               >
-                {propertyType === allPropertyTypesLabel ? (
-                  <option value={allCategoriesLabel}>
+                {propertyType ===
+                allPropertyTypesLabel ? (
+                  <option
+                    value={
+                      allCategoriesLabel
+                    }
+                  >
                     Selecione o tipo primeiro
                   </option>
                 ) : (
-                  categories.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
+                  <>
+                    <option
+                      value={
+                        allCategoriesLabel
+                      }
+                    >
+                      {
+                        allCategoriesLabel
+                      }
                     </option>
-                  ))
+
+                    {categories.map(
+                      (item) => (
+                        <option
+                          key={item}
+                          value={item}
+                        >
+                          {item}
+                        </option>
+                      ),
+                    )}
+                  </>
                 )}
               </select>
             </label>
@@ -633,24 +1014,42 @@ export default function PropertySearch({
                 </span>
 
                 <select
-                  value={bedroom}
+                  value={
+                    bedroom
+                  }
                   onChange={(event) =>
-                    setBedroom(event.target.value)
+                    setBedroom(
+                      event.target.value,
+                    )
                   }
                   className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
                 >
-                  <option value={allBedroomsLabel}>
-                    {allBedroomsLabel}
+                  <option
+                    value={
+                      allBedroomsLabel
+                    }
+                  >
+                    {
+                      allBedroomsLabel
+                    }
                   </option>
 
-                  {bedroomOptions.map((item) => (
-                    <option
-                      key={item.value}
-                      value={item.value}
-                    >
-                      {item.label}
-                    </option>
-                  ))}
+                  {bedroomOptions.map(
+                    (item) => (
+                      <option
+                        key={
+                          item.value
+                        }
+                        value={
+                          item.value
+                        }
+                      >
+                        {
+                          item.label
+                        }
+                      </option>
+                    ),
+                  )}
                 </select>
               </label>
             )}
@@ -663,24 +1062,38 @@ export default function PropertySearch({
               <select
                 value={value}
                 onChange={(event) =>
-                  setValue(event.target.value)
+                  setValue(
+                    event.target.value,
+                  )
                 }
                 className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
               >
-                <option value={allValuesLabel}>
-                  {allValuesLabel}
+                <option
+                  value={
+                    allValuesLabel
+                  }
+                >
+                  {
+                    allValuesLabel
+                  }
                 </option>
 
                 {values
                   .filter(
                     (item) =>
-                      item !== "Todos os valores",
+                      item !==
+                      "Todos os valores",
                   )
-                  .map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
+                  .map(
+                    (item) => (
+                      <option
+                        key={item}
+                        value={item}
+                      >
+                        {item}
+                      </option>
+                    ),
+                  )}
               </select>
             </label>
 
@@ -689,7 +1102,9 @@ export default function PropertySearch({
                 <div className="flex items-end">
                   <button
                     type="button"
-                    onClick={handleSearch}
+                    onClick={
+                      handleSearch
+                    }
                     className="min-h-14 w-full bg-amber-500 px-7 text-sm font-bold uppercase tracking-[0.16em] text-black transition hover:bg-amber-400"
                   >
                     Buscar imóveis
@@ -713,7 +1128,9 @@ export default function PropertySearch({
                   <button
                     type="button"
                     onClick={() =>
-                      setIsCustomSearchOpen(true)
+                      setIsCustomSearchOpen(
+                        true,
+                      )
                     }
                     className="mt-5 min-h-12 w-full border border-amber-500 px-5 text-[11px] font-bold uppercase tracking-[0.16em] text-amber-400 transition hover:bg-amber-500 hover:text-black"
                   >
@@ -724,7 +1141,9 @@ export default function PropertySearch({
             ) : (
               <button
                 type="button"
-                onClick={handleSearch}
+                onClick={
+                  handleSearch
+                }
                 className="min-h-14 bg-amber-500 px-7 text-sm font-bold uppercase tracking-[0.16em] text-black transition hover:bg-amber-400 md:self-end"
               >
                 Buscar imóveis
@@ -741,8 +1160,13 @@ export default function PropertySearch({
           aria-modal="true"
           aria-labelledby="custom-search-title"
           onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setIsCustomSearchOpen(false);
+            if (
+              event.target ===
+              event.currentTarget
+            ) {
+              setIsCustomSearchOpen(
+                false,
+              );
             }
           }}
         >
@@ -769,7 +1193,9 @@ export default function PropertySearch({
               <button
                 type="button"
                 onClick={() =>
-                  setIsCustomSearchOpen(false)
+                  setIsCustomSearchOpen(
+                    false,
+                  )
                 }
                 aria-label="Fechar questionário"
                 className="flex h-10 w-10 shrink-0 items-center justify-center border border-white/15 text-xl text-zinc-400 transition hover:border-amber-500 hover:text-amber-400"
@@ -779,7 +1205,9 @@ export default function PropertySearch({
             </div>
 
             <form
-              onSubmit={handleCustomSearchSubmit}
+              onSubmit={
+                handleCustomSearchSubmit
+              }
               className="p-6 sm:p-8"
             >
               <div className="grid gap-6 md:grid-cols-2">
@@ -794,15 +1222,23 @@ export default function PropertySearch({
                     defaultValue=""
                     className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
                   >
-                    <option value="" disabled>
+                    <option
+                      value=""
+                      disabled
+                    >
                       Selecione
                     </option>
 
-                    {customPropertyTypes.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
+                    {customPropertyTypes.map(
+                      (item) => (
+                        <option
+                          key={item}
+                          value={item}
+                        >
+                          {item}
+                        </option>
+                      ),
+                    )}
                   </select>
                 </label>
 
@@ -831,15 +1267,23 @@ export default function PropertySearch({
                     defaultValue=""
                     className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
                   >
-                    <option value="" disabled>
+                    <option
+                      value=""
+                      disabled
+                    >
                       Selecione
                     </option>
 
-                    {customValueRanges.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
+                    {customValueRanges.map(
+                      (item) => (
+                        <option
+                          key={item}
+                          value={item}
+                        >
+                          {item}
+                        </option>
+                      ),
+                    )}
                   </select>
                 </label>
 
@@ -854,15 +1298,23 @@ export default function PropertySearch({
                     defaultValue=""
                     className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
                   >
-                    <option value="" disabled>
+                    <option
+                      value=""
+                      disabled
+                    >
                       Selecione
                     </option>
 
-                    {customObjectives.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
+                    {customObjectives.map(
+                      (item) => (
+                        <option
+                          key={item}
+                          value={item}
+                        >
+                          {item}
+                        </option>
+                      ),
+                    )}
                   </select>
                 </label>
               </div>

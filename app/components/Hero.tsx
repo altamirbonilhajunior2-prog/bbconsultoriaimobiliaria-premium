@@ -4,6 +4,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import type {
+  HomeSearchState,
+} from "./HomeSearchExperience";
+
+type HeroProps = {
+  searchState?: HomeSearchState;
+  onSearchStateChange?: (
+    nextState: HomeSearchState,
+  ) => void;
+};
+
+const initialSearchState: HomeSearchState = {
+  propertyType: "Todos os tipos",
+  location: "São José dos Campos",
+  priceRange: "Qualquer valor",
+};
 
 const benefits = [
   {
@@ -103,17 +119,43 @@ const benefits = [
   },
 ];
 
-export default function Hero() {
+export default function Hero({
+  searchState,
+  onSearchStateChange,
+}: HeroProps) {
   const router = useRouter();
 
-  const [propertyType, setPropertyType] =
-    useState("Todos os tipos");
+  const [
+    localSearchState,
+    setLocalSearchState,
+  ] = useState<HomeSearchState>(
+    initialSearchState,
+  );
 
-  const [location, setLocation] =
-    useState("São José dos Campos");
+  const activeSearchState =
+    searchState ?? localSearchState;
 
-  const [priceRange, setPriceRange] =
-    useState("Qualquer valor");
+  const {
+    propertyType,
+    location,
+    priceRange,
+  } = activeSearchState;
+
+  function updateSearchState(
+    partialState: Partial<HomeSearchState>,
+  ) {
+    const nextState: HomeSearchState = {
+      ...activeSearchState,
+      ...partialState,
+    };
+
+    if (onSearchStateChange) {
+      onSearchStateChange(nextState);
+      return;
+    }
+
+    setLocalSearchState(nextState);
+  }
 
   function handleSearch(
     event: FormEvent<HTMLFormElement>,
@@ -324,9 +366,11 @@ export default function Hero() {
                   <select
                     value={propertyType}
                     onChange={(event) =>
-                      setPropertyType(
-                        event.target.value,
-                      )
+                      updateSearchState({
+                        propertyType:
+                          event.target
+                            .value as HomeSearchState["propertyType"],
+                      })
                     }
                     className="mt-1 h-7 w-full bg-transparent text-sm text-zinc-300 outline-none"
                   >
@@ -389,9 +433,11 @@ export default function Hero() {
                   <select
                     value={location}
                     onChange={(event) =>
-                      setLocation(
-                        event.target.value,
-                      )
+                      updateSearchState({
+                        location:
+                          event.target
+                            .value as HomeSearchState["location"],
+                      })
                     }
                     className="mt-1 h-7 w-full bg-transparent text-sm text-zinc-300 outline-none"
                   >
@@ -440,9 +486,11 @@ export default function Hero() {
                   <select
                     value={priceRange}
                     onChange={(event) =>
-                      setPriceRange(
-                        event.target.value,
-                      )
+                      updateSearchState({
+                        priceRange:
+                          event.target
+                            .value as HomeSearchState["priceRange"],
+                      })
                     }
                     className="mt-1 h-7 w-full bg-transparent text-sm text-zinc-300 outline-none"
                   >
