@@ -454,6 +454,9 @@ export default async function PropertyPage({
                 : "Selecionado"
             ),
 
+          propertyType:
+            item.propertyType,
+
           area:
             formatArea(
               item.area,
@@ -843,6 +846,9 @@ export default async function PropertyPage({
                   }
                   tag={
                     item.tag
+                  }
+                  propertyType={
+                    item.propertyType
                   }
                   area={
                     item.area

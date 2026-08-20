@@ -668,6 +668,9 @@ export default async function ComprarPage({
               ? "Destaque"
               : ""),
 
+          propertyType:
+            property.propertyType,
+
           area:
             formatArea(
               property.area,
@@ -794,6 +797,9 @@ export default async function ComprarPage({
                   }
                   tag={
                     property.tag
+                  }
+                  propertyType={
+                    property.propertyType
                   }
                   area={
                     property.area

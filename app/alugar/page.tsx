@@ -625,6 +625,9 @@ export default async function AlugarPage({
               ? "Destaque"
               : "Locação"),
 
+          propertyType:
+            property.propertyType,
+
           area:
             formatArea(
               property.area,
@@ -759,6 +762,9 @@ export default async function AlugarPage({
                   }
                   tag={
                     property.tag
+                  }
+                  propertyType={
+                    property.propertyType
                   }
                   area={
                     property.area

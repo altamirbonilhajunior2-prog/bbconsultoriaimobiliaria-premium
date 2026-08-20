@@ -210,6 +210,9 @@ export default async function Home() {
 
           tag,
 
+          propertyType:
+            property.propertyType,
+
           area:
             formatArea(
               property.area,
@@ -283,6 +286,7 @@ export default async function Home() {
                   price={property.price}
                   image={property.image}
                   tag={property.tag}
+                  propertyType={property.propertyType}
                   area={property.area}
                   bedrooms={property.bedrooms}
                   suites={property.suites}

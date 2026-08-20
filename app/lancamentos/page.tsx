@@ -153,6 +153,9 @@ export default async function LancamentosPage() {
             coverImage?.url ??
             "/logo-bb.png",
 
+          propertyType:
+            property.propertyType,
+
           area:
             formatArea(
               property.area,
@@ -286,6 +289,9 @@ export default async function LancamentosPage() {
                     property.image
                   }
                   tag="Lançamento"
+                  propertyType={
+                    property.propertyType
+                  }
                   area={
                     property.area
                   }

@@ -12,6 +12,7 @@ type PropertyCardProps = {
   bedrooms: string;
   suites: string;
   parking: string;
+  propertyType: string;
 };
 
 export default function PropertyCard({
@@ -25,8 +26,12 @@ export default function PropertyCard({
   bedrooms,
   suites,
   parking,
+  propertyType,
 }: PropertyCardProps) {
   const propertyUrl = `/imovel/${code.toLowerCase()}`;
+
+  const isLand =
+    propertyType === "TERRENO";
 
   return (
     <article className="group flex h-full flex-col overflow-hidden border border-white/10 bg-[#0a0a0a] transition-all duration-500 hover:-translate-y-1 hover:border-amber-500/60 hover:shadow-[0_24px_70px_rgba(0,0,0,0.5)]">
@@ -67,32 +72,36 @@ export default function PropertyCard({
           <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-white/10 py-3 text-[11px] text-zinc-400">
             <span>{area}</span>
 
-            <span className="text-amber-500/70">•</span>
+            {!isLand ? (
+              <>
+                <span className="text-amber-500/70">•</span>
 
-            <span>
-              {bedrooms}{" "}
-              {bedrooms === "1"
-                ? "dormitório"
-                : "dormitórios"}
-            </span>
+                <span>
+                  {bedrooms}{" "}
+                  {bedrooms === "1"
+                    ? "dormitório"
+                    : "dormitórios"}
+                </span>
 
-            <span className="text-amber-500/70">•</span>
+                <span className="text-amber-500/70">•</span>
 
-            <span>
-              {suites}{" "}
-              {suites === "1"
-                ? "suíte"
-                : "suítes"}
-            </span>
+                <span>
+                  {suites}{" "}
+                  {suites === "1"
+                    ? "suíte"
+                    : "suítes"}
+                </span>
 
-            <span className="text-amber-500/70">•</span>
+                <span className="text-amber-500/70">•</span>
 
-            <span>
-              {parking}{" "}
-              {parking === "1"
-                ? "vaga"
-                : "vagas"}
-            </span>
+                <span>
+                  {parking}{" "}
+                  {parking === "1"
+                    ? "vaga"
+                    : "vagas"}
+                </span>
+              </>
+            ) : null}
           </div>
 
           <div className="mt-4">
