@@ -7,7 +7,6 @@ export default function ComprarFilters() {
     <PropertySearch
       showPurpose={false}
       defaultPurpose="Venda"
-      showCustomSearchCTA
     />
   );
 }

@@ -254,7 +254,9 @@ export default async function Home() {
           </section>
         }
       >
-        <PropertySearch />
+        <PropertySearch
+          showCustomSearchCTA
+        />
       </Suspense>
 
       <section className="mx-auto max-w-[1720px] px-5 pb-20 pt-20 sm:px-6 lg:px-8 xl:px-10">
