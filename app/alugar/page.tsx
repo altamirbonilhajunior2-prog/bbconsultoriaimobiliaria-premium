@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import Footer from "../components/Footer";
@@ -8,10 +9,15 @@ import { prisma } from "../../lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Alugar | B&B Consultoria Imobiliária",
+export const metadata: Metadata = {
+  title: "Imóveis para Alugar em São José dos Campos e Região",
+
   description:
-    "Imóveis selecionados para locação em São José dos Campos.",
+    "Encontre casas, apartamentos e imóveis selecionados para alugar em São José dos Campos e região, com opções no Urbanova, Jardim Aquarius e atendimento consultivo da B&B.",
+
+  alternates: {
+    canonical: "/alugar",
+  },
 };
 
 type AlugarPageProps = {
@@ -667,24 +673,19 @@ export default async function AlugarPage({
           <div className="mt-5 flex flex-col gap-8 xl:flex-row xl:items-end xl:justify-between">
             <div className="max-w-[1250px]">
               <h1 className="font-serif text-[38px] font-normal leading-[1.08] tracking-[-0.025em] text-white sm:text-[44px] lg:text-[50px] xl:text-[56px]">
-                Imóveis selecionados
-                para locação.
+                Imóveis para alugar em São José dos Campos e região.
               </h1>
 
               <p className="mt-5 max-w-3xl text-base leading-8 text-zinc-400 sm:text-lg">
-                Nós selecionamos
-                imóveis para locação
-                considerando
-                localização, qualidade
-                construtiva, segurança,
-                mobilidade e perfil de
-                cada cliente.
+                Casas, apartamentos e imóveis selecionados para locação,
+                com foco em localização, segurança, mobilidade, qualidade
+                construtiva e adequação ao perfil de cada cliente.
               </p>
             </div>
 
             <Link
               href="/contato"
-              className="inline-flex min-h-13 w-fit items-center justify-center border border-amber-500 px-7 text-xs font-bold uppercase tracking-[0.16em] text-amber-400 transition hover:bg-amber-500 hover:text-black"
+              className="inline-flex min-h-13 w-fit shrink-0 items-center justify-center border border-amber-500 px-7 text-center text-xs font-bold uppercase tracking-[0.16em] text-amber-400 transition hover:bg-amber-500 hover:text-black"
             >
               Falar com um consultor
             </Link>
@@ -711,12 +712,12 @@ export default async function AlugarPage({
         <div className="flex flex-col gap-4 border-b border-white/10 pb-6 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-400">
-              Resultado da busca
+              Imóveis para locação
             </p>
 
             <h2 className="mt-3 font-serif text-4xl font-normal">
               {hasActiveFilters
-                ? "Resultados para locação"
+                ? "Resultados da sua busca"
                 : "Imóveis disponíveis para locação"}
             </h2>
           </div>
@@ -792,18 +793,14 @@ export default async function AlugarPage({
             </p>
 
             <h3 className="mt-5 font-serif text-3xl font-normal sm:text-4xl">
-              Não há imóveis publicados
-              para locação com estes
-              critérios.
+              Não encontramos um imóvel para locação com todos os critérios
+              selecionados.
             </h3>
 
             <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-zinc-400">
-              Você pode ajustar os
-              filtros ou falar com a
-              B&amp;B para verificarmos
-              outras oportunidades
-              compatíveis com o seu
-              perfil.
+              Ajuste os filtros ou fale com a B&amp;B. Podemos verificar outras
+              oportunidades compatíveis com o seu perfil, inclusive imóveis
+              que ainda não estejam publicados no portal.
             </p>
 
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -823,6 +820,61 @@ export default async function AlugarPage({
             </div>
           </div>
         )}
+      </section>
+
+      <section className="border-t border-white/10 bg-[#090909]">
+        <div className="mx-auto grid max-w-[1720px] gap-10 px-6 py-16 lg:grid-cols-[1.35fr_0.65fr] lg:px-10 xl:px-12">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-amber-400">
+              Alugar imóvel em São José dos Campos
+            </p>
+
+            <h2 className="mt-4 max-w-4xl font-serif text-3xl font-normal leading-tight sm:text-4xl">
+              Encontre o imóvel certo para morar com mais segurança e menos
+              perda de tempo.
+            </h2>
+
+            <p className="mt-6 max-w-4xl text-sm leading-7 text-zinc-400 sm:text-base sm:leading-8">
+              A B&amp;B Consultoria Imobiliária acompanha o mercado de locação
+              em São José dos Campos e seleciona imóveis considerando
+              localização, condomínio, padrão construtivo, mobilidade,
+              segurança e adequação ao perfil do cliente.
+            </p>
+
+            <p className="mt-5 max-w-4xl text-sm leading-7 text-zinc-400 sm:text-base sm:leading-8">
+              Entre as regiões acompanhadas estão Urbanova, Jardim Aquarius e
+              outros bairros consolidados da cidade, com opções de casas,
+              apartamentos e imóveis em condomínio para diferentes perfis de
+              locação.
+            </p>
+          </div>
+
+          <div className="flex flex-col justify-center gap-3">
+            <Link
+              href="/bairros/urbanova"
+              className="flex min-h-14 items-center justify-between border border-white/10 px-5 text-sm text-zinc-200 transition hover:border-amber-500/60 hover:text-amber-400"
+            >
+              Imóveis no Urbanova
+              <span aria-hidden="true">→</span>
+            </Link>
+
+            <Link
+              href="/bairros/jardim-aquarius"
+              className="flex min-h-14 items-center justify-between border border-white/10 px-5 text-sm text-zinc-200 transition hover:border-amber-500/60 hover:text-amber-400"
+            >
+              Imóveis no Jardim Aquarius
+              <span aria-hidden="true">→</span>
+            </Link>
+
+            <Link
+              href="/contato"
+              className="flex min-h-14 items-center justify-between border border-amber-500/50 px-5 text-sm text-amber-400 transition hover:bg-amber-500 hover:text-black"
+            >
+              Falar com a B&amp;B
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </div>
       </section>
 
       <Footer />

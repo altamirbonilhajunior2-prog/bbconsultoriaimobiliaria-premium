@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -9,22 +10,29 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-const details: Record<string, {
+type NeighborhoodDetail = {
   eyebrow: string;
   title: string;
+  seoTitle: string;
+  seoDescription: string;
   intro: string;
   paragraphs: string[];
   highlights: string[];
-}> = {
+};
+
+const details: Record<string, NeighborhoodDetail> = {
   urbanova: {
     eyebrow: "Urbanova | São José dos Campos",
-    title: "Urbanova",
+    title: "Imóveis no Urbanova em São José dos Campos",
+    seoTitle: "Imóveis no Urbanova em São José dos Campos",
+    seoDescription:
+      "Casas, apartamentos e imóveis à venda e para locação no Urbanova, em São José dos Campos. Conheça a região e encontre oportunidades selecionadas pela B&B.",
     intro:
-      "Uma das regiões mais consolidadas de São José dos Campos para quem busca qualidade de vida, condomínios fechados e imóveis de médio e alto padrão.",
+      "Casas, apartamentos e imóveis em condomínios em uma das regiões mais procuradas de São José dos Campos para quem busca qualidade de vida, segurança e imóveis de médio e alto padrão.",
     paragraphs: [
-      "O Urbanova combina perfil residencial, áreas verdes, infraestrutura e acesso a serviços que fazem parte da rotina das famílias que escolheram a região para morar.",
-      "A expansão dos condomínios ao longo dos anos consolidou diferentes perfis de imóveis e faixas de valor. Por isso, a escolha exige análise do condomínio, localização interna, mobilidade, padrão construtivo e potencial de revenda.",
-      "Na B&B, nossa atuação no Urbanova parte de uma leitura consultiva: buscamos entender o momento do cliente e comparar as opções de maneira racional antes da decisão.",
+      "O Urbanova é uma das regiões residenciais mais consolidadas de São José dos Campos, com forte presença de condomínios fechados, áreas verdes, escolas, comércio e serviços que fazem parte da rotina das famílias que escolheram o bairro para morar.",
+      "A variedade de condomínios e empreendimentos cria diferentes perfis de casas e apartamentos à venda e para locação no Urbanova. Por isso, a análise deve considerar localização interna, padrão construtivo, posição do imóvel, infraestrutura do condomínio, mobilidade e perspectiva de valorização.",
+      "Na B&B, a busca por imóveis no Urbanova parte de uma análise consultiva. Comparamos as opções disponíveis de acordo com o objetivo, orçamento e momento de cada cliente, evitando que a decisão seja baseada apenas em aparência ou preço anunciado.",
     ],
     highlights: [
       "Condomínios fechados e segurança",
@@ -35,15 +43,19 @@ const details: Record<string, {
       "Mercado relevante para moradia e valorização patrimonial",
     ],
   },
+
   "jardim-aquarius": {
     eyebrow: "Jardim Aquarius | São José dos Campos",
-    title: "Jardim Aquarius",
+    title: "Imóveis no Jardim Aquarius em São José dos Campos",
+    seoTitle: "Imóveis no Jardim Aquarius em São José dos Campos",
+    seoDescription:
+      "Apartamentos e imóveis à venda e para locação no Jardim Aquarius, em São José dos Campos. Conheça o bairro e veja oportunidades selecionadas pela B&B.",
     intro:
-      "Uma região urbana consolidada, com forte presença de edifícios residenciais, serviços, gastronomia e mobilidade.",
+      "Uma das regiões urbanas mais valorizadas de São José dos Campos, com forte presença de edifícios residenciais, comércio, serviços, gastronomia e excelente conveniência.",
     paragraphs: [
-      "O Jardim Aquarius oferece uma rotina marcada pela proximidade entre moradia, comércio e serviços.",
-      "A diversidade de edifícios exige comparação entre idade, padrão construtivo, lazer, posição da unidade, vagas e liquidez.",
-      "Nossa curadoria busca separar atributos estéticos de fatores que realmente influenciam uso, valor e revenda.",
+      "O Jardim Aquarius oferece uma rotina marcada pela proximidade entre moradia, comércio, serviços, restaurantes e importantes vias de acesso de São José dos Campos.",
+      "A oferta de apartamentos no Jardim Aquarius é diversificada, com edifícios de diferentes idades, padrões construtivos e estruturas de lazer. A escolha exige comparar localização dentro do bairro, posição da unidade, vista, vagas, condomínio, padrão do edifício e liquidez.",
+      "Na B&B, analisamos os imóveis à venda e para locação no Jardim Aquarius considerando não apenas atributos estéticos, mas também os fatores que influenciam conforto, valor de mercado e potencial de revenda.",
     ],
     highlights: [
       "Localização consolidada",
@@ -54,15 +66,19 @@ const details: Record<string, {
       "Oferta diversificada de apartamentos",
     ],
   },
+
   colinas: {
     eyebrow: "Colinas | São José dos Campos",
-    title: "Colinas",
+    title: "Imóveis no Colinas em São José dos Campos",
+    seoTitle: "Imóveis no Colinas em São José dos Campos",
+    seoDescription:
+      "Imóveis à venda e para locação na região do Colinas, em São José dos Campos. Conheça a localização e oportunidades selecionadas pela B&B.",
     intro:
-      "Uma região tradicional de São José dos Campos, reconhecida pela localização e proximidade a importantes serviços da cidade.",
+      "Uma região tradicional e valorizada de São José dos Campos, reconhecida pela localização estratégica, perfil residencial e proximidade a importantes serviços da cidade.",
     paragraphs: [
-      "A região dos Colinas reúne conveniência, acesso e diferentes perfis residenciais.",
-      "Na escolha de um imóvel, avaliamos entorno, mobilidade, ruído, posição e características específicas de cada empreendimento.",
-      "Esse conjunto de fatores ajuda a entender não apenas como é morar no local, mas também a perspectiva patrimonial da aquisição.",
+      "A região do Colinas reúne conveniência, boa mobilidade e diferentes perfis de imóveis residenciais em uma localização consolidada de São José dos Campos.",
+      "Na escolha de um imóvel na região, é importante avaliar entorno, posição, mobilidade, ruído, padrão construtivo e características específicas de cada empreendimento.",
+      "A análise desses fatores permite entender não apenas a experiência de morar no local, mas também aspectos relacionados à liquidez, valor de mercado e perspectiva patrimonial do imóvel.",
     ],
     highlights: [
       "Região tradicional",
@@ -73,15 +89,19 @@ const details: Record<string, {
       "Diversidade imobiliária",
     ],
   },
+
   "altos-do-esplanada": {
     eyebrow: "Altos do Esplanada | São José dos Campos",
-    title: "Altos do Esplanada",
+    title: "Imóveis no Altos do Esplanada em São José dos Campos",
+    seoTitle: "Imóveis no Altos do Esplanada em São José dos Campos",
+    seoDescription:
+      "Imóveis de alto padrão à venda e para locação no Altos do Esplanada, em São José dos Campos. Conheça a região e a curadoria imobiliária da B&B.",
     intro:
-      "Uma região associada a exclusividade, tranquilidade e imóveis voltados ao segmento de maior padrão.",
+      "Uma região residencial de São José dos Campos associada a exclusividade, tranquilidade, privacidade e imóveis voltados ao segmento de maior padrão.",
     paragraphs: [
-      "O Altos do Esplanada apresenta perfil residencial diferenciado e acesso a importantes eixos da cidade.",
-      "Imóveis nessa região devem ser avaliados considerando padrão arquitetônico, privacidade, localização, entorno e liquidez.",
-      "Nossa análise busca relacionar esses atributos ao objetivo do comprador, seja para moradia ou posicionamento patrimonial.",
+      "O Altos do Esplanada apresenta perfil residencial diferenciado, localização estratégica e acesso a importantes regiões e serviços de São José dos Campos.",
+      "Os imóveis no Altos do Esplanada devem ser analisados considerando arquitetura, padrão construtivo, privacidade, posição, entorno, conservação e liquidez.",
+      "Na B&B, relacionamos esses atributos ao objetivo do comprador ou locatário para identificar oportunidades coerentes tanto para moradia quanto para posicionamento patrimonial.",
     ],
     highlights: [
       "Perfil residencial premium",
@@ -100,7 +120,9 @@ export function generateStaticParams() {
   }));
 }
 
-export default async function NeighborhoodPage({ params }: PageProps) {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
 
   const neighborhood = neighborhoods.find(
@@ -113,7 +135,42 @@ export default async function NeighborhoodPage({ params }: PageProps) {
     notFound();
   }
 
-  const encodedName = encodeURIComponent(neighborhood.name);
+  return {
+    title: detail.seoTitle,
+
+    description: detail.seoDescription,
+
+    alternates: {
+      canonical: `/bairros/${slug}`,
+    },
+
+    openGraph: {
+      type: "website",
+      title: detail.seoTitle,
+      description: detail.seoDescription,
+      url: `/bairros/${slug}`,
+    },
+  };
+}
+
+export default async function NeighborhoodPage({
+  params,
+}: PageProps) {
+  const { slug } = await params;
+
+  const neighborhood = neighborhoods.find(
+    (item) => item.slug === slug,
+  );
+
+  const detail = details[slug];
+
+  if (!neighborhood || !detail) {
+    notFound();
+  }
+
+  const encodedName = encodeURIComponent(
+    neighborhood.name,
+  );
 
   return (
     <main className="min-h-screen bg-[#050505] text-white">
@@ -122,7 +179,7 @@ export default async function NeighborhoodPage({ params }: PageProps) {
       <section className="relative min-h-[500px] overflow-hidden lg:min-h-[580px]">
         <Image
           src={neighborhood.image}
-          alt={neighborhood.name}
+          alt={`${neighborhood.name}, São José dos Campos`}
           fill
           priority
           sizes="100vw"
@@ -138,7 +195,7 @@ export default async function NeighborhoodPage({ params }: PageProps) {
               {detail.eyebrow}
             </p>
 
-            <h1 className="mt-4 font-serif text-5xl leading-none sm:text-6xl lg:text-7xl">
+            <h1 className="mt-4 font-serif text-5xl leading-[1.05] sm:text-6xl lg:text-7xl">
               {detail.title}
             </h1>
 
@@ -161,7 +218,9 @@ export default async function NeighborhoodPage({ params }: PageProps) {
 
           <div className="mt-8 space-y-6 text-base leading-8 text-zinc-400">
             {detail.paragraphs.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
+              <p key={paragraph}>
+                {paragraph}
+              </p>
             ))}
           </div>
 
@@ -209,8 +268,9 @@ export default async function NeighborhoodPage({ params }: PageProps) {
         <div className="mx-auto flex max-w-[1500px] flex-col gap-6 px-5 py-14 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-10">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-400">
-              Consultoria B&B
+              Consultoria B&amp;B
             </p>
+
             <h2 className="mt-3 font-serif text-3xl sm:text-4xl">
               Avalie a região antes de decidir.
             </h2>

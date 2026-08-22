@@ -11,10 +11,14 @@ import { prisma } from "../lib/prisma";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title:
-    "Imóveis em São José dos Campos e Região | B&B Consultoria Imobiliária",
+  title: "Imóveis em São José dos Campos e Região",
+
   description:
-    "Imóveis para comprar e alugar em São José dos Campos e região com curadoria, análise estratégica e atendimento consultivo da B&B Consultoria Imobiliária.",
+    "Imóveis à venda e para locação em São José dos Campos e região, com curadoria imobiliária, conhecimento local e atendimento consultivo da B&B.",
+
+  alternates: {
+    canonical: "/",
+  },
 };
 
 const benefits = [

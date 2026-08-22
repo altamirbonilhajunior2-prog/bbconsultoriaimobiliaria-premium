@@ -18,26 +18,15 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.bbconsultoriaimoveis.com.br"),
 
   title: {
-    default: "B&B Consultoria Imobiliária",
+    default:
+      "Imóveis em São José dos Campos | B&B Consultoria Imobiliária",
     template: "%s | B&B Consultoria Imobiliária",
   },
 
   description:
-    "Consultoria imobiliária especializada em imóveis de médio e alto padrão em São José dos Campos. Atendimento consultivo, análise patrimonial e oportunidades selecionadas.",
+    "Imóveis à venda e para locação em São José dos Campos, com foco em Urbanova, Jardim Aquarius e bairros selecionados. Curadoria imobiliária, atendimento consultivo e imóveis de médio e alto padrão.",
 
   applicationName: "B&B Consultoria Imobiliária",
-
-  keywords: [
-    "imóveis São José dos Campos",
-    "casas Urbanova",
-    "apartamentos Jardim Aquarius",
-    "consultoria imobiliária",
-    "alto padrão",
-    "casas em condomínio",
-    "imóveis de luxo",
-    "imobiliária São José dos Campos",
-    "B&B Consultoria Imobiliária",
-  ],
 
   authors: [
     {
@@ -49,35 +38,20 @@ export const metadata: Metadata = {
 
   publisher: "B&B Consultoria Imobiliária",
 
-  alternates: {
-    canonical: "/",
-  },
-
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    url: "https://www.bbconsultoriaimoveis.com.br",
     siteName: "B&B Consultoria Imobiliária",
-    title: "B&B Consultoria Imobiliária",
+    title: "Imóveis em São José dos Campos | B&B Consultoria Imobiliária",
     description:
-      "Consultoria imobiliária especializada em imóveis de médio e alto padrão em São José dos Campos.",
-
-    images: [
-      {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "B&B Consultoria Imobiliária",
-      },
-    ],
+      "Imóveis à venda e para locação em São José dos Campos. Curadoria imobiliária, conhecimento local e atendimento consultivo.",
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "B&B Consultoria Imobiliária",
+    title: "Imóveis em São José dos Campos | B&B Consultoria Imobiliária",
     description:
-      "Consultoria imobiliária especializada em imóveis de médio e alto padrão em São José dos Campos.",
-    images: ["/og-image.jpg"],
+      "Imóveis à venda e para locação em São José dos Campos. Curadoria imobiliária, conhecimento local e atendimento consultivo.",
   },
 
   robots: {

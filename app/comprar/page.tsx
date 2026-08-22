@@ -10,10 +10,14 @@ import { prisma } from "../../lib/prisma";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title:
-    "Imóveis à Venda em São José dos Campos e Região | B&B Consultoria Imobiliária",
+  title: "Imóveis à Venda em São José dos Campos e Região",
+
   description:
-    "Encontre imóveis à venda em São José dos Campos e região com curadoria, análise estratégica e atendimento consultivo da B&B Consultoria Imobiliária.",
+    "Encontre casas, apartamentos, terrenos e imóveis selecionados à venda em São José dos Campos e região, com curadoria e atendimento consultivo da B&B.",
+
+  alternates: {
+    canonical: "/comprar",
+  },
 };
 
 type ComprarPageProps = {
@@ -726,9 +730,9 @@ export default async function ComprarPage({
               </h1>
 
               <p className="mt-5 max-w-3xl text-base leading-8 text-zinc-400 sm:text-lg">
-                Selecionamos imóveis com análise de localização, padrão
-                construtivo, liquidez, valorização e adequação ao seu objetivo
-                para tornar sua decisão de compra mais segura.
+                Encontre casas, apartamentos, terrenos e imóveis selecionados
+                para venda, com análise de localização, padrão construtivo,
+                liquidez, valorização e adequação ao seu objetivo.
               </p>
             </div>
 
@@ -835,26 +839,17 @@ export default async function ComprarPage({
         ) : (
           <div className="mt-10 border border-amber-500/25 bg-[#0a0a0a] px-6 py-14 text-center">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400">
-              Nenhum resultado
-              encontrado
+              Nenhum resultado encontrado
             </p>
 
             <h3 className="mt-5 font-serif text-3xl font-normal sm:text-4xl">
-              Não encontramos um imóvel
-              com todos os critérios
-              selecionados.
+              Não encontramos um imóvel com todos os critérios selecionados.
             </h3>
 
             <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-zinc-400">
-              Você pode ajustar os
-              filtros ou falar com a
-              B&amp;B. Podemos
-              identificar outras
-              oportunidades compatíveis
-              com o seu perfil,
-              inclusive imóveis que
-              ainda não estejam
-              publicados no portal.
+              Você pode ajustar os filtros ou falar com a B&amp;B. Podemos
+              identificar outras oportunidades compatíveis com o seu perfil,
+              inclusive imóveis que ainda não estejam publicados no portal.
             </p>
 
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -909,6 +904,62 @@ export default async function ComprarPage({
             </button>
           </div>
         ) : null}
+      </section>
+
+      <section className="border-t border-white/10 bg-[#090909]">
+        <div className="mx-auto grid max-w-[1720px] gap-10 px-6 py-16 lg:grid-cols-[1.35fr_0.65fr] lg:px-10 xl:px-12">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-amber-400">
+              Comprar imóvel em São José dos Campos
+            </p>
+
+            <h2 className="mt-4 max-w-4xl font-serif text-3xl font-normal leading-tight sm:text-4xl">
+              Curadoria imobiliária para encontrar o imóvel certo para o seu
+              momento.
+            </h2>
+
+            <p className="mt-6 max-w-4xl text-sm leading-7 text-zinc-400 sm:text-base sm:leading-8">
+              A B&amp;B Consultoria Imobiliária seleciona oportunidades em São
+              José dos Campos e região considerando localização, padrão
+              construtivo, liquidez, potencial de valorização e adequação ao
+              perfil de cada cliente. O portal reúne casas, apartamentos,
+              terrenos, imóveis em condomínio e oportunidades de médio e alto
+              padrão para quem busca morar ou investir com mais segurança.
+            </p>
+
+            <p className="mt-5 max-w-4xl text-sm leading-7 text-zinc-400 sm:text-base sm:leading-8">
+              Entre as regiões acompanhadas pela B&amp;B estão bairros
+              valorizados como Urbanova e Jardim Aquarius, além de outras áreas
+              consolidadas de São José dos Campos.
+            </p>
+          </div>
+
+          <div className="flex flex-col justify-center gap-3">
+            <Link
+              href="/bairros/urbanova"
+              className="flex min-h-14 items-center justify-between border border-white/10 px-5 text-sm text-zinc-200 transition hover:border-amber-500/60 hover:text-amber-400"
+            >
+              Imóveis no Urbanova
+              <span aria-hidden="true">→</span>
+            </Link>
+
+            <Link
+              href="/bairros/jardim-aquarius"
+              className="flex min-h-14 items-center justify-between border border-white/10 px-5 text-sm text-zinc-200 transition hover:border-amber-500/60 hover:text-amber-400"
+            >
+              Imóveis no Jardim Aquarius
+              <span aria-hidden="true">→</span>
+            </Link>
+
+            <Link
+              href="/consultoria"
+              className="flex min-h-14 items-center justify-between border border-amber-500/50 px-5 text-sm text-amber-400 transition hover:bg-amber-500 hover:text-black"
+            >
+              Conheça a consultoria B&amp;B
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </div>
       </section>
 
       <Footer />
