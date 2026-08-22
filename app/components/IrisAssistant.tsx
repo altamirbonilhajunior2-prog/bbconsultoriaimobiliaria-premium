@@ -51,6 +51,12 @@ type IrisSearchResponse = {
   message?: string;
 };
 
+type IrisInterpretResponse = {
+  success: boolean;
+  interpreted?: IrisAnswers;
+  message?: string;
+};
+
 const initialAnswers: IrisAnswers = {
   purpose: "",
   propertyType: "",
@@ -104,6 +110,12 @@ function formatCurrency(
   ).format(value);
 }
 
+function summaryValue(
+  value: string,
+) {
+  return value.trim() || "Não informado.";
+}
+
 export default function IrisAssistant() {
   const [
     isOpen,
@@ -128,6 +140,21 @@ export default function IrisAssistant() {
     regionInput,
     setRegionInput,
   ] = useState("");
+
+  const [
+    naturalInput,
+    setNaturalInput,
+  ] = useState("");
+
+  const [
+    isInterpreting,
+    setIsInterpreting,
+  ] = useState(false);
+
+  const [
+    interpretError,
+    setInterpretError,
+  ] = useState(false);
 
   const [
     searchResults,
@@ -185,38 +212,51 @@ export default function IrisAssistant() {
         {
           label: "Finalidade",
           value:
-            answers.purpose,
+            summaryValue(
+              answers.purpose,
+            ),
         },
         {
           label: "Tipo de imóvel",
           value:
-            answers.propertyType,
+            summaryValue(
+              answers.propertyType,
+            ),
         },
         {
           label: "Bairro ou região",
           value:
-            answers.region,
+            summaryValue(
+              answers.region,
+            ),
         },
         {
           label: "Faixa de valor",
           value:
-            answers.value,
+            summaryValue(
+              answers.value,
+            ),
         },
         {
           label: "Dormitórios",
           value:
-            answers.bedrooms,
+            summaryValue(
+              answers.bedrooms,
+            ),
         },
         {
           label: "Objetivo",
           value:
-            answers.objective,
+            summaryValue(
+              answers.objective,
+            ),
         },
         {
           label: "Preferências",
           value:
-            answers.details ||
-            "Não informado.",
+            summaryValue(
+              answers.details,
+            ),
         },
       ],
       [answers],
@@ -232,6 +272,16 @@ export default function IrisAssistant() {
     );
 
     setRegionInput("");
+
+    setNaturalInput("");
+
+    setIsInterpreting(
+      false,
+    );
+
+    setInterpretError(
+      false,
+    );
 
     setSearchResults(
       [],
@@ -450,6 +500,137 @@ export default function IrisAssistant() {
     }
   }
 
+  async function handleNaturalSearch(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    const message =
+      naturalInput.trim();
+
+    if (!message) {
+      return;
+    }
+
+    setInterpretError(
+      false,
+    );
+
+    setIsInterpreting(
+      true,
+    );
+
+    setSearchResults(
+      [],
+    );
+
+    setSearchCompleted(
+      false,
+    );
+
+    setSearchError(
+      false,
+    );
+
+    try {
+      const response =
+        await fetch(
+          "/api/iris/interpret",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                message,
+              }),
+          },
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          "Falha ao interpretar a busca.",
+        );
+      }
+
+      const data =
+        (await response.json()) as
+          IrisInterpretResponse;
+
+      if (
+        !data.success ||
+        !data.interpreted
+      ) {
+        throw new Error(
+          data.message ||
+            "Falha ao interpretar a busca.",
+        );
+      }
+
+      const interpreted =
+        data.interpreted;
+
+      const nextAnswers: IrisAnswers = {
+        purpose:
+          interpreted.purpose ||
+          "",
+
+        propertyType:
+          interpreted.propertyType ||
+          "",
+
+        region:
+          interpreted.region ||
+          "",
+
+        value:
+          interpreted.value ||
+          "Ainda não defini",
+
+        bedrooms:
+          interpreted.bedrooms ||
+          "Não é relevante",
+
+        objective:
+          interpreted.objective ||
+          "",
+
+        details:
+          interpreted.details ||
+          message,
+      };
+
+      setAnswers(
+        nextAnswers,
+      );
+
+      setStep(
+        "summary",
+      );
+
+      await searchProperties(
+        nextAnswers,
+      );
+    } catch (error) {
+      console.error(
+        "Erro ao interpretar busca com a Íris:",
+        error,
+      );
+
+      setInterpretError(
+        true,
+      );
+    } finally {
+      setIsInterpreting(
+        false,
+      );
+    }
+  }
+
   async function handleDetailsSubmit(
     event: FormEvent<HTMLFormElement>,
   ) {
@@ -502,16 +683,29 @@ export default function IrisAssistant() {
       "Olá, concluí uma busca com a Íris no Portal B&B.",
       "",
       "Resumo da busca:",
-      `Finalidade: ${answers.purpose}`,
-      `Tipo de imóvel: ${answers.propertyType}`,
-      `Bairro ou região: ${answers.region}`,
-      `Faixa de valor: ${answers.value}`,
-      `Dormitórios: ${answers.bedrooms}`,
-      `Objetivo: ${answers.objective}`,
+      `Finalidade: ${summaryValue(
+        answers.purpose,
+      )}`,
+      `Tipo de imóvel: ${summaryValue(
+        answers.propertyType,
+      )}`,
+      `Bairro ou região: ${summaryValue(
+        answers.region,
+      )}`,
+      `Faixa de valor: ${summaryValue(
+        answers.value,
+      )}`,
+      `Dormitórios: ${summaryValue(
+        answers.bedrooms,
+      )}`,
+      `Objetivo: ${summaryValue(
+        answers.objective,
+      )}`,
       "",
       "Preferências adicionais:",
-      answers.details ||
-        "Não informado.",
+      summaryValue(
+        answers.details,
+      ),
       ...selectedProperties,
       "",
       "Gostaria de receber uma curadoria de imóveis compatíveis com este perfil.",
@@ -541,11 +735,72 @@ export default function IrisAssistant() {
           </IrisMessage>
 
           <IrisMessage>
-            Vou ajudar você a organizar sua busca de forma rápida e objetiva.
+            Você pode me contar com suas próprias palavras o imóvel que procura
+            ou usar a busca guiada abaixo.
           </IrisMessage>
 
           <IrisQuestion>
-            Para começarmos, o que você procura?
+            Descreva o imóvel que você procura.
+          </IrisQuestion>
+
+          <form
+            onSubmit={
+              handleNaturalSearch
+            }
+            className="mt-4"
+          >
+            <textarea
+              rows={4}
+              value={
+                naturalInput
+              }
+              onChange={(event) =>
+                setNaturalInput(
+                  event.target.value,
+                )
+              }
+              disabled={
+                isInterpreting
+              }
+              placeholder="Ex.: Quero uma casa no Urbanova até R$ 2 milhões, com 4 dormitórios, para morar."
+              className="w-full resize-y rounded-xl border border-[#d5a85a]/30 bg-[#101010] px-4 py-4 text-sm leading-6 text-white outline-none placeholder:text-zinc-600 transition focus:border-[#d5a85a]/70 disabled:cursor-wait disabled:opacity-60"
+            />
+
+            <button
+              type="submit"
+              disabled={
+                isInterpreting ||
+                !naturalInput.trim()
+              }
+              className="mt-3 min-h-12 w-full rounded-xl bg-[#d5a85a] px-5 text-xs font-bold uppercase tracking-[0.14em] text-black transition hover:bg-[#e8c47d] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isInterpreting
+                ? "Íris está analisando..."
+                : "Buscar com a Íris"}
+            </button>
+          </form>
+
+          {interpretError ? (
+            <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
+              <p className="text-xs leading-5 text-zinc-300">
+                Não consegui interpretar sua descrição agora. Você pode tentar
+                novamente ou continuar pela busca guiada abaixo.
+              </p>
+            </div>
+          ) : null}
+
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-white/10" />
+
+            <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-zinc-600">
+              ou busca guiada
+            </span>
+
+            <div className="h-px flex-1 bg-white/10" />
+          </div>
+
+          <IrisQuestion>
+            Para começarmos pelo questionário, o que você procura?
           </IrisQuestion>
 
           <Options>
@@ -1145,8 +1400,9 @@ export default function IrisAssistant() {
               }
 
               <p className="mt-7 text-center text-[10px] leading-5 text-zinc-600">
-                A Íris é uma assistente virtual. Quando necessário, seu
-                atendimento poderá ser encaminhado para a equipe da B&amp;B.
+                A Íris é uma assistente virtual. As sugestões exibidas são
+                baseadas nos imóveis publicados no Portal B&amp;B. Quando
+                necessário, o atendimento poderá ser encaminhado para a equipe.
               </p>
             </div>
           </section>
