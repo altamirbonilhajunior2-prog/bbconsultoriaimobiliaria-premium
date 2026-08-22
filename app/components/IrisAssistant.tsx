@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   FormEvent,
   useEffect,
@@ -1316,11 +1317,9 @@ export default function IrisAssistant() {
           openAssistant
         }
         aria-label="Falar com a Íris, assistente virtual da B&B"
-        className="fixed bottom-6 right-28 z-[998] hidden min-h-16 items-center gap-4 rounded-full border border-[#d5a85a]/60 bg-[#090909]/95 px-6 text-left shadow-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-[#d5a85a] hover:shadow-[0_16px_40px_rgba(213,168,90,0.22)] md:flex"
+        className="fixed bottom-6 right-28 z-[998] hidden min-h-16 items-center gap-4 rounded-full border border-[#d5a85a]/60 bg-[#090909]/95 px-5 pr-6 text-left shadow-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-[#d5a85a] hover:shadow-[0_16px_40px_rgba(213,168,90,0.22)] md:flex"
       >
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#d5a85a]/60 bg-[#d5a85a]/10 font-serif text-xl text-[#d5a85a]">
-          Í
-        </span>
+        <IrisAvatar />
 
         <span>
           <span className="block text-[9px] font-bold uppercase tracking-[0.18em] text-[#d5a85a]">
@@ -1339,9 +1338,15 @@ export default function IrisAssistant() {
           openAssistant
         }
         aria-label="Falar com a Íris, assistente virtual da B&B"
-        className="fixed bottom-24 right-6 z-[998] flex h-14 w-14 items-center justify-center rounded-full border-2 border-[#d5a85a] bg-[#090909] font-serif text-xl text-[#d5a85a] shadow-2xl transition-all duration-300 hover:scale-105 md:hidden"
+        className="fixed bottom-24 right-6 z-[998] flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-[#d5a85a] bg-[#090909] shadow-2xl transition-all duration-300 hover:scale-105 md:hidden"
       >
-        Í
+        <Image
+          src="/iris-avatar.webp"
+          alt="Íris"
+          width={112}
+          height={112}
+          className="h-full w-full object-cover object-top"
+        />
       </button>
 
       {isOpen ? (
@@ -1364,9 +1369,7 @@ export default function IrisAssistant() {
           >
             <header className="flex items-center justify-between gap-4 border-b border-white/10 bg-[#0d0d0d] px-5 py-4">
               <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#d5a85a]/60 bg-[#d5a85a]/10 font-serif text-xl text-[#d5a85a]">
-                  Í
-                </span>
+                <IrisAvatar />
 
                 <div>
                   <h2
@@ -1409,6 +1412,20 @@ export default function IrisAssistant() {
         </div>
       ) : null}
     </>
+  );
+}
+
+function IrisAvatar() {
+  return (
+    <span className="relative flex h-11 w-11 shrink-0 overflow-hidden rounded-full border border-[#d5a85a]/70 bg-[#111111] shadow-[0_0_18px_rgba(213,168,90,0.14)]">
+      <Image
+        src="/iris-avatar.webp"
+        alt="Íris, assistente virtual da B&B"
+        width={88}
+        height={88}
+        className="h-full w-full object-cover object-top"
+      />
+    </span>
   );
 }
 
