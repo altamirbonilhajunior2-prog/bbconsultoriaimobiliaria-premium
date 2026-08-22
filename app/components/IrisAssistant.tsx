@@ -27,6 +27,30 @@ type IrisAnswers = {
   details: string;
 };
 
+type IrisSearchResult = {
+  code: string;
+  title: string;
+  propertyType: string;
+  category: string;
+  neighborhood: string;
+  city: string;
+  development: string | null;
+  purpose: string;
+  price: number | null;
+  bedrooms: number;
+  suites: number;
+  parking: number;
+  image: string | null;
+  url: string;
+};
+
+type IrisSearchResponse = {
+  success: boolean;
+  count: number;
+  results: IrisSearchResult[];
+  message?: string;
+};
+
 const initialAnswers: IrisAnswers = {
   purpose: "",
   propertyType: "",
@@ -62,6 +86,24 @@ const objectiveOptions = [
   "Outro",
 ];
 
+function formatCurrency(
+  value: number | null,
+) {
+  if (value === null) {
+    return "Sob consulta";
+  }
+
+  return new Intl.NumberFormat(
+    "pt-BR",
+    {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    },
+  ).format(value);
+}
+
 export default function IrisAssistant() {
   const [
     isOpen,
@@ -86,6 +128,28 @@ export default function IrisAssistant() {
     regionInput,
     setRegionInput,
   ] = useState("");
+
+  const [
+    searchResults,
+    setSearchResults,
+  ] = useState<IrisSearchResult[]>(
+    [],
+  );
+
+  const [
+    isSearching,
+    setIsSearching,
+  ] = useState(false);
+
+  const [
+    searchCompleted,
+    setSearchCompleted,
+  ] = useState(false);
+
+  const [
+    searchError,
+    setSearchError,
+  ] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -168,6 +232,22 @@ export default function IrisAssistant() {
     );
 
     setRegionInput("");
+
+    setSearchResults(
+      [],
+    );
+
+    setIsSearching(
+      false,
+    );
+
+    setSearchCompleted(
+      false,
+    );
+
+    setSearchError(
+      false,
+    );
   }
 
   function openAssistant() {
@@ -276,7 +356,101 @@ export default function IrisAssistant() {
     );
   }
 
-  function handleDetailsSubmit(
+  async function searchProperties(
+    nextAnswers: IrisAnswers,
+  ) {
+    setIsSearching(
+      true,
+    );
+
+    setSearchCompleted(
+      false,
+    );
+
+    setSearchError(
+      false,
+    );
+
+    setSearchResults(
+      [],
+    );
+
+    try {
+      const response =
+        await fetch(
+          "/api/iris/search",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                purpose:
+                  nextAnswers.purpose,
+
+                propertyType:
+                  nextAnswers.propertyType,
+
+                region:
+                  nextAnswers.region,
+
+                value:
+                  nextAnswers.value,
+
+                bedrooms:
+                  nextAnswers.bedrooms,
+
+                objective:
+                  nextAnswers.objective,
+              }),
+          },
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          "Falha na busca de imóveis.",
+        );
+      }
+
+      const data =
+        (await response.json()) as
+          IrisSearchResponse;
+
+      if (!data.success) {
+        throw new Error(
+          data.message ||
+            "Falha na busca de imóveis.",
+        );
+      }
+
+      setSearchResults(
+        data.results,
+      );
+    } catch (error) {
+      console.error(
+        "Erro ao consultar imóveis com a Íris:",
+        error,
+      );
+
+      setSearchError(
+        true,
+      );
+    } finally {
+      setIsSearching(
+        false,
+      );
+
+      setSearchCompleted(
+        true,
+      );
+    }
+  }
+
+  async function handleDetailsSubmit(
     event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
@@ -293,19 +467,37 @@ export default function IrisAssistant() {
         ) || "",
       ).trim();
 
+    const nextAnswers: IrisAnswers = {
+      ...answers,
+      details,
+    };
+
     setAnswers(
-      (current) => ({
-        ...current,
-        details,
-      }),
+      nextAnswers,
     );
 
     setStep(
       "summary",
     );
+
+    await searchProperties(
+      nextAnswers,
+    );
   }
 
   function sendToWhatsApp() {
+    const selectedProperties =
+      searchResults.length > 0
+        ? [
+            "",
+            "Imóveis encontrados pela Íris:",
+            ...searchResults.map(
+              (property) =>
+                `${property.code} - ${property.title}`,
+            ),
+          ]
+        : [];
+
     const message = [
       "Olá, concluí uma busca com a Íris no Portal B&B.",
       "",
@@ -320,6 +512,7 @@ export default function IrisAssistant() {
       "Preferências adicionais:",
       answers.details ||
         "Não informado.",
+      ...selectedProperties,
       "",
       "Gostaria de receber uma curadoria de imóveis compatíveis com este perfil.",
     ].join("\n");
@@ -666,30 +859,196 @@ export default function IrisAssistant() {
           </div>
         </div>
 
-        <IrisMessage>
-          Posso encaminhar este perfil para a equipe da B&amp;B continuar a
-          curadoria pelo WhatsApp.
-        </IrisMessage>
+        {isSearching ? (
+          <div className="mt-5 rounded-2xl border border-white/10 bg-[#111111] px-4 py-5">
+            <p className="text-sm leading-6 text-zinc-300">
+              Estou consultando os imóveis disponíveis da B&amp;B para encontrar
+              as opções mais compatíveis com o seu perfil...
+            </p>
 
-        <button
-          type="button"
-          onClick={
-            sendToWhatsApp
-          }
-          className="mt-4 min-h-13 w-full rounded-xl bg-[#d5a85a] px-5 text-xs font-bold uppercase tracking-[0.14em] text-black transition hover:bg-[#e8c47d]"
-        >
-          Enviar para a B&amp;B
-        </button>
+            <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full w-2/3 animate-pulse rounded-full bg-[#d5a85a]" />
+            </div>
+          </div>
+        ) : null}
 
-        <button
-          type="button"
-          onClick={
-            resetConversation
-          }
-          className="mt-3 min-h-12 w-full rounded-xl border border-white/10 bg-[#101010] px-5 text-xs font-bold uppercase tracking-[0.12em] text-zinc-300 transition hover:border-[#d5a85a]/50 hover:text-[#d5a85a]"
-        >
-          Fazer uma nova busca
-        </button>
+        {searchCompleted &&
+        !searchError &&
+        searchResults.length >
+          0 ? (
+          <>
+            <IrisMessage>
+              Encontrei{" "}
+              {
+                searchResults.length
+              }{" "}
+              {searchResults.length ===
+              1
+                ? "imóvel compatível"
+                : "imóveis compatíveis"}{" "}
+              com os critérios informados.
+            </IrisMessage>
+
+            <div className="mt-4 space-y-3">
+              {searchResults.map(
+                (property) => (
+                  <article
+                    key={
+                      property.code
+                    }
+                    className="overflow-hidden rounded-2xl border border-white/10 bg-[#101010]"
+                  >
+                    {property.image ? (
+                      <div className="aspect-[16/9] overflow-hidden bg-black">
+                        <img
+                          src={
+                            property.image
+                          }
+                          alt={
+                            property.title
+                          }
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ) : null}
+
+                    <div className="p-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#d5a85a]">
+                          {
+                            property.code
+                          }
+                        </span>
+
+                        <span className="text-xs font-semibold text-white">
+                          {
+                            formatCurrency(
+                              property.price,
+                            )
+                          }
+                        </span>
+                      </div>
+
+                      <h3 className="mt-2 font-serif text-lg leading-6 text-white">
+                        {
+                          property.title
+                        }
+                      </h3>
+
+                      <p className="mt-2 text-xs leading-5 text-zinc-400">
+                        {
+                          property.neighborhood
+                        }
+                        {" • "}
+                        {
+                          property.city
+                        }
+                      </p>
+
+                      {property.development ? (
+                        <p className="mt-1 text-xs leading-5 text-zinc-500">
+                          {
+                            property.development
+                          }
+                        </p>
+                      ) : null}
+
+                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-zinc-400">
+                        {property.bedrooms >
+                        0 ? (
+                          <span>
+                            {
+                              property.bedrooms
+                            }{" "}
+                            dormitórios
+                          </span>
+                        ) : null}
+
+                        {property.suites >
+                        0 ? (
+                          <span>
+                            {
+                              property.suites
+                            }{" "}
+                            suítes
+                          </span>
+                        ) : null}
+
+                        {property.parking >
+                        0 ? (
+                          <span>
+                            {
+                              property.parking
+                            }{" "}
+                            vagas
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <a
+                        href={
+                          property.url
+                        }
+                        className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-[#d5a85a]/50 px-4 text-[10px] font-bold uppercase tracking-[0.14em] text-[#d5a85a] transition hover:bg-[#d5a85a] hover:text-black"
+                      >
+                        Ver imóvel
+                      </a>
+                    </div>
+                  </article>
+                ),
+              )}
+            </div>
+          </>
+        ) : null}
+
+        {searchCompleted &&
+        !searchError &&
+        searchResults.length ===
+          0 ? (
+          <IrisMessage>
+            Não encontrei neste momento um imóvel publicado que corresponda
+            exatamente a todos esses critérios. A equipe da B&amp;B pode fazer
+            uma curadoria personalizada para você.
+          </IrisMessage>
+        ) : null}
+
+        {searchCompleted &&
+        searchError ? (
+          <IrisMessage>
+            Não consegui consultar os imóveis automaticamente neste momento,
+            mas seu perfil já está organizado e pode ser encaminhado para a
+            equipe da B&amp;B continuar a busca.
+          </IrisMessage>
+        ) : null}
+
+        {searchCompleted ? (
+          <>
+            <IrisMessage>
+              Posso encaminhar seu perfil para a equipe da B&amp;B continuar o
+              atendimento pelo WhatsApp.
+            </IrisMessage>
+
+            <button
+              type="button"
+              onClick={
+                sendToWhatsApp
+              }
+              className="mt-4 min-h-13 w-full rounded-xl bg-[#d5a85a] px-5 text-xs font-bold uppercase tracking-[0.14em] text-black transition hover:bg-[#e8c47d]"
+            >
+              Enviar para a B&amp;B
+            </button>
+
+            <button
+              type="button"
+              onClick={
+                resetConversation
+              }
+              className="mt-3 min-h-12 w-full rounded-xl border border-white/10 bg-[#101010] px-5 text-xs font-bold uppercase tracking-[0.12em] text-zinc-300 transition hover:border-[#d5a85a]/50 hover:text-[#d5a85a]"
+            >
+              Fazer uma nova busca
+            </button>
+          </>
+        ) : null}
       </>
     );
   }
@@ -867,7 +1226,9 @@ function OptionButton({
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={
+        onClick
+      }
       className="min-h-12 rounded-xl border border-white/10 bg-[#101010] px-4 text-left text-sm text-zinc-200 transition hover:border-[#d5a85a]/60 hover:bg-[#d5a85a]/5 hover:text-[#d5a85a]"
     >
       {children}
