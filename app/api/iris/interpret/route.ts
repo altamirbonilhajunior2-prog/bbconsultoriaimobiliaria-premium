@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey:
-    process.env.OPENAI_API_KEY,
-});
-
 type IrisInterpretRequest = {
   message?: string;
 };
@@ -14,6 +9,31 @@ export async function POST(
   request: Request,
 ) {
   try {
+    const apiKey =
+      process.env.OPENAI_API_KEY;
+
+    if (!apiKey) {
+      console.error(
+        "OPENAI_API_KEY não está configurada.",
+      );
+
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "A inteligência da Íris ainda não está disponível.",
+        },
+        {
+          status: 503,
+        },
+      );
+    }
+
+    const openai =
+      new OpenAI({
+        apiKey,
+      });
+
     const body =
       (await request.json()) as
         IrisInterpretRequest;
