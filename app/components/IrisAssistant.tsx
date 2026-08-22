@@ -1351,7 +1351,7 @@ export default function IrisAssistant() {
 
       {isOpen ? (
         <div
-          className="fixed inset-0 z-[1000] flex items-end justify-end bg-black/30 p-3 backdrop-blur-[2px] sm:p-5"
+          className="fixed inset-0 z-[1000] flex items-start justify-end overflow-y-auto bg-black/30 p-3 pt-[max(12px,env(safe-area-inset-top))] backdrop-blur-[2px] sm:items-end sm:p-5"
           onMouseDown={(event) => {
             if (
               event.target ===
@@ -1365,9 +1365,9 @@ export default function IrisAssistant() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="iris-title"
-            className="flex max-h-[min(760px,calc(100vh-24px))] w-full max-w-[420px] flex-col overflow-hidden rounded-2xl border border-[#d5a85a]/30 bg-[#080808] shadow-[0_28px_90px_rgba(0,0,0,0.72)]"
+            className="flex max-h-[calc(100dvh-24px)] w-full max-w-[420px] flex-col overflow-hidden rounded-2xl border border-[#d5a85a]/30 bg-[#080808] shadow-[0_28px_90px_rgba(0,0,0,0.72)] sm:max-h-[min(760px,calc(100vh-40px))]"
           >
-            <header className="flex items-center justify-between gap-4 border-b border-white/10 bg-[#0d0d0d] px-5 py-4">
+            <header className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-[#0d0d0d] px-5 py-4">
               <div className="flex items-center gap-3">
                 <IrisAvatar />
 
@@ -1391,13 +1391,13 @@ export default function IrisAssistant() {
                   setIsOpen(false)
                 }
                 aria-label="Fechar atendimento da Íris"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-xl text-zinc-400 transition hover:border-[#d5a85a]/60 hover:text-[#d5a85a]"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 text-xl text-zinc-400 transition hover:border-[#d5a85a]/60 hover:text-[#d5a85a]"
               >
                 ×
               </button>
             </header>
 
-            <div className="flex-1 overflow-y-auto px-5 py-6">
+            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
               {
                 renderStep()
               }
