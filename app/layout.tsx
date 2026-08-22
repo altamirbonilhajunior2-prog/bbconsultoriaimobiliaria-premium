@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { GoogleTagManager } from "@next/third-parties/google";
 import "./globals.css";
+import IrisAssistant from "./components/IrisAssistant";
 import WhatsAppButton from "./components/WhatsAppButton";
 
 const geistSans = Geist({
@@ -42,14 +43,16 @@ export const metadata: Metadata = {
     type: "website",
     locale: "pt_BR",
     siteName: "B&B Consultoria Imobiliária",
-    title: "Imóveis em São José dos Campos | B&B Consultoria Imobiliária",
+    title:
+      "Imóveis em São José dos Campos | B&B Consultoria Imobiliária",
     description:
       "Imóveis à venda e para locação em São José dos Campos. Curadoria imobiliária, conhecimento local e atendimento consultivo.",
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Imóveis em São José dos Campos | B&B Consultoria Imobiliária",
+    title:
+      "Imóveis em São José dos Campos | B&B Consultoria Imobiliária",
     description:
       "Imóveis à venda e para locação em São José dos Campos. Curadoria imobiliária, conhecimento local e atendimento consultivo.",
   },
@@ -85,6 +88,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-[#050505] text-white">
         {children}
+
+        <IrisAssistant />
+
         <WhatsAppButton />
 
         <GoogleTagManager gtmId="GTM-PFRXG4HN" />
