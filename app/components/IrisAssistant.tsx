@@ -48,6 +48,7 @@ type IrisSearchResult = {
 type IrisSearchResponse = {
   success: boolean;
   count: number;
+  matchType?: "exact" | "similar" | "none";
   results: IrisSearchResult[];
   message?: string;
 };
@@ -179,6 +180,13 @@ export default function IrisAssistant() {
     setSearchError,
   ] = useState(false);
 
+  const [
+    searchMatchType,
+    setSearchMatchType,
+  ] = useState<
+    "exact" | "similar" | "none"
+  >("none");
+
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -286,6 +294,10 @@ export default function IrisAssistant() {
 
     setSearchResults(
       [],
+    );
+
+    setSearchMatchType(
+      "none",
     );
 
     setIsSearching(
@@ -426,6 +438,10 @@ export default function IrisAssistant() {
       [],
     );
 
+    setSearchMatchType(
+      "none",
+    );
+
     try {
       const response =
         await fetch(
@@ -480,6 +496,13 @@ export default function IrisAssistant() {
 
       setSearchResults(
         data.results,
+      );
+
+      setSearchMatchType(
+        data.matchType ??
+          (data.results.length > 0
+            ? "exact"
+            : "none"),
       );
     } catch (error) {
       console.error(
@@ -1134,15 +1157,24 @@ export default function IrisAssistant() {
           0 ? (
           <>
             <IrisMessage>
-              Encontrei{" "}
-              {
-                searchResults.length
-              }{" "}
-              {searchResults.length ===
-              1
-                ? "imóvel compatível"
-                : "imóveis compatíveis"}{" "}
-              com os critérios informados.
+              {searchMatchType ===
+              "similar"
+                ? `Não encontrei uma correspondência exata, mas selecionei ${
+                    searchResults.length
+                  } ${
+                    searchResults.length ===
+                    1
+                      ? "alternativa próxima"
+                      : "alternativas próximas"
+                  } ao seu perfil.`
+                : `Encontrei ${
+                    searchResults.length
+                  } ${
+                    searchResults.length ===
+                    1
+                      ? "imóvel compatível"
+                      : "imóveis compatíveis"
+                  } com os critérios informados.`}
             </IrisMessage>
 
             <div className="mt-4 space-y-3">
