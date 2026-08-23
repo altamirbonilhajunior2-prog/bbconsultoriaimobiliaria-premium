@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 
+import { registerContactAction } from "./actions";
+
 const sourceLabels: Record<string, string> = {
   OLX: "OLX",
   ZAP: "ZAP",
@@ -189,6 +191,13 @@ export default async function AcquisitionOpportunityPage({
     opportunity.state,
   ].filter(Boolean);
 
+  const canRegisterContact =
+    opportunity.status === "ENCONTRADO" ||
+    opportunity.status === "SELECIONADO";
+
+  const contactAlreadyRegistered =
+    opportunity.contactedAt !== null;
+
   return (
     <main className="min-h-screen bg-[#050505] px-4 py-8 text-white sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -246,14 +255,29 @@ export default async function AcquisitionOpportunityPage({
               Abrir anúncio original
             </a>
 
-            <button
-              type="button"
-              disabled
-              className="inline-flex min-h-12 cursor-not-allowed items-center justify-center rounded-lg bg-amber-500 px-5 text-sm font-semibold text-black opacity-50"
-              title="Será ativado na próxima etapa."
-            >
-              Registrar contato
-            </button>
+            <form action={registerContactAction}>
+              <input
+                type="hidden"
+                name="opportunityId"
+                value={opportunity.id}
+              />
+
+              <button
+                type="submit"
+                disabled={!canRegisterContact}
+                className={`inline-flex min-h-12 w-full items-center justify-center rounded-lg px-5 text-sm font-semibold transition sm:w-auto ${
+                  canRegisterContact
+                    ? "bg-amber-500 text-black hover:bg-amber-400"
+                    : "cursor-not-allowed border border-white/10 bg-white/5 text-zinc-500"
+                }`}
+              >
+                {canRegisterContact
+                  ? "Registrar contato"
+                  : contactAlreadyRegistered
+                    ? "Contato registrado"
+                    : "Contato indisponível"}
+              </button>
+            </form>
           </div>
         </div>
 
