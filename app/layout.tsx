@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { GoogleTagManager } from "@next/third-parties/google";
+
 import "./globals.css";
-import IrisAssistant from "./components/IrisAssistant";
-import WhatsAppButton from "./components/WhatsAppButton";
+import PublicFloatingActions from "./components/PublicFloatingActions";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,18 +16,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.bbconsultoriaimoveis.com.br"),
+  metadataBase: new URL(
+    "https://www.bbconsultoriaimoveis.com.br",
+  ),
 
   title: {
     default:
       "Imóveis em São José dos Campos | B&B Consultoria Imobiliária",
-    template: "%s | B&B Consultoria Imobiliária",
+    template:
+      "%s | B&B Consultoria Imobiliária",
   },
 
   description:
     "Imóveis à venda e para locação em São José dos Campos, com foco em Urbanova, Jardim Aquarius e bairros selecionados. Curadoria imobiliária, atendimento consultivo e imóveis de médio e alto padrão.",
 
-  applicationName: "B&B Consultoria Imobiliária",
+  applicationName:
+    "B&B Consultoria Imobiliária",
 
   authors: [
     {
@@ -35,14 +39,17 @@ export const metadata: Metadata = {
     },
   ],
 
-  creator: "B&B Consultoria Imobiliária",
+  creator:
+    "B&B Consultoria Imobiliária",
 
-  publisher: "B&B Consultoria Imobiliária",
+  publisher:
+    "B&B Consultoria Imobiliária",
 
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    siteName: "B&B Consultoria Imobiliária",
+    siteName:
+      "B&B Consultoria Imobiliária",
     title:
       "Imóveis em São José dos Campos | B&B Consultoria Imobiliária",
     description:
@@ -60,10 +67,12 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+
     googleBot: {
       index: true,
       follow: true,
-      "max-image-preview": "large",
+      "max-image-preview":
+        "large",
       "max-video-preview": -1,
       "max-snippet": -1,
     },
@@ -89,9 +98,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-[#050505] text-white">
         {children}
 
-        <IrisAssistant />
-
-        <WhatsAppButton />
+        <PublicFloatingActions />
 
         <GoogleTagManager gtmId="GTM-PFRXG4HN" />
       </body>
