@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
 import AuthorizationRequestPanel from "./AuthorizationRequestPanel";
+import AuthorizationResponsePanel from "./AuthorizationResponsePanel";
 import { registerContactAction } from "./actions";
 
 const sourceLabels: Record<string, string> = {
@@ -208,6 +209,12 @@ export default async function AcquisitionOpportunityPage({
   const authorizationPending =
     opportunity.status ===
       "AGUARDANDO_AUTORIZACAO" ||
+    opportunity.authorizationStatus ===
+      "PENDENTE";
+
+  const canRegisterResponse =
+    opportunity.status ===
+      "AGUARDANDO_AUTORIZACAO" &&
     opportunity.authorizationStatus ===
       "PENDENTE";
 
@@ -593,6 +600,13 @@ export default async function AcquisitionOpportunityPage({
               }
               authorizationPending={
                 authorizationPending
+              }
+            />
+
+            <AuthorizationResponsePanel
+              opportunityId={opportunity.id}
+              canRegisterResponse={
+                canRegisterResponse
               }
             />
 
