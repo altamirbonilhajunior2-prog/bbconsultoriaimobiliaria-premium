@@ -26,6 +26,22 @@ function getOpportunityId(
   return opportunityId;
 }
 
+function revalidateOpportunity(
+  opportunityId: number,
+) {
+  revalidatePath(
+    "/admin/captacao-ia",
+  );
+
+  revalidatePath(
+    `/admin/captacao-ia/${opportunityId}`,
+  );
+
+  revalidatePath(
+    "/admin",
+  );
+}
+
 export async function registerContactAction(
   formData: FormData,
 ) {
@@ -75,16 +91,85 @@ export async function registerContactAction(
     });
   }
 
-  revalidatePath(
-    "/admin/captacao-ia",
+  revalidateOpportunity(
+    opportunity.id,
   );
 
-  revalidatePath(
+  redirect(
     `/admin/captacao-ia/${opportunity.id}`,
   );
+}
 
-  revalidatePath(
-    "/admin",
+export async function requestAuthorizationAction(
+  formData: FormData,
+) {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect("/login-admin");
+  }
+
+  const opportunityId =
+    getOpportunityId(formData);
+
+  if (!opportunityId) {
+    redirect("/admin/captacao-ia");
+  }
+
+  const opportunity =
+    await prisma.acquisitionOpportunity.findUnique({
+      where: {
+        id: opportunityId,
+      },
+
+      select: {
+        id: true,
+        status: true,
+        contactedAt: true,
+        authorizationStatus: true,
+      },
+    });
+
+  if (!opportunity) {
+    redirect("/admin/captacao-ia");
+  }
+
+  const canRequestAuthorization =
+    opportunity.status === "CONTATADO" &&
+    opportunity.contactedAt !== null &&
+    opportunity.authorizationStatus ===
+      "NAO_SOLICITADA";
+
+  if (canRequestAuthorization) {
+    await prisma.acquisitionOpportunity.update({
+      where: {
+        id: opportunity.id,
+      },
+
+      data: {
+        status:
+          "AGUARDANDO_AUTORIZACAO",
+
+        authorizationStatus:
+          "PENDENTE",
+
+        authorizationRequestedAt:
+          new Date(),
+
+        authorizedToAdvertise:
+          false,
+
+        authorizedToUseImages:
+          false,
+
+        authorizedToEditImages:
+          false,
+      },
+    });
+  }
+
+  revalidateOpportunity(
+    opportunity.id,
   );
 
   redirect(

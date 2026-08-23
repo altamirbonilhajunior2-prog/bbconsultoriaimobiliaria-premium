@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 
+import AuthorizationRequestPanel from "./AuthorizationRequestPanel";
 import { registerContactAction } from "./actions";
 
 const sourceLabels: Record<string, string> = {
@@ -197,6 +198,18 @@ export default async function AcquisitionOpportunityPage({
 
   const contactAlreadyRegistered =
     opportunity.contactedAt !== null;
+
+  const canRequestAuthorization =
+    opportunity.status === "CONTATADO" &&
+    opportunity.contactedAt !== null &&
+    opportunity.authorizationStatus ===
+      "NAO_SOLICITADA";
+
+  const authorizationPending =
+    opportunity.status ===
+      "AGUARDANDO_AUTORIZACAO" ||
+    opportunity.authorizationStatus ===
+      "PENDENTE";
 
   return (
     <main className="min-h-screen bg-[#050505] px-4 py-8 text-white sm:px-6 lg:px-8">
@@ -572,6 +585,16 @@ export default async function AcquisitionOpportunityPage({
                 />
               </div>
             </section>
+
+            <AuthorizationRequestPanel
+              opportunityId={opportunity.id}
+              canRequestAuthorization={
+                canRequestAuthorization
+              }
+              authorizationPending={
+                authorizationPending
+              }
+            />
 
             <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
               <div className="mb-6">
