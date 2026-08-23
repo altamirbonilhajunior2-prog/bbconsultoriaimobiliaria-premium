@@ -377,9 +377,12 @@ export default async function AdminCaptacaoIAPage() {
                           Fonte
                         </a>
 
-                        <span className="inline-flex h-10 cursor-not-allowed items-center justify-center border border-white/5 px-4 text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-700">
+                        <Link
+                          href={`/admin/captacao-ia/${opportunity.id}`}
+                          className="inline-flex h-10 items-center justify-center border border-amber-500/50 px-4 text-[9px] font-bold uppercase tracking-[0.14em] text-amber-400 transition hover:bg-amber-500 hover:text-black"
+                        >
                           Abrir
-                        </span>
+                        </Link>
                       </div>
                     </article>
                   );
