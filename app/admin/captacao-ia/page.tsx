@@ -1,36 +1,147 @@
 import Link from "next/link";
+import { prisma } from "../../../lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-const stages = [
-  {
-    label: "Encontrados",
-    value: 0,
-    detail: "Oportunidades identificadas",
-  },
-  {
-    label: "Selecionados",
-    value: 0,
-    detail: "Aprovados para abordagem",
-  },
-  {
-    label: "Contatados",
-    value: 0,
-    detail: "Contato já realizado",
-  },
-  {
-    label: "Autorizados",
-    value: 0,
-    detail: "Liberados para preparação",
-  },
-  {
-    label: "Publicados",
-    value: 0,
-    detail: "Convertidos em imóveis do portal",
-  },
-];
+const sourceLabels: Record<string, string> = {
+  OLX: "OLX",
+  ZAP: "ZAP",
+  VIVAREAL: "Viva Real",
+  IMOVELWEB: "Imovelweb",
+  SITE_IMOBILIARIA: "Site imobiliária",
+  OUTRO: "Outro",
+};
 
-export default function AdminCaptacaoIAPage() {
+const statusLabels: Record<string, string> = {
+  ENCONTRADO: "Encontrado",
+  SELECIONADO: "Selecionado",
+  CONTATADO: "Contatado",
+  AGUARDANDO_AUTORIZACAO: "Aguardando autorização",
+  AUTORIZADO: "Autorizado",
+  PUBLICADO: "Publicado",
+  DESCARTADO: "Descartado",
+  ARQUIVADO: "Arquivado",
+};
+
+function formatCurrency(
+  value: { toString(): string } | null,
+) {
+  if (value === null) {
+    return "Não informado";
+  }
+
+  const numericValue = Number(value.toString());
+
+  if (!Number.isFinite(numericValue)) {
+    return "Não informado";
+  }
+
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(numericValue);
+}
+
+function getStatusClass(status: string) {
+  if (status === "AUTORIZADO") {
+    return "border-emerald-500/50 bg-emerald-500/10 text-emerald-400";
+  }
+
+  if (status === "PUBLICADO") {
+    return "border-blue-500/50 bg-blue-500/10 text-blue-400";
+  }
+
+  if (
+    status === "CONTATADO" ||
+    status === "AGUARDANDO_AUTORIZACAO"
+  ) {
+    return "border-amber-500/50 bg-amber-500/10 text-amber-400";
+  }
+
+  if (
+    status === "DESCARTADO" ||
+    status === "ARQUIVADO"
+  ) {
+    return "border-zinc-500/50 bg-zinc-500/10 text-zinc-500";
+  }
+
+  return "border-white/15 bg-white/[0.03] text-zinc-300";
+}
+
+export default async function AdminCaptacaoIAPage() {
+  const opportunities =
+    await prisma.acquisitionOpportunity.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+        source: true,
+        sourceUrl: true,
+        sourceTitle: true,
+        status: true,
+        city: true,
+        neighborhood: true,
+        development: true,
+        price: true,
+        rentalPrice: true,
+        score: true,
+        createdAt: true,
+      },
+    });
+
+  const totalFound = opportunities.filter(
+    (item) => item.status === "ENCONTRADO",
+  ).length;
+
+  const totalSelected = opportunities.filter(
+    (item) => item.status === "SELECIONADO",
+  ).length;
+
+  const totalContacted = opportunities.filter(
+    (item) =>
+      item.status === "CONTATADO" ||
+      item.status === "AGUARDANDO_AUTORIZACAO",
+  ).length;
+
+  const totalAuthorized = opportunities.filter(
+    (item) => item.status === "AUTORIZADO",
+  ).length;
+
+  const totalPublished = opportunities.filter(
+    (item) => item.status === "PUBLICADO",
+  ).length;
+
+  const stages = [
+    {
+      label: "Encontrados",
+      value: totalFound,
+      detail: "Oportunidades identificadas",
+    },
+    {
+      label: "Selecionados",
+      value: totalSelected,
+      detail: "Aprovados para abordagem",
+    },
+    {
+      label: "Contatados",
+      value: totalContacted,
+      detail: "Contato ou autorização em andamento",
+    },
+    {
+      label: "Autorizados",
+      value: totalAuthorized,
+      detail: "Liberados para preparação",
+    },
+    {
+      label: "Publicados",
+      value: totalPublished,
+      detail: "Convertidos em imóveis do portal",
+    },
+  ];
+
   return (
     <main className="min-h-screen bg-[#050505] text-white">
       <div className="mx-auto max-w-[1500px] px-6 py-12 lg:px-10">
@@ -58,15 +169,13 @@ export default function AdminCaptacaoIAPage() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              disabled
-              className="inline-flex min-h-14 cursor-not-allowed items-center justify-center border border-white/10 px-7 text-xs font-bold uppercase tracking-[0.16em] text-zinc-600"
-            >
-              Nova captação
-            </button>
-          </div>
+          <button
+            type="button"
+            disabled
+            className="inline-flex min-h-14 cursor-not-allowed items-center justify-center border border-white/10 px-7 text-xs font-bold uppercase tracking-[0.16em] text-zinc-600"
+          >
+            Nova captação
+          </button>
         </header>
 
         <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -100,69 +209,124 @@ export default function AdminCaptacaoIAPage() {
             <span className="text-right">Ações</span>
           </div>
 
-          <div className="bg-[#080808] px-6 py-16 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
-              Radar B&amp;B
-            </p>
+          {opportunities.length > 0 ? (
+            <div>
+              {opportunities.map((opportunity) => {
+                const location =
+                  opportunity.development ??
+                  opportunity.neighborhood ??
+                  "Localização não informada";
 
-            <h2 className="mt-4 font-serif text-3xl font-normal">
-              Nenhuma oportunidade cadastrada.
-            </h2>
+                const value =
+                  opportunity.price ??
+                  opportunity.rentalPrice;
 
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-500">
-              Assim que ativarmos a base de dados da Captação IA, as
-              oportunidades encontradas em fontes como OLX, ZAP, parceiros e
-              outras origens aparecerão aqui para análise antes de qualquer
-              publicação.
-            </p>
+                return (
+                  <article
+                    key={opportunity.id}
+                    className="grid gap-5 border-b border-white/10 bg-[#080808] px-6 py-6 last:border-b-0 lg:grid-cols-[110px_1.7fr_1fr_1fr_160px_160px] lg:items-center"
+                  >
+                    <div>
+                      <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-600 lg:hidden">
+                        Fonte
+                      </span>
 
-            <div className="mx-auto mt-8 grid max-w-4xl gap-4 text-left md:grid-cols-3">
-              <article className="border border-white/10 bg-[#0b0b0b] p-5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
-                  01
-                </p>
+                      <p className="mt-1 text-sm font-semibold text-amber-400 lg:mt-0">
+                        {sourceLabels[opportunity.source] ??
+                          opportunity.source}
+                      </p>
+                    </div>
 
-                <h3 className="mt-3 font-serif text-xl">
-                  Encontrar
-                </h3>
+                    <div>
+                      <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-600 lg:hidden">
+                        Oportunidade
+                      </span>
 
-                <p className="mt-3 text-xs leading-6 text-zinc-500">
-                  Registrar oportunidades encontradas nas fontes definidas
-                  pela B&amp;B.
-                </p>
-              </article>
+                      <h2 className="mt-1 font-serif text-xl font-normal text-white lg:mt-0">
+                        {opportunity.sourceTitle ??
+                          `Captação #${opportunity.id}`}
+                      </h2>
 
-              <article className="border border-white/10 bg-[#0b0b0b] p-5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
-                  02
-                </p>
+                      {opportunity.score !== null && (
+                        <p className="mt-2 text-xs text-zinc-500">
+                          Score B&amp;B:{" "}
+                          <span className="text-amber-400">
+                            {opportunity.score}/100
+                          </span>
+                        </p>
+                      )}
+                    </div>
 
-                <h3 className="mt-3 font-serif text-xl">
-                  Autorizar
-                </h3>
+                    <div>
+                      <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-600 lg:hidden">
+                        Localização
+                      </span>
 
-                <p className="mt-3 text-xs leading-6 text-zinc-500">
-                  Controlar contato, autorização de divulgação e utilização
-                  das imagens.
-                </p>
-              </article>
+                      <p className="mt-1 text-sm text-zinc-300 lg:mt-0">
+                        {location}
+                      </p>
 
-              <article className="border border-white/10 bg-[#0b0b0b] p-5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
-                  03
-                </p>
+                      <p className="mt-1 text-xs text-zinc-500">
+                        {opportunity.city}
+                      </p>
+                    </div>
 
-                <h3 className="mt-3 font-serif text-xl">
-                  Publicar
-                </h3>
+                    <div>
+                      <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-600 lg:hidden">
+                        Valor
+                      </span>
 
-                <p className="mt-3 text-xs leading-6 text-zinc-500">
-                  Converter oportunidades autorizadas em imóveis completos do
-                  Portal B&amp;B.
-                </p>
-              </article>
+                      <p className="mt-1 text-sm font-medium text-white lg:mt-0">
+                        {formatCurrency(value)}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span
+                        className={`inline-flex border px-3 py-2 text-[9px] font-bold uppercase tracking-[0.14em] ${getStatusClass(
+                          opportunity.status,
+                        )}`}
+                      >
+                        {statusLabels[opportunity.status] ??
+                          opportunity.status}
+                      </span>
+                    </div>
+
+                    <div className="flex gap-3 lg:justify-end">
+                      <a
+                        href={opportunity.sourceUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex h-10 items-center justify-center border border-white/15 px-4 text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-300 transition hover:border-amber-500 hover:text-amber-400"
+                      >
+                        Fonte
+                      </a>
+
+                      <span className="inline-flex h-10 cursor-not-allowed items-center justify-center border border-white/5 px-4 text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-700">
+                        Abrir
+                      </span>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
-          </div>
+          ) : (
+            <div className="bg-[#080808] px-6 py-16 text-center">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                Radar B&amp;B
+              </p>
+
+              <h2 className="mt-4 font-serif text-3xl font-normal">
+                Nenhuma oportunidade cadastrada.
+              </h2>
+
+              <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-500">
+                As oportunidades encontradas em fontes como OLX, ZAP,
+                parceiros e outras origens aparecerão aqui para análise antes
+                de qualquer publicação.
+              </p>
+            </div>
+          )}
         </section>
 
         <section className="mt-10 border border-amber-500/20 bg-amber-500/[0.04] p-6">
