@@ -209,3 +209,111 @@ model Agent {
   @@index([role])
   @@index([active])
 }
+
+enum AcquisitionSource {
+  OLX
+  ZAP
+  VIVAREAL
+  IMOVELWEB
+  SITE_IMOBILIARIA
+  OUTRO
+}
+
+enum AcquisitionOrigin {
+  PROPRIETARIO
+  IMOBILIARIA
+  CORRETOR
+  OUTRO
+}
+
+enum AcquisitionStatus {
+  ENCONTRADO
+  SELECIONADO
+  CONTATADO
+  AGUARDANDO_AUTORIZACAO
+  AUTORIZADO
+  PUBLICADO
+  DESCARTADO
+  ARQUIVADO
+}
+
+enum AuthorizationStatus {
+  NAO_SOLICITADA
+  PENDENTE
+  AUTORIZADA
+  NEGADA
+  REVOGADA
+}
+
+model AcquisitionOpportunity {
+  id Int @id @default(autoincrement())
+
+  source    AcquisitionSource
+  sourceUrl String @unique @db.VarChar(1000)
+
+  origin AcquisitionOrigin?
+
+  status              AcquisitionStatus  @default(ENCONTRADO)
+  authorizationStatus AuthorizationStatus @default(NAO_SOLICITADA)
+
+  sourceTitle String? @db.VarChar(250)
+
+  state        String @default("SP") @db.VarChar(2)
+  city         String @default("São José dos Campos") @db.VarChar(120)
+  neighborhood String? @db.VarChar(150)
+
+  development String? @db.VarChar(180)
+  location    String? @db.VarChar(250)
+
+  purpose      PropertyPurpose?
+  propertyType PropertyType?
+
+  price       Decimal? @db.Decimal(15, 2)
+  rentalPrice Decimal? @db.Decimal(15, 2)
+
+  condominium Decimal? @db.Decimal(12, 2)
+  iptu        Decimal? @db.Decimal(12, 2)
+
+  area     Decimal? @db.Decimal(10, 2)
+  landArea Decimal? @db.Decimal(10, 2)
+
+  bedrooms  Int?
+  suites    Int?
+  bathrooms Int?
+  parking   Int?
+
+  contactName  String? @db.VarChar(180)
+  contactPhone String? @db.VarChar(30)
+  contactEmail String? @db.VarChar(180)
+
+  score       Int?
+  scoreReason String? @db.Text
+
+  internalNotes String? @db.Text
+
+  contactedAt              DateTime?
+  authorizationRequestedAt DateTime?
+  authorizationAt          DateTime?
+
+  authorizationNotes String? @db.Text
+
+  authorizedToAdvertise Boolean @default(false)
+  authorizedToUseImages Boolean @default(false)
+  authorizedToEditImages Boolean @default(false)
+
+  firstSeenAt   DateTime @default(now())
+  lastCheckedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([source])
+  @@index([origin])
+  @@index([status])
+  @@index([authorizationStatus])
+  @@index([city])
+  @@index([neighborhood])
+  @@index([price])
+  @@index([score])
+  @@index([createdAt])
+}
