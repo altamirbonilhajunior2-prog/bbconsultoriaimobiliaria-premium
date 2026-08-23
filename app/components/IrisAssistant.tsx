@@ -824,7 +824,7 @@ export default function IrisAssistant() {
           </div>
 
           <IrisQuestion>
-            Para começarmos pelo questionário, o que você procura?
+            Para começarmos, o que você procura?
           </IrisQuestion>
 
           <Options>
