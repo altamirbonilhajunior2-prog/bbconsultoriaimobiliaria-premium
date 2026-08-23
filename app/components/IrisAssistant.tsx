@@ -48,7 +48,6 @@ type IrisSearchResult = {
 type IrisSearchResponse = {
   success: boolean;
   count: number;
-  matchType?: "exact" | "similar" | "none";
   results: IrisSearchResult[];
   message?: string;
 };
@@ -69,12 +68,21 @@ const initialAnswers: IrisAnswers = {
   details: "",
 };
 
-const valueOptions = [
+const purchaseValueOptions = [
   "Até R$ 500 mil",
   "De R$ 500 mil a R$ 1 milhão",
   "De R$ 1 milhão a R$ 2 milhões",
   "De R$ 2 milhões a R$ 3 milhões",
   "Acima de R$ 3 milhões",
+  "Ainda não defini",
+];
+
+const rentalValueOptions = [
+  "Até R$ 3 mil/mês",
+  "De R$ 3 mil a R$ 5 mil/mês",
+  "De R$ 5 mil a R$ 8 mil/mês",
+  "De R$ 8 mil a R$ 12 mil/mês",
+  "Acima de R$ 12 mil/mês",
   "Ainda não defini",
 ];
 
@@ -180,13 +188,6 @@ export default function IrisAssistant() {
     setSearchError,
   ] = useState(false);
 
-  const [
-    searchMatchType,
-    setSearchMatchType,
-  ] = useState<
-    "exact" | "similar" | "none"
-  >("none");
-
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -214,6 +215,11 @@ export default function IrisAssistant() {
       );
     };
   }, [isOpen]);
+
+  const valueOptions =
+    answers.purpose === "Locação"
+      ? rentalValueOptions
+      : purchaseValueOptions;
 
   const summaryItems =
     useMemo(
@@ -296,10 +302,6 @@ export default function IrisAssistant() {
       [],
     );
 
-    setSearchMatchType(
-      "none",
-    );
-
     setIsSearching(
       false,
     );
@@ -324,6 +326,7 @@ export default function IrisAssistant() {
       (current) => ({
         ...current,
         purpose,
+        value: "",
       }),
     );
 
@@ -438,10 +441,6 @@ export default function IrisAssistant() {
       [],
     );
 
-    setSearchMatchType(
-      "none",
-    );
-
     try {
       const response =
         await fetch(
@@ -496,13 +495,6 @@ export default function IrisAssistant() {
 
       setSearchResults(
         data.results,
-      );
-
-      setSearchMatchType(
-        data.matchType ??
-          (data.results.length > 0
-            ? "exact"
-            : "none"),
       );
     } catch (error) {
       console.error(
@@ -691,26 +683,22 @@ export default function IrisAssistant() {
   }
 
   function sendToWhatsApp() {
-    const references =
+    const selectedProperties =
       searchResults.length > 0
-        ? `Referências: ${searchResults
-            .map(
+        ? [
+            "",
+            "Imóveis encontrados pela Íris:",
+            ...searchResults.map(
               (property) =>
-                property.code,
-            )
-            .join(", ")}`
-        : "";
-
-    const introduction =
-      searchResults.length > 0
-        ? "Segue meu perfil de busca e as referências dos imóveis apresentados pela Íris:"
-        : "Segue meu perfil de busca:";
+                `${property.code} - ${property.title}`,
+            ),
+          ]
+        : [];
 
     const message = [
-      "Olá! Fiz uma busca no Portal B&B com a Íris e gostaria de dar continuidade ao atendimento com um consultor.",
+      "Olá, concluí uma busca com a Íris no Portal B&B.",
       "",
-      introduction,
-      "",
+      "Resumo da busca:",
       `Finalidade: ${summaryValue(
         answers.purpose,
       )}`,
@@ -734,12 +722,9 @@ export default function IrisAssistant() {
       summaryValue(
         answers.details,
       ),
-      ...(references
-        ? [
-            "",
-            references,
-          ]
-        : []),
+      ...selectedProperties,
+      "",
+      "Gostaria de receber uma curadoria de imóveis compatíveis com este perfil.",
     ].join("\n");
 
     const whatsappUrl =
@@ -753,6 +738,7 @@ export default function IrisAssistant() {
       "noopener,noreferrer",
     );
   }
+
   function renderStep() {
     if (
       step === "purpose"
@@ -830,7 +816,7 @@ export default function IrisAssistant() {
           </div>
 
           <IrisQuestion>
-            Para começarmos, o que você procura?
+            Para começarmos pelo questionário, o que você procura?
           </IrisQuestion>
 
           <Options>
@@ -967,7 +953,10 @@ export default function IrisAssistant() {
           </UserAnswer>
 
           <IrisQuestion>
-            Qual faixa de valor você considera?
+            {answers.purpose ===
+            "Locação"
+              ? "Qual faixa de aluguel mensal você considera?"
+              : "Qual faixa de valor você considera?"}
           </IrisQuestion>
 
           <Options>
@@ -1163,24 +1152,15 @@ export default function IrisAssistant() {
           0 ? (
           <>
             <IrisMessage>
-              {searchMatchType ===
-              "similar"
-                ? `Não encontrei uma correspondência exata, mas selecionei ${
-                    searchResults.length
-                  } ${
-                    searchResults.length ===
-                    1
-                      ? "alternativa próxima"
-                      : "alternativas próximas"
-                  } ao seu perfil.`
-                : `Encontrei ${
-                    searchResults.length
-                  } ${
-                    searchResults.length ===
-                    1
-                      ? "imóvel compatível"
-                      : "imóveis compatíveis"
-                  } com os critérios informados.`}
+              Encontrei{" "}
+              {
+                searchResults.length
+              }{" "}
+              {searchResults.length ===
+              1
+                ? "imóvel compatível"
+                : "imóveis compatíveis"}{" "}
+              com os critérios informados.
             </IrisMessage>
 
             <div className="mt-4 space-y-3">
