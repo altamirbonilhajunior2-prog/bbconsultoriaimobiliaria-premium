@@ -22,6 +22,12 @@ const managementLinks = [
     href: "/admin/captadores",
   },
   {
+    title: "Captação IA",
+    description:
+      "Localizar, selecionar e acompanhar oportunidades até a autorização e publicação.",
+    href: "/admin/captacao-ia",
+  },
+  {
     title: "Bairros",
     description: "Organizar bairros e regiões atendidas pela B&B.",
     href: "/admin/bairros",
@@ -150,7 +156,8 @@ export default async function AdminPage() {
 
             <p className="mt-4 max-w-3xl text-sm leading-7 text-zinc-400">
               Ambiente interno para gestão de imóveis, proprietários,
-              captações, clientes e operações da B&amp;B Consultoria Imobiliária.
+              captações, clientes e operações da B&amp;B Consultoria
+              Imobiliária.
             </p>
           </div>
 
