@@ -691,22 +691,26 @@ export default function IrisAssistant() {
   }
 
   function sendToWhatsApp() {
-    const selectedProperties =
+    const references =
       searchResults.length > 0
-        ? [
-            "",
-            "Imóveis encontrados pela Íris:",
-            ...searchResults.map(
+        ? `Referências: ${searchResults
+            .map(
               (property) =>
-                `${property.code} - ${property.title}`,
-            ),
-          ]
-        : [];
+                property.code,
+            )
+            .join(", ")}`
+        : "";
+
+    const introduction =
+      searchResults.length > 0
+        ? "Segue meu perfil de busca e as referências dos imóveis apresentados pela Íris:"
+        : "Segue meu perfil de busca:";
 
     const message = [
-      "Olá, concluí uma busca com a Íris no Portal B&B.",
+      "Olá! Fiz uma busca no Portal B&B com a Íris e gostaria de dar continuidade ao atendimento com um consultor.",
       "",
-      "Resumo da busca:",
+      introduction,
+      "",
       `Finalidade: ${summaryValue(
         answers.purpose,
       )}`,
@@ -730,9 +734,12 @@ export default function IrisAssistant() {
       summaryValue(
         answers.details,
       ),
-      ...selectedProperties,
-      "",
-      "Gostaria de receber uma curadoria de imóveis compatíveis com este perfil.",
+      ...(references
+        ? [
+            "",
+            references,
+          ]
+        : []),
     ].join("\n");
 
     const whatsappUrl =
@@ -746,7 +753,6 @@ export default function IrisAssistant() {
       "noopener,noreferrer",
     );
   }
-
   function renderStep() {
     if (
       step === "purpose"

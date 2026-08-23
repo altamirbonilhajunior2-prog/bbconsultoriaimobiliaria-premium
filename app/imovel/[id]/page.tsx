@@ -375,7 +375,7 @@ export default async function PropertyPage({
 
   const whatsappMessage =
     encodeURIComponent(
-      `Olá, gostaria de receber mais informações sobre o imóvel ${property.code} — ${property.title}.`,
+      `Olá! Gostaria de iniciar um atendimento com um consultor sobre este imóvel. Referência: ${property.code} — ${property.title}.`,
     );
 
   const schedulePurpose =
