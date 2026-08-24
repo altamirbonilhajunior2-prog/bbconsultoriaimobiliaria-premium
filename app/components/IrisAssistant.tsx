@@ -1242,18 +1242,17 @@ export default function IrisAssistant() {
                       ) : null}
 
                       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-zinc-400">
-                        {property.bedrooms >
-                        0 ? (
-                          <span>
-                            {
-                              property.bedrooms
-                            }{" "}
-                            dormitórios
-                          </span>
-                        ) : null}
-
-                        {property.suites >
-                        0 ? (
+                       {property.propertyType !== "TERRENO" &&
+property.propertyType !== "RURAL" &&
+property.bedrooms > 0 ? (
+  <span>
+    {property.bedrooms}{" "}
+    dormitórios
+  </span>
+) : null}
+                        {property.propertyType !== "TERRENO" &&
+property.propertyType !== "RURAL" &&
+property.suites > 0 ? (
                           <span>
                             {
                               property.suites
@@ -1262,9 +1261,9 @@ export default function IrisAssistant() {
                           </span>
                         ) : null}
 
-                        {property.parking >
-                        0 ? (
-                          <span>
+{property.propertyType !== "TERRENO" &&
+property.propertyType !== "RURAL" &&
+property.parking > 0 ? (                          <span>
                             {
                               property.parking
                             }{" "}
