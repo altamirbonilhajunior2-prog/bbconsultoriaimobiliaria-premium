@@ -197,14 +197,7 @@ export default function ImageManager({
     ) {
       router.refresh();
     }
-
-    if (
-      removeSelectedState.success ||
-      removeAllState.success
-    ) {
-      setSelectedImageIds([]);
-    }
-  }, [
+    }, [
     coverState,
     moveState,
     removeState,
@@ -212,25 +205,7 @@ export default function ImageManager({
     removeAllState,
     router,
   ]);
-
-  useEffect(() => {
-    const validIds =
-      new Set(
-        images.map(
-          (image) => image.id,
-        ),
-      );
-
-    setSelectedImageIds(
-      (current) =>
-        current.filter(
-          (id) =>
-            validIds.has(id),
-        ),
-    );
-  }, [images]);
-
-  const isPending =
+    const isPending =
     uploading ||
     coverPending ||
     movePending ||
