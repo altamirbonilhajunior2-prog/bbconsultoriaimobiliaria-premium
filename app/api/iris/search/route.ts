@@ -458,11 +458,20 @@ export async function POST(
               property.purpose,
             price,
             bedrooms:
-              property.bedrooms,
+  property.propertyType === PropertyType.TERRENO ||
+  property.propertyType === PropertyType.RURAL
+    ? 0
+    : property.bedrooms,
             suites:
-              property.suites,
-            parking:
-              property.parking,
+  property.propertyType === PropertyType.TERRENO ||
+  property.propertyType === PropertyType.RURAL
+    ? 0
+    : property.suites,
+           parking:
+  property.propertyType === PropertyType.TERRENO ||
+  property.propertyType === PropertyType.RURAL
+    ? 0
+    : property.parking,
             image:
               image?.url ?? null,
             url:
