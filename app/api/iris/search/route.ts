@@ -23,21 +23,22 @@ type ValueRange = {
 function normalizePropertyType(
   value?: string,
 ): PropertyType | undefined {
-  if (value === "Casa") {
-    return PropertyType.CASA;
+  if (value === "Casa") return PropertyType.CASA;
+  if (value === "Apartamento") return PropertyType.APARTAMENTO;
+  if (value === "Terreno") return PropertyType.TERRENO;
+
+  if (
+    value === "Rural" ||
+    value === "Chácara" ||
+    value === "Sitio" ||
+    value === "Sítio" ||
+    value === "Fazenda" ||
+    value === "Área Rural"
+  ) {
+    return PropertyType.RURAL;
   }
 
-  if (value === "Apartamento") {
-    return PropertyType.APARTAMENTO;
-  }
-
-  if (value === "Terreno") {
-    return PropertyType.TERRENO;
-  }
-
-  if (value === "Comercial") {
-    return PropertyType.COMERCIAL;
-  }
+  if (value === "Comercial") return PropertyType.COMERCIAL;
 
   return undefined;
 }
@@ -77,10 +78,7 @@ function normalizeObjective(
     return OpportunityProfile.RENDA;
   }
 
-  if (
-    value ===
-    "Valorização patrimonial"
-  ) {
+  if (value === "Valorização patrimonial") {
     return OpportunityProfile.VALORIZACAO;
   }
 
@@ -90,49 +88,32 @@ function normalizeObjective(
 function getPurchaseValueRange(
   value?: string,
 ): ValueRange | null {
-  if (
-    value ===
-    "Até R$ 500 mil"
-  ) {
-    return {
-      max: 500000,
-    };
+  if (value === "Até R$ 500 mil") {
+    return { max: 500000 };
   }
 
-  if (
-    value ===
-    "De R$ 500 mil a R$ 1 milhão"
-  ) {
+  if (value === "De R$ 500 mil a R$ 1 milhão") {
     return {
       min: 500000,
       max: 1000000,
     };
   }
 
-  if (
-    value ===
-    "De R$ 1 milhão a R$ 2 milhões"
-  ) {
+  if (value === "De R$ 1 milhão a R$ 2 milhões") {
     return {
       min: 1000000,
       max: 2000000,
     };
   }
 
-  if (
-    value ===
-    "De R$ 2 milhões a R$ 3 milhões"
-  ) {
+  if (value === "De R$ 2 milhões a R$ 3 milhões") {
     return {
       min: 2000000,
       max: 3000000,
     };
   }
 
-  if (
-    value ===
-    "Acima de R$ 3 milhões"
-  ) {
+  if (value === "Acima de R$ 3 milhões") {
     return {
       min: 3000000,
     };
@@ -144,49 +125,32 @@ function getPurchaseValueRange(
 function getRentalValueRange(
   value?: string,
 ): ValueRange | null {
-  if (
-    value ===
-    "Até R$ 3 mil/mês"
-  ) {
-    return {
-      max: 3000,
-    };
+  if (value === "Até R$ 3 mil/mês") {
+    return { max: 3000 };
   }
 
-  if (
-    value ===
-    "De R$ 3 mil a R$ 5 mil/mês"
-  ) {
+  if (value === "De R$ 3 mil a R$ 5 mil/mês") {
     return {
       min: 3000,
       max: 5000,
     };
   }
 
-  if (
-    value ===
-    "De R$ 5 mil a R$ 8 mil/mês"
-  ) {
+  if (value === "De R$ 5 mil a R$ 8 mil/mês") {
     return {
       min: 5000,
       max: 8000,
     };
   }
 
-  if (
-    value ===
-    "De R$ 8 mil a R$ 12 mil/mês"
-  ) {
+  if (value === "De R$ 8 mil a R$ 12 mil/mês") {
     return {
       min: 8000,
       max: 12000,
     };
   }
 
-  if (
-    value ===
-    "Acima de R$ 12 mil/mês"
-  ) {
+  if (value === "Acima de R$ 12 mil/mês") {
     return {
       min: 12000,
     };
@@ -199,57 +163,24 @@ function getValueRange(
   purpose?: string,
   value?: string,
 ): ValueRange | null {
-  if (
-    value ===
-    "Ainda não defini"
-  ) {
+  if (!value || value === "Ainda não defini") {
     return null;
   }
 
-  if (
-    purpose ===
-    "Locação"
-  ) {
-    return getRentalValueRange(
-      value,
-    );
+  if (purpose === "Locação") {
+    return getRentalValueRange(value);
   }
 
-  return getPurchaseValueRange(
-    value,
-  );
+  return getPurchaseValueRange(value);
 }
 
 function getMinimumBedrooms(
   value?: string,
 ) {
-  if (
-    value ===
-    "1 dormitório"
-  ) {
-    return 1;
-  }
-
-  if (
-    value ===
-    "2 dormitórios"
-  ) {
-    return 2;
-  }
-
-  if (
-    value ===
-    "3 dormitórios"
-  ) {
-    return 3;
-  }
-
-  if (
-    value ===
-    "4 ou mais dormitórios"
-  ) {
-    return 4;
-  }
+  if (value === "1 dormitório") return 1;
+  if (value === "2 dormitórios") return 2;
+  if (value === "3 dormitórios") return 3;
+  if (value === "4 ou mais dormitórios") return 4;
 
   return undefined;
 }
@@ -263,10 +194,7 @@ function decimalToNumber(
     return null;
   }
 
-  const number =
-    Number(
-      value.toString(),
-    );
+  const number = Number(value.toString());
 
   return Number.isFinite(number)
     ? number
@@ -278,8 +206,7 @@ export async function POST(
 ) {
   try {
     const body =
-      (await request.json()) as
-        IrisSearchRequest;
+      (await request.json()) as IrisSearchRequest;
 
     const propertyType =
       normalizePropertyType(
@@ -302,26 +229,28 @@ export async function POST(
         body.value,
       );
 
+    const isLandOrRural =
+      propertyType === PropertyType.TERRENO ||
+      propertyType === PropertyType.RURAL;
+
     const minimumBedrooms =
-      getMinimumBedrooms(
-        body.bedrooms,
-      );
+      isLandOrRural
+        ? undefined
+        : getMinimumBedrooms(
+            body.bedrooms,
+          );
 
     const region =
       body.region?.trim();
 
-    const properties =
+    let properties =
       await prisma.property.findMany({
         where: {
           published: true,
-
-          status:
-            "DISPONIVEL",
+          status: "DISPONIVEL",
 
           ...(propertyType
-            ? {
-                propertyType,
-              }
+            ? { propertyType }
             : {}),
 
           ...(purposes
@@ -345,91 +274,59 @@ export async function POST(
                 OR: [
                   {
                     neighborhood: {
-                      contains:
-                        region,
-                      mode:
-                        "insensitive",
+                      contains: region,
+                      mode: "insensitive",
                     },
                   },
-
                   {
                     city: {
-                      contains:
-                        region,
-                      mode:
-                        "insensitive",
+                      contains: region,
+                      mode: "insensitive",
                     },
                   },
-
                   {
                     development: {
-                      contains:
-                        region,
-                      mode:
-                        "insensitive",
+                      contains: region,
+                      mode: "insensitive",
                     },
                   },
-
                   {
                     location: {
-                      contains:
-                        region,
-                      mode:
-                        "insensitive",
+                      contains: region,
+                      mode: "insensitive",
                     },
                   },
                 ],
               }
             : {}),
 
-          ...(minimumBedrooms !==
-          undefined
+          ...(minimumBedrooms !== undefined
             ? {
                 bedrooms: {
-                  gte:
-                    minimumBedrooms,
+                  gte: minimumBedrooms,
                 },
               }
             : {}),
 
           ...(valueRange
-            ? body.purpose ===
-              "Locação"
+            ? body.purpose === "Locação"
               ? {
                   rentalPrice: {
-                    ...(valueRange.min !==
-                    undefined
-                      ? {
-                          gte:
-                            valueRange.min,
-                        }
+                    ...(valueRange.min !== undefined
+                      ? { gte: valueRange.min }
                       : {}),
-
-                    ...(valueRange.max !==
-                    undefined
-                      ? {
-                          lte:
-                            valueRange.max,
-                        }
+                    ...(valueRange.max !== undefined
+                      ? { lte: valueRange.max }
                       : {}),
                   },
                 }
               : {
                   price: {
-                    ...(valueRange.min !==
-                    undefined
-                      ? {
-                          gte:
-                            valueRange.min,
-                        }
+                    ...(valueRange.min !== undefined
+                      ? { gte: valueRange.min }
                       : {}),
-
-                    ...(valueRange.max !==
-                    undefined
-                      ? {
-                          lte:
-                            valueRange.max,
-                        }
+                    ...(valueRange.max !== undefined
+                      ? { lte: valueRange.max }
                       : {}),
                   },
                 }
@@ -440,40 +337,94 @@ export async function POST(
           images: {
             orderBy: [
               {
-                isCover:
-                  "desc",
+                isCover: "desc",
               },
               {
-                position:
-                  "asc",
-              },
-              {
-                id:
-                  "asc",
+                position: "asc",
               },
             ],
-
             take: 1,
           },
         },
 
         orderBy: [
           {
-            highlight:
-              "desc",
+            highlight: "desc",
           },
           {
-            publishedAt:
-              "desc",
+            publishedAt: "desc",
           },
           {
-            createdAt:
-              "desc",
+            createdAt: "desc",
           },
         ],
 
         take: 6,
       });
+
+    if (properties.length === 0) {
+      properties =
+        await prisma.property.findMany({
+          where: {
+            published: true,
+            status: "DISPONIVEL",
+
+            ...(propertyType
+              ? { propertyType }
+              : {}),
+
+            ...(region
+              ? {
+                  OR: [
+                    {
+                      neighborhood: {
+                        contains: region,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      city: {
+                        contains: region,
+                        mode: "insensitive",
+                      },
+                    },
+                    {
+                      development: {
+                        contains: region,
+                        mode: "insensitive",
+                      },
+                    },
+                  ],
+                }
+              : {}),
+          },
+
+          include: {
+            images: {
+              orderBy: [
+                {
+                  isCover: "desc",
+                },
+                {
+                  position: "asc",
+                },
+              ],
+              take: 1,
+            },
+          },
+
+          orderBy: [
+            {
+              highlight: "desc",
+            },
+            {
+              publishedAt: "desc",
+            },
+          ],
+
+          take: 6,
+        });
+    }
 
     const results =
       properties.map(
@@ -482,8 +433,7 @@ export async function POST(
             property.images[0];
 
           const price =
-            body.purpose ===
-            "Locação"
+            body.purpose === "Locação"
               ? decimalToNumber(
                   property.rentalPrice,
                 )
@@ -492,45 +442,29 @@ export async function POST(
                 );
 
           return {
-            code:
-              property.code,
-
-            title:
-              property.title,
-
+            code: property.code,
+            title: property.title,
             propertyType:
               property.propertyType,
-
             category:
               property.category,
-
             neighborhood:
               property.neighborhood,
-
             city:
               property.city,
-
             development:
               property.development,
-
             purpose:
               property.purpose,
-
             price,
-
             bedrooms:
               property.bedrooms,
-
             suites:
               property.suites,
-
             parking:
               property.parking,
-
             image:
-              image?.url ??
-              null,
-
+              image?.url ?? null,
             url:
               `/imovel/${property.code.toLowerCase()}`,
           };
@@ -539,10 +473,10 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      count:
-        results.length,
+      count: results.length,
       results,
     });
+
   } catch (error) {
     console.error(
       "Erro na busca da Íris:",

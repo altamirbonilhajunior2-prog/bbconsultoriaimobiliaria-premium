@@ -35,8 +35,7 @@ export async function POST(
       });
 
     const body =
-      (await request.json()) as
-        IrisInterpretRequest;
+      (await request.json()) as IrisInterpretRequest;
 
     const message =
       body.message?.trim();
@@ -67,14 +66,25 @@ export async function POST(
                 "Você interpreta pedidos de busca imobiliária da B&B Consultoria Imobiliária.",
                 "Extraia apenas informações explicitamente informadas ou claramente inferíveis do texto.",
                 "Não invente dados.",
+                "",
+                "TIPO DE IMÓVEL:",
+                "Use Casa, Apartamento, Terreno, Comercial ou Rural.",
+                "Considere Rural quando o cliente mencionar chácara, sítio, sitio, fazenda, área rural, terreno rural ou propriedade de campo.",
+                "",
+                "Exemplos:",
+                "Quero uma chácara em São José dos Campos -> Rural.",
+                "Procuro uma fazenda para investimento -> Rural.",
+                "Quero um sítio com área verde -> Rural.",
+                "Terreno rural para comprar -> Rural.",
+                "",
                 "Região pode ser bairro, condomínio, cidade ou região.",
+                "",
                 "Para finalidade use Compra, Locação ou Investimento.",
-                "Para tipo use Casa, Apartamento, Terreno ou Comercial.",
-                "Para dormitórios use exatamente uma das opções permitidas.",
-                "Para objetivo use exatamente uma das opções permitidas.",
+                "Para objetivo use Moradia, Investimento, Renda ou Valorização patrimonial.",
                 "",
                 "IMPORTANTE SOBRE VALORES:",
-                "Se a finalidade for Compra ou Investimento, use somente estas faixas:",
+                "",
+                "Se a finalidade for Compra ou Investimento, use somente:",
                 "Até R$ 500 mil",
                 "De R$ 500 mil a R$ 1 milhão",
                 "De R$ 1 milhão a R$ 2 milhões",
@@ -82,7 +92,7 @@ export async function POST(
                 "Acima de R$ 3 milhões",
                 "Ainda não defini",
                 "",
-                "Se a finalidade for Locação, interprete o valor como aluguel mensal e use somente estas faixas:",
+                "Se a finalidade for Locação, interprete como aluguel mensal:",
                 "Até R$ 3 mil/mês",
                 "De R$ 3 mil a R$ 5 mil/mês",
                 "De R$ 5 mil a R$ 8 mil/mês",
@@ -97,7 +107,6 @@ export async function POST(
                 "Quero comprar até 900 mil -> Compra / De R$ 500 mil a R$ 1 milhão.",
               ].join("\n"),
           },
-
           {
             role: "user",
             content:
@@ -123,6 +132,7 @@ export async function POST(
                 purpose: {
                   type:
                     "string",
+
                   enum: [
                     "",
                     "Compra",
@@ -134,12 +144,14 @@ export async function POST(
                 propertyType: {
                   type:
                     "string",
+
                   enum: [
                     "",
                     "Casa",
                     "Apartamento",
                     "Terreno",
                     "Comercial",
+                    "Rural",
                   ],
                 },
 
@@ -151,6 +163,7 @@ export async function POST(
                 value: {
                   type:
                     "string",
+
                   enum: [
                     "",
                     "Até R$ 500 mil",
@@ -170,6 +183,7 @@ export async function POST(
                 bedrooms: {
                   type:
                     "string",
+
                   enum: [
                     "",
                     "1 dormitório",
@@ -183,6 +197,7 @@ export async function POST(
                 objective: {
                   type:
                     "string",
+
                   enum: [
                     "",
                     "Moradia",
@@ -232,6 +247,7 @@ export async function POST(
       success: true,
       interpreted,
     });
+
   } catch (error) {
     console.error(
       "Erro na interpretação da Íris:",

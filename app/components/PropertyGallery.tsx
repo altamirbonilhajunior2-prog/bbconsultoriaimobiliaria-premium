@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type PropertyGalleryProps = {
   images: string[];
@@ -28,18 +28,16 @@ export default function PropertyGallery({
     setSelectedIndex(index);
   }
 
-  function showPreviousImage() {
-    setSelectedIndex((currentIndex) =>
-      currentIndex === 0 ? safeImages.length - 1 : currentIndex - 1,
-    );
-  }
-
-  function showNextImage() {
-    setSelectedIndex((currentIndex) =>
-      currentIndex === safeImages.length - 1 ? 0 : currentIndex + 1,
-    );
-  }
-
+  const showPreviousImage = useCallback(() => {
+  setSelectedIndex((currentIndex) =>
+    currentIndex === 0 ? safeImages.length - 1 : currentIndex - 1,
+  );
+}, [safeImages.length]);
+  const showNextImage = useCallback(() => {
+  setSelectedIndex((currentIndex) =>
+    currentIndex === safeImages.length - 1 ? 0 : currentIndex + 1,
+  );
+}, [safeImages.length]);
   function openLightbox() {
     setIsLightboxOpen(true);
   }
@@ -76,7 +74,12 @@ export default function PropertyGallery({
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isLightboxOpen, safeImages.length]);
+    }, [
+    isLightboxOpen,
+    safeImages.length,
+    showPreviousImage,
+    showNextImage,
+  ]);
 
   return (
     <>

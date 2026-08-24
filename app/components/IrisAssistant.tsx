@@ -878,18 +878,14 @@ export default function IrisAssistant() {
               answers.purpose
             }
           </UserAnswer>
-
-          <IrisQuestion>
-            Qual tipo de imóvel você procura?
-          </IrisQuestion>
-
-          <Options>
-            {[
-              "Casa",
-              "Apartamento",
-              "Terreno",
-              "Comercial",
-            ].map(
+<Options>
+  {[
+    "Casa",
+    "Apartamento",
+    "Terreno",
+    "Comercial",
+    "Rural",
+  ].map(          
               (item) => (
                 <OptionButton
                   key={item}
@@ -1194,15 +1190,13 @@ export default function IrisAssistant() {
                   >
                     {property.image ? (
                       <div className="aspect-[16/9] overflow-hidden bg-black">
-                        <img
-                          src={
-                            property.image
-                          }
-                          alt={
-                            property.title
-                          }
-                          className="h-full w-full object-cover"
-                        />
+                        <Image
+  src={property.image}
+  alt={property.title}
+  width={800}
+  height={450}
+  className="h-full w-full object-cover"
+/>
                       </div>
                     ) : null}
 
