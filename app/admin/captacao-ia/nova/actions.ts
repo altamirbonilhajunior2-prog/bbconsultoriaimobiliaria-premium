@@ -188,7 +188,104 @@ function mapPropertyType(
       return null;
   }
 }
+function calculateAcquisitionScore({
+  neighborhood,
+  development,
+  propertyType,
+  contactPhone,
+  price,
+  bedrooms,
+}: {
+  neighborhood: string | null;
+  development: string | null;
+  propertyType: string | null;
+  contactPhone: string | null;
+  price: number | null;
+  bedrooms: number | null;
+}) {
+  let score = 0;
 
+  const reasons: string[] = [];
+
+  const location =
+    `${neighborhood ?? ""} ${development ?? ""}`
+      .toLowerCase();
+
+  if (
+    location.includes("urbanova") ||
+    location.includes("jardim aquarius") ||
+    location.includes("colinas") ||
+    location.includes("altos do esplanada")
+  ) {
+    score += 20;
+
+    reasons.push(
+      "Região estratégica para o posicionamento B&B.",
+    );
+  }
+
+  if (
+    propertyType === "CASA"
+  ) {
+    score += 15;
+
+    reasons.push(
+      "Casa alinhada ao perfil de imóveis premium.",
+    );
+  }
+
+  if (
+    development
+  ) {
+    score += 10;
+
+    reasons.push(
+      "Condomínio ou empreendimento identificado.",
+    );
+  }
+
+  if (
+    contactPhone
+  ) {
+    score += 10;
+
+    reasons.push(
+      "Contato disponível para abordagem comercial.",
+    );
+  }
+
+  if (
+    price !== null
+  ) {
+    score += 5;
+
+    reasons.push(
+      "Valor informado para análise de mercado.",
+    );
+  }
+
+  if (
+    bedrooms !== null &&
+    bedrooms >= 3
+  ) {
+    score += 5;
+
+    reasons.push(
+      "Perfil com boa aderência residencial.",
+    );
+  }
+
+  return {
+    score: Math.min(
+      score,
+      100,
+    ),
+
+    reason:
+      reasons.join(" ") ||
+      "Oportunidade necessita de análise complementar.",
+  };
+}
 function isValidHttpUrl(
   value: string,
 ) {
@@ -326,7 +423,50 @@ export async function createAcquisitionAction(
         "score",
       ),
     );
+const scoreReason =
+  getOptionalText(
+    formData,
+    "scoreReason",
+  );
 
+const automaticScore =
+  calculateAcquisitionScore({
+    neighborhood:
+      getOptionalText(
+        formData,
+        "neighborhood",
+      ),
+
+    development:
+      getOptionalText(
+        formData,
+        "development",
+      ),
+
+    propertyType,
+
+    contactPhone:
+      getOptionalText(
+        formData,
+        "contactPhone",
+      ),
+
+    price:
+      parseDecimal(
+        getText(
+          formData,
+          "price",
+        ),
+      ),
+
+    bedrooms:
+      parseOptionalInteger(
+        getText(
+          formData,
+          "bedrooms",
+        ),
+      ),
+  });
   if (
     score !== null &&
     (
@@ -505,13 +645,13 @@ export async function createAcquisitionAction(
               "contactEmail",
             ),
 
-          score,
+          score:
+  score ??
+  automaticScore.score,
 
-          scoreReason:
-            getOptionalText(
-              formData,
-              "scoreReason",
-            ),
+scoreReason:
+  scoreReason ||
+  automaticScore.reason,
 
           internalNotes:
             getOptionalText(
