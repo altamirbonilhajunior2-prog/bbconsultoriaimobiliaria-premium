@@ -312,21 +312,6 @@ export default function EditPropertyForm({
     );
 
   useEffect(() => {
-    if (
-      selectedCoCaptorId &&
-      selectedCoCaptorId ===
-        principalCaptorId
-    ) {
-      setSelectedCoCaptorId(
-        "",
-      );
-    }
-  }, [
-    principalCaptorId,
-    selectedCoCaptorId,
-  ]);
-
-  useEffect(() => {
     if (!formState.message) {
       return;
     }
@@ -554,11 +539,23 @@ export default function EditPropertyForm({
                     }
                     onChange={(
                       event,
-                    ) =>
+                    ) => {
+                      const value =
+                        event.target.value;
+
                       setSelectedCaptorId(
-                        event.target.value,
-                      )
-                    }
+                        value,
+                      );
+
+                      if (
+                        selectedCoCaptorId ===
+                        value
+                      ) {
+                        setSelectedCoCaptorId(
+                          "",
+                        );
+                      }
+                    }}
                     className={inputClass}
                   >
                     <option value="">
