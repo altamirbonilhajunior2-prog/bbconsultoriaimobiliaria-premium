@@ -40,6 +40,7 @@ export const propertyTypes = {
     "Chácara",
     "Sítio",
     "Fazenda",
+    "Área Rural",
   ],
 } as const;
 
