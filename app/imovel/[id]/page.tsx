@@ -4,6 +4,7 @@ import Footer from "../../components/Footer";
 import Header from "../../components/Header";
 import PropertyCard from "../../components/PropertyCard";
 import PropertyGallery from "../../components/PropertyGallery";
+import TrackedWhatsAppLink from "../../components/TrackedWhatsAppLink";
 import { prisma } from "../../../lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -707,14 +708,12 @@ export default async function PropertyPage({
               Agendar visita
             </Link>
 
-            <a
-              href={`https://wa.me/5512978140636?text=${whatsappMessage}`}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-4 inline-flex min-h-16 w-full items-center justify-center border border-amber-500 px-7 text-center text-xs font-bold uppercase tracking-[0.18em] text-amber-400 transition hover:bg-amber-500 hover:text-black"
-            >
-              Solicitar informações
-            </a>
+            <TrackedWhatsAppLink
+  href={`https://wa.me/5512978140636?text=${whatsappMessage}`}
+  className="mt-4 inline-flex min-h-16 w-full items-center justify-center border border-amber-500 px-7 text-center text-xs font-bold uppercase tracking-[0.18em] text-amber-400 transition hover:bg-amber-500 hover:text-black"
+>
+  Solicitar informações
+</TrackedWhatsAppLink>
 
             <p className="mt-6 text-center text-[10px] leading-5 text-zinc-500">
               Nós analisamos cada imóvel antes de indicá-lo aos nossos
