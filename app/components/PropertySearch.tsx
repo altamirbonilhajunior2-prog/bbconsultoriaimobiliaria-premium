@@ -81,6 +81,21 @@ const bedroomOptions = [
   { value: "4+", label: "04 ou mais" },
 ];
 
+const ruralPropertyTypes = [
+  "Chácara",
+  "Fazenda",
+  "Sítio",
+  "Área Rural",
+] as const;
+
+function isRuralPropertyType(
+  value: string,
+): value is (typeof ruralPropertyTypes)[number] {
+  return ruralPropertyTypes.some(
+    (item) => item === value,
+  );
+}
+
 function isPropertyType(
   value: string,
 ): value is PropertyType {
@@ -225,6 +240,13 @@ export default function PropertySearch({
         ],
       ];
     }, [propertyType]);
+
+  const publicPropertyType =
+    propertyType === "Rural"
+      ? isRuralPropertyType(category)
+        ? category
+        : "Área Rural"
+      : propertyType;
 
   const developments =
     useMemo(() => {
@@ -497,6 +519,22 @@ export default function PropertySearch({
 
       setCategory(
         allCategoriesLabel,
+      );
+
+      return;
+    }
+
+    if (
+      isRuralPropertyType(
+        selectedType,
+      )
+    ) {
+      setPropertyType(
+        "Rural",
+      );
+
+      setCategory(
+        selectedType,
       );
 
       return;
@@ -932,7 +970,7 @@ export default function PropertySearch({
 
               <select
                 value={
-                  propertyType
+                  publicPropertyType
                 }
                 onChange={
                   handlePropertyTypeChange
@@ -949,9 +987,15 @@ export default function PropertySearch({
                   }
                 </option>
 
-                {Object.keys(
-                  propertyTypes,
-                ).map(
+                {[
+                  ...Object.keys(
+                    propertyTypes,
+                  ).filter(
+                    (type) =>
+                      type !== "Rural",
+                  ),
+                  ...ruralPropertyTypes,
+                ].map(
                   (type) => (
                     <option
                       key={type}
