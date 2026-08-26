@@ -53,12 +53,6 @@ type IrisSearchResponse = {
   message?: string;
 };
 
-type IrisInterpretResponse = {
-  success: boolean;
-  interpreted?: IrisAnswers;
-  message?: string;
-};
-
 const initialAnswers: IrisAnswers = {
   purpose: "",
   propertyType: "",
@@ -69,12 +63,21 @@ const initialAnswers: IrisAnswers = {
   details: "",
 };
 
-const valueOptions = [
+const purchaseValueOptions = [
   "Até R$ 500 mil",
   "De R$ 500 mil a R$ 1 milhão",
   "De R$ 1 milhão a R$ 2 milhões",
   "De R$ 2 milhões a R$ 3 milhões",
   "Acima de R$ 3 milhões",
+  "Ainda não defini",
+];
+
+const rentalValueOptions = [
+  "Até R$ 3 mil/mês",
+  "De R$ 3 mil a R$ 5 mil/mês",
+  "De R$ 5 mil a R$ 8 mil/mês",
+  "De R$ 8 mil a R$ 12 mil/mês",
+  "Acima de R$ 12 mil/mês",
   "Ainda não defini",
 ];
 
@@ -142,21 +145,6 @@ export default function IrisAssistant() {
     regionInput,
     setRegionInput,
   ] = useState("");
-
-  const [
-    naturalInput,
-    setNaturalInput,
-  ] = useState("");
-
-  const [
-    isInterpreting,
-    setIsInterpreting,
-  ] = useState(false);
-
-  const [
-    interpretError,
-    setInterpretError,
-  ] = useState(false);
 
   const [
     searchResults,
@@ -282,16 +270,6 @@ export default function IrisAssistant() {
 
     setRegionInput("");
 
-    setNaturalInput("");
-
-    setIsInterpreting(
-      false,
-    );
-
-    setInterpretError(
-      false,
-    );
-
     setSearchResults(
       [],
     );
@@ -324,6 +302,7 @@ export default function IrisAssistant() {
       (current) => ({
         ...current,
         purpose,
+        value: "",
       }),
     );
 
@@ -339,6 +318,11 @@ export default function IrisAssistant() {
       (current) => ({
         ...current,
         propertyType,
+        bedrooms:
+          propertyType === "Casa" ||
+          propertyType === "Apartamento"
+            ? ""
+            : "Não é relevante",
       }),
     );
 
@@ -385,7 +369,10 @@ export default function IrisAssistant() {
     );
 
     setStep(
-      "bedrooms",
+      answers.propertyType === "Casa" ||
+        answers.propertyType === "Apartamento"
+        ? "bedrooms"
+        : "objective",
     );
   }
 
@@ -524,137 +511,6 @@ export default function IrisAssistant() {
     }
   }
 
-  async function handleNaturalSearch(
-    event: FormEvent<HTMLFormElement>,
-  ) {
-    event.preventDefault();
-
-    const message =
-      naturalInput.trim();
-
-    if (!message) {
-      return;
-    }
-
-    setInterpretError(
-      false,
-    );
-
-    setIsInterpreting(
-      true,
-    );
-
-    setSearchResults(
-      [],
-    );
-
-    setSearchCompleted(
-      false,
-    );
-
-    setSearchError(
-      false,
-    );
-
-    try {
-      const response =
-        await fetch(
-          "/api/iris/interpret",
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
-
-            body:
-              JSON.stringify({
-                message,
-              }),
-          },
-        );
-
-      if (!response.ok) {
-        throw new Error(
-          "Falha ao interpretar a busca.",
-        );
-      }
-
-      const data =
-        (await response.json()) as
-          IrisInterpretResponse;
-
-      if (
-        !data.success ||
-        !data.interpreted
-      ) {
-        throw new Error(
-          data.message ||
-            "Falha ao interpretar a busca.",
-        );
-      }
-
-      const interpreted =
-        data.interpreted;
-
-      const nextAnswers: IrisAnswers = {
-        purpose:
-          interpreted.purpose ||
-          "",
-
-        propertyType:
-          interpreted.propertyType ||
-          "",
-
-        region:
-          interpreted.region ||
-          "",
-
-        value:
-          interpreted.value ||
-          "Ainda não defini",
-
-        bedrooms:
-          interpreted.bedrooms ||
-          "Não é relevante",
-
-        objective:
-          interpreted.objective ||
-          "",
-
-        details:
-          interpreted.details ||
-          message,
-      };
-
-      setAnswers(
-        nextAnswers,
-      );
-
-      setStep(
-        "summary",
-      );
-
-      await searchProperties(
-        nextAnswers,
-      );
-    } catch (error) {
-      console.error(
-        "Erro ao interpretar busca com a Íris:",
-        error,
-      );
-
-      setInterpretError(
-        true,
-      );
-    } finally {
-      setIsInterpreting(
-        false,
-      );
-    }
-  }
-
   async function handleDetailsSubmit(
     event: FormEvent<HTMLFormElement>,
   ) {
@@ -765,69 +621,9 @@ export default function IrisAssistant() {
           </IrisMessage>
 
           <IrisMessage>
-            Você pode me contar com suas próprias palavras o imóvel que procura
-            ou usar a busca guiada abaixo.
+            Vou guiar você por algumas perguntas rápidas para encontrar o imóvel
+            mais adequado ao seu perfil.
           </IrisMessage>
-
-          <IrisQuestion>
-            Descreva o imóvel que você procura.
-          </IrisQuestion>
-
-          <form
-            onSubmit={
-              handleNaturalSearch
-            }
-            className="mt-4"
-          >
-            <textarea
-              rows={4}
-              value={
-                naturalInput
-              }
-              onChange={(event) =>
-                setNaturalInput(
-                  event.target.value,
-                )
-              }
-              disabled={
-                isInterpreting
-              }
-              placeholder="Ex.: Quero uma casa no Urbanova até R$ 2 milhões, com 4 dormitórios, para morar."
-              className="w-full resize-y rounded-xl border border-[#d5a85a]/30 bg-[#101010] px-4 py-4 text-sm leading-6 text-white outline-none placeholder:text-zinc-600 transition focus:border-[#d5a85a]/70 disabled:cursor-wait disabled:opacity-60"
-            />
-
-            <button
-              type="submit"
-              disabled={
-                isInterpreting ||
-                !naturalInput.trim()
-              }
-              className="mt-3 min-h-12 w-full rounded-xl bg-[#d5a85a] px-5 text-xs font-bold uppercase tracking-[0.14em] text-black transition hover:bg-[#e8c47d] disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isInterpreting
-                ? "Íris está analisando..."
-                : "Buscar com a Íris"}
-            </button>
-          </form>
-
-          {interpretError ? (
-            <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-3">
-              <p className="text-xs leading-5 text-zinc-300">
-                Não consegui interpretar sua descrição agora. Você pode tentar
-                novamente ou continuar pela busca guiada abaixo.
-              </p>
-            </div>
-          ) : null}
-
-          <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-white/10" />
-
-            <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-zinc-600">
-              ou busca guiada
-            </span>
-
-            <div className="h-px flex-1 bg-white/10" />
-          </div>
 
           <IrisQuestion>
             Para começarmos, o que você procura?
@@ -963,11 +759,16 @@ export default function IrisAssistant() {
           </UserAnswer>
 
           <IrisQuestion>
-            Qual faixa de valor você considera?
+            {answers.purpose === "Locação"
+              ? "Qual faixa de aluguel mensal você considera?"
+              : "Qual faixa de valor você considera?"}
           </IrisQuestion>
 
           <Options>
-            {valueOptions.map(
+            {(answers.purpose === "Locação"
+              ? rentalValueOptions
+              : purchaseValueOptions
+            ).map(
               (item) => (
                 <OptionButton
                   key={item}
@@ -1242,18 +1043,17 @@ export default function IrisAssistant() {
                       ) : null}
 
                       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-zinc-400">
-                        {property.bedrooms >
-                        0 ? (
-                          <span>
-                            {
-                              property.bedrooms
-                            }{" "}
-                            dormitórios
-                          </span>
-                        ) : null}
-
-                        {property.suites >
-                        0 ? (
+                       {property.propertyType !== "TERRENO" &&
+property.propertyType !== "RURAL" &&
+property.bedrooms > 0 ? (
+  <span>
+    {property.bedrooms}{" "}
+    dormitórios
+  </span>
+) : null}
+                        {property.propertyType !== "TERRENO" &&
+property.propertyType !== "RURAL" &&
+property.suites > 0 ? (
                           <span>
                             {
                               property.suites
@@ -1262,9 +1062,9 @@ export default function IrisAssistant() {
                           </span>
                         ) : null}
 
-                        {property.parking >
-                        0 ? (
-                          <span>
+{property.propertyType !== "TERRENO" &&
+property.propertyType !== "RURAL" &&
+property.parking > 0 ? (                          <span>
                             {
                               property.parking
                             }{" "}
