@@ -680,7 +680,10 @@ export default function IrisAssistant() {
     "Apartamento",
     "Terreno",
     "Comercial",
-    "Rural",
+    "Chácara",
+    "Fazenda",
+    "Sítio",
+    "Área Rural",
   ].map(          
               (item) => (
                 <OptionButton

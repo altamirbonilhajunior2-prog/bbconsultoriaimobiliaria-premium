@@ -309,6 +309,19 @@ export default function PropertySearch({
         "Cobertura",
       );
     } else if (
+      searchState.propertyType === "Chácara" ||
+      searchState.propertyType === "Fazenda" ||
+      searchState.propertyType === "Sítio" ||
+      searchState.propertyType === "Área Rural"
+    ) {
+      setPropertyType(
+        "Rural",
+      );
+
+      setCategory(
+        searchState.propertyType,
+      );
+    } else if (
       searchState.propertyType ===
       allPropertyTypesLabel
     ) {

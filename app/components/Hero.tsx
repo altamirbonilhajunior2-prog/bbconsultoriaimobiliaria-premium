@@ -194,6 +194,21 @@ export default function Hero({
         "Cobertura",
       );
     } else if (
+      propertyType === "Chácara" ||
+      propertyType === "Fazenda" ||
+      propertyType === "Sítio" ||
+      propertyType === "Área Rural"
+    ) {
+      params.set(
+        "tipo",
+        "Rural",
+      );
+
+      params.set(
+        "categoria",
+        propertyType,
+      );
+    } else if (
       propertyType !==
       "Todos os tipos"
     ) {
@@ -416,11 +431,20 @@ export default function Hero({
                       Comercial
                     </option>
 
-                    <option
-                      value="Rural"
-                      className="bg-zinc-950"
-                    >
-                      Rural
+                    <option value="Chácara" className="bg-zinc-950">
+                      Chácara
+                    </option>
+
+                    <option value="Fazenda" className="bg-zinc-950">
+                      Fazenda
+                    </option>
+
+                    <option value="Sítio" className="bg-zinc-950">
+                      Sítio
+                    </option>
+
+                    <option value="Área Rural" className="bg-zinc-950">
+                      Área Rural
                     </option>
                   </select>
                 </label>

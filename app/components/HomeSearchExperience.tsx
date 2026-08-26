@@ -11,7 +11,10 @@ export type HomePropertyType =
   | "Cobertura"
   | "Terreno"
   | "Comercial"
-  | "Rural";
+  | "Chácara"
+  | "Fazenda"
+  | "Sítio"
+  | "Área Rural";
 
 export type HomeLocation =
   | "São José dos Campos"
