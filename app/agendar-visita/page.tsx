@@ -9,6 +9,7 @@ import {
 } from "react";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import { trackWhatsAppClick } from "../components/whatsappTracking";
 
 const whatsappNumber = "5512978140636";
 
@@ -257,6 +258,7 @@ export default function AgendarVisitaPage() {
         message,
       )}`;
 
+    trackWhatsAppClick();
     window.open(
       whatsappUrl,
       "_blank",

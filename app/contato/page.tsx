@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import TrackedWhatsAppLink from "../components/TrackedWhatsAppLink";
 
 export const metadata = {
   title: "Contato | B&B Consultoria Imobiliária",
@@ -119,7 +120,7 @@ export default function ContatoPage() {
 
         <div className="mt-12 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {services.map((service, index) => (
-            <a
+            <TrackedWhatsAppLink
               key={service.title}
               href={createWhatsAppUrl(service.message)}
               target="_blank"
@@ -142,7 +143,7 @@ export default function ContatoPage() {
               <span className="mt-auto pt-7 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400 transition group-hover:text-amber-300">
                 Iniciar atendimento →
               </span>
-            </a>
+            </TrackedWhatsAppLink>
           ))}
         </div>
       </section>
@@ -163,14 +164,14 @@ export default function ContatoPage() {
               objetivo imobiliário.
             </p>
 
-            <a
+            <TrackedWhatsAppLink
               href={generalMessage}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-7 inline-flex min-h-14 w-full items-center justify-center bg-amber-500 px-6 text-center text-[10px] font-bold uppercase tracking-[0.16em] text-black transition hover:bg-amber-400"
             >
               Falar pelo WhatsApp
-            </a>
+            </TrackedWhatsAppLink>
           </article>
 
           <article className="border border-white/10 bg-black/30 p-8">
@@ -230,14 +231,14 @@ export default function ContatoPage() {
           apresentamos as alternativas mais adequadas para sua decisão.
         </p>
 
-        <a
+        <TrackedWhatsAppLink
           href={generalMessage}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-9 inline-flex min-h-16 items-center justify-center bg-amber-500 px-9 text-center text-xs font-bold uppercase tracking-[0.17em] text-black transition hover:bg-amber-400"
         >
           Falar com a B&amp;B
-        </a>
+        </TrackedWhatsAppLink>
       </section>
 
       <Footer />

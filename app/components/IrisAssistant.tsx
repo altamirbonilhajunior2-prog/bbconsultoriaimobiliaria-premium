@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { trackWhatsAppClick } from "./whatsappTracking";
 
 type Step =
   | "purpose"
@@ -603,6 +604,7 @@ export default function IrisAssistant() {
         message,
       )}`;
 
+    trackWhatsAppClick();
     window.open(
       whatsappUrl,
       "_blank",

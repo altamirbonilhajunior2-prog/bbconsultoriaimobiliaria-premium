@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import TrackedWhatsAppLink from "./TrackedWhatsAppLink";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import type {
@@ -311,7 +312,7 @@ export default function Hero({
                 Buscar imóveis
               </Link>
 
-              <a
+              <TrackedWhatsAppLink
                 href="https://wa.me/5512978140636?text=Ol%C3%A1%2C%20gostaria%20de%20falar%20com%20a%20B%26B%20Consultoria%20Imobili%C3%A1ria."
                 target="_blank"
                 rel="noreferrer"
@@ -338,7 +339,7 @@ export default function Hero({
                 </svg>
 
                 Falar no WhatsApp
-              </a>
+              </TrackedWhatsAppLink>
             </div>
           </div>
         </div>

@@ -1,10 +1,12 @@
+import TrackedWhatsAppLink from "./TrackedWhatsAppLink";
+
 export default function WhatsAppButton() {
   const whatsappMessage = encodeURIComponent(
     "Olá, gostaria de iniciar um atendimento com um consultor imobiliário.",
   );
 
   return (
-    <a
+    <TrackedWhatsAppLink
       href={`https://wa.me/5512978140636?text=${whatsappMessage}`}
       target="_blank"
       rel="noopener noreferrer"
@@ -25,6 +27,6 @@ export default function WhatsAppButton() {
       <span className="sr-only">
         Conversar pelo WhatsApp
       </span>
-    </a>
+    </TrackedWhatsAppLink>
   );
 }

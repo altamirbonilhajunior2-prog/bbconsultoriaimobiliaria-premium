@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Footer from "../components/Footer";
 import Header from "../components/Header";
+import TrackedWhatsAppLink from "../components/TrackedWhatsAppLink";
 
 const whatsappNumber = "5512978140636";
 
@@ -102,14 +103,14 @@ export default function ConsultoriaPage() {
             </p>
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-              <a
+              <TrackedWhatsAppLink
                 href={methodologyWhatsAppUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex min-h-14 items-center justify-center bg-amber-500 px-8 text-center text-xs font-bold uppercase tracking-[0.15em] text-black transition hover:bg-amber-400"
               >
                 Falar com a B&amp;B
-              </a>
+              </TrackedWhatsAppLink>
 
               <Link
                 href="/comprar"
@@ -243,14 +244,14 @@ export default function ConsultoriaPage() {
             </h2>
           </div>
 
-          <a
+          <TrackedWhatsAppLink
             href={serviceWhatsAppUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex min-h-14 shrink-0 items-center justify-center bg-amber-500 px-8 text-center text-xs font-bold uppercase tracking-[0.15em] text-black transition hover:bg-amber-400"
           >
             Iniciar atendimento
-          </a>
+          </TrackedWhatsAppLink>
         </div>
       </section>
 
