@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { trackWhatsAppClick } from "./whatsappTracking";
 import { getBuildings } from "../data/location/buildings";
 import { getCities } from "../data/location/cities";
 import { getCondominiums } from "../data/location/condominiums";
@@ -694,6 +695,7 @@ export default function PropertySearch({
         message,
       )}`;
 
+    trackWhatsAppClick();
     window.open(
       whatsappUrl,
       "_blank",

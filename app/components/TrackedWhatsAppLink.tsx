@@ -1,41 +1,31 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type {
+  ComponentPropsWithoutRef,
+  MouseEvent,
+} from "react";
+import { trackWhatsAppClick } from "./whatsappTracking";
 
-type TrackedWhatsAppLinkProps = {
-  href: string;
-  children: ReactNode;
-  className?: string;
-};
+type TrackedWhatsAppLinkProps =
+  ComponentPropsWithoutRef<"a">;
 
 export default function TrackedWhatsAppLink({
-  href,
-  children,
-  className,
+  onClick,
+  ...props
 }: TrackedWhatsAppLinkProps) {
-  function handleClick() {
-    const win = window as typeof window & {
-      dataLayer?: Record<string, unknown>[];
-    };
-
-    win.dataLayer = win.dataLayer || [];
-
-    win.dataLayer.push({
-      event: "whatsapp_click",
-      whatsapp_source: "property_detail",
-      page_location: window.location.href,
-    });
+  function handleClick(
+    event: MouseEvent<HTMLAnchorElement>,
+  ) {
+    trackWhatsAppClick();
+    onClick?.(event);
   }
 
   return (
     <a
-      href={href}
       target="_blank"
       rel="noreferrer"
-      className={className}
+      {...props}
       onClick={handleClick}
-    >
-      {children}
-    </a>
+    />
   );
 }

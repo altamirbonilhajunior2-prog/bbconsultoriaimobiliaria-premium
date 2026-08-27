@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import TrackedWhatsAppLink from "./TrackedWhatsAppLink";
 
 const navigation = [
   { label: "Comprar", href: "/comprar" },
@@ -105,7 +106,7 @@ export default function Footer() {
             <p>Atendimento consultivo e personalizado.</p>
           </div>
 
-          <a
+          <TrackedWhatsAppLink
             href={`https://wa.me/5512978140636?text=${whatsappMessage}`}
             target="_blank"
             rel="noopener noreferrer"
@@ -113,7 +114,7 @@ export default function Footer() {
             className="mt-7 inline-flex min-h-13 w-full items-center justify-center bg-[#D5A85A] px-6 text-center text-xs font-bold uppercase tracking-[0.16em] text-black transition-colors duration-300 hover:bg-[#E5BC6B]"
           >
             Falar pelo WhatsApp
-          </a>
+          </TrackedWhatsAppLink>
         </div>
       </div>
 
