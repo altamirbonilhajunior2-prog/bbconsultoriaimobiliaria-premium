@@ -32,6 +32,7 @@ type ComprarPageProps = {
     categoria?: string | string[];
     dormitorios?: string | string[];
     valor?: string | string[];
+    pagina?: string | string[];
   }>;
 };
 
@@ -713,6 +714,64 @@ export default async function ComprarPage({
       },
     );
 
+  const pageSize = 12;
+  const totalPages = Math.ceil(
+    cards.length / pageSize,
+  );
+  const requestedPage = Number.parseInt(
+    getSingleParam(params.pagina) ?? "1",
+    10,
+  );
+  const currentPage = Math.min(
+    Math.max(
+      Number.isFinite(requestedPage)
+        ? requestedPage
+        : 1,
+      1,
+    ),
+    Math.max(totalPages, 1),
+  );
+  const paginatedCards = cards.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
+
+  function getPageHref(page: number) {
+    const nextParams =
+      new URLSearchParams();
+
+    for (const [key, rawValue] of
+      Object.entries(params)) {
+      if (
+        key === "pagina" ||
+        rawValue === undefined
+      ) {
+        continue;
+      }
+
+      const values = Array.isArray(rawValue)
+        ? rawValue
+        : [rawValue];
+
+      for (const item of values) {
+        nextParams.append(key, item);
+      }
+    }
+
+    if (page > 1) {
+      nextParams.set(
+        "pagina",
+        String(page),
+      );
+    }
+
+    const query = nextParams.toString();
+
+    return `/comprar${
+      query ? `?${query}` : ""
+    }#imoveis`;
+  }
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
       <Header />
@@ -758,7 +817,7 @@ export default async function ComprarPage({
         <ComprarFilters />
       </Suspense>
 
-      <section className="mx-auto max-w-[1720px] px-6 py-16 lg:px-10 xl:px-12">
+      <section id="imoveis" className="mx-auto max-w-[1720px] scroll-mt-6 px-6 py-16 lg:px-10 xl:px-12">
         <div className="flex flex-col gap-5 border-b border-white/10 pb-6 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-400">
@@ -793,7 +852,7 @@ export default async function ComprarPage({
 
         {cards.length > 0 ? (
           <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {cards.map(
+            {paginatedCards.map(
               (property) => (
                 <PropertyCard
                   key={
@@ -870,38 +929,41 @@ export default async function ComprarPage({
           </div>
         )}
 
-        {cards.length > 12 ? (
+        {totalPages > 1 ? (
           <div className="mt-14 flex justify-center gap-3">
-            <button
-              type="button"
-              aria-label="Página 1"
-              className="flex h-11 w-11 items-center justify-center border border-amber-500 bg-amber-500 text-sm font-bold text-black"
-            >
-              1
-            </button>
+            {Array.from(
+              { length: totalPages },
+              (_, index) => index + 1,
+            ).map((page) => (
+              <Link
+                key={page}
+                href={getPageHref(page)}
+                aria-label={`Página ${page}`}
+                aria-current={
+                  page === currentPage
+                    ? "page"
+                    : undefined
+                }
+                className={`flex h-11 w-11 items-center justify-center border text-sm transition ${
+                  page === currentPage
+                    ? "border-amber-500 bg-amber-500 font-bold text-black"
+                    : "border-white/15 text-zinc-300 hover:border-amber-500 hover:text-amber-400"
+                }`}
+              >
+                {page}
+              </Link>
+            ))}
 
-            <button
-              type="button"
-              aria-label="Página 2"
-              className="flex h-11 w-11 items-center justify-center border border-white/15 text-sm text-zinc-300 transition hover:border-amber-500 hover:text-amber-400"
-            >
-              2
-            </button>
-
-            <button
-              type="button"
-              aria-label="Página 3"
-              className="flex h-11 w-11 items-center justify-center border border-white/15 text-sm text-zinc-300 transition hover:border-amber-500 hover:text-amber-400"
-            >
-              3
-            </button>
-
-            <button
-              type="button"
-              className="flex h-11 items-center justify-center border border-white/15 px-5 text-xs font-bold uppercase tracking-[0.14em] text-zinc-300 transition hover:border-amber-500 hover:text-amber-400"
-            >
-              Próxima →
-            </button>
+            {currentPage < totalPages ? (
+              <Link
+                href={getPageHref(
+                  currentPage + 1,
+                )}
+                className="flex h-11 items-center justify-center border border-white/15 px-5 text-xs font-bold uppercase tracking-[0.14em] text-zinc-300 transition hover:border-amber-500 hover:text-amber-400"
+              >
+                Próxima →
+              </Link>
+            ) : null}
           </div>
         ) : null}
       </section>
