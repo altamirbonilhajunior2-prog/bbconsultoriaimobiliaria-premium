@@ -14,8 +14,6 @@ export default function TrackedWhatsAppLink({
   className,
 }: TrackedWhatsAppLinkProps) {
   function handleClick() {
-    console.log("B&B TESTE: clique no WhatsApp detectado");
-
     const win = window as typeof window & {
       dataLayer?: Record<string, unknown>[];
     };
@@ -27,8 +25,6 @@ export default function TrackedWhatsAppLink({
       whatsapp_source: "property_detail",
       page_location: window.location.href,
     });
-
-    console.log("B&B TESTE: evento enviado ao dataLayer", win.dataLayer);
   }
 
   return (
