@@ -19,7 +19,7 @@ const defaultFeatures = [
   "Arquitetura contemporânea",
   "Ambientes integrados",
   "Área gourmet",
-  "Suítes confortáveis",
+  "Planta adaptável",
   "Iluminação natural",
   "Paisagismo",
   "Acabamentos selecionados",
