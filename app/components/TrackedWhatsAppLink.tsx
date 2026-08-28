@@ -1,17 +1,31 @@
 "use client";
 
-import type { ComponentPropsWithoutRef, MouseEvent } from "react";
+import type {
+  ComponentPropsWithoutRef,
+  MouseEvent,
+} from "react";
 import { trackWhatsAppClick } from "./whatsappTracking";
 
-type TrackedWhatsAppLinkProps = ComponentPropsWithoutRef<"a"> & {
-  trackingData?: Record<string, string>;
-};
+type TrackedWhatsAppLinkProps =
+  ComponentPropsWithoutRef<"a">;
 
-export default function TrackedWhatsAppLink({ onClick, trackingData, ...props }: TrackedWhatsAppLinkProps) {
-  function handleClick(event: MouseEvent<HTMLAnchorElement>) {
-    trackWhatsAppClick(trackingData);
+export default function TrackedWhatsAppLink({
+  onClick,
+  ...props
+}: TrackedWhatsAppLinkProps) {
+  function handleClick(
+    event: MouseEvent<HTMLAnchorElement>,
+  ) {
+    trackWhatsAppClick();
     onClick?.(event);
   }
 
-  return <a target="_blank" rel="noreferrer" {...props} onClick={handleClick} />;
+  return (
+    <a
+      target="_blank"
+      rel="noreferrer"
+      {...props}
+      onClick={handleClick}
+    />
+  );
 }
