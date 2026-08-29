@@ -57,6 +57,69 @@ function decimalToNumber(
     : null;
 }
 
+function getSalePriceRange(
+  value: number | null,
+) {
+  if (value === null) {
+    return null;
+  }
+
+  if (value <= 500_000) {
+    return { lte: 500_000 };
+  }
+
+  if (value <= 1_000_000) {
+    return {
+      gt: 500_000,
+      lte: 1_000_000,
+    };
+  }
+
+  if (value <= 2_000_000) {
+    return {
+      gt: 1_000_000,
+      lte: 2_000_000,
+    };
+  }
+
+  if (value <= 3_000_000) {
+    return {
+      gt: 2_000_000,
+      lte: 3_000_000,
+    };
+  }
+
+  return { gt: 3_000_000 };
+}
+
+function getRentalPriceRange(
+  value: number | null,
+) {
+  if (value === null) {
+    return null;
+  }
+
+  if (value <= 5_000) {
+    return { lte: 5_000 };
+  }
+
+  if (value <= 10_000) {
+    return {
+      gt: 5_000,
+      lte: 10_000,
+    };
+  }
+
+  if (value <= 20_000) {
+    return {
+      gt: 10_000,
+      lte: 20_000,
+    };
+  }
+
+  return { gt: 20_000 };
+}
+
 function formatCurrency(
   value: { toString(): string } | null,
 ) {
@@ -301,10 +364,31 @@ export default async function PropertyPage({
       },
     });
 
+  const relatedPrice =
+    decimalToNumber(
+      property.purpose ===
+      "LOCACAO"
+        ? property.rentalPrice
+        : property.price,
+    );
+
+  const relatedPriceRange =
+    property.purpose ===
+    "LOCACAO"
+      ? getRentalPriceRange(
+          relatedPrice,
+        )
+      : getSalePriceRange(
+          relatedPrice,
+        );
+
   const relatedProperties =
     await prisma.property.findMany({
       where: {
         published: true,
+
+        propertyType:
+          property.propertyType,
 
         code: {
           not:
@@ -326,6 +410,19 @@ export default async function PropertyPage({
                   "VENDA_E_LOCACAO",
                 ],
               },
+
+        ...(relatedPriceRange
+          ? property.purpose ===
+            "LOCACAO"
+            ? {
+                rentalPrice:
+                  relatedPriceRange,
+              }
+            : {
+                price:
+                  relatedPriceRange,
+              }
+          : {}),
       },
 
       include: {
@@ -343,41 +440,16 @@ export default async function PropertyPage({
         },
       },
 
-      orderBy:
-        property.purpose ===
-        "LOCACAO"
-          ? [
-              {
-                rentalPrice: {
-                  sort: "desc",
-                  nulls: "last",
-                },
-              },
-              {
-                highlight:
-                  "desc",
-              },
-              {
-                publishedAt:
-                  "desc",
-              },
-            ]
-          : [
-              {
-                price: {
-                  sort: "desc",
-                  nulls: "last",
-                },
-              },
-              {
-                highlight:
-                  "desc",
-              },
-              {
-                publishedAt:
-                  "desc",
-              },
-            ],
+      orderBy: [
+        {
+          highlight:
+            "desc",
+        },
+        {
+          publishedAt:
+            "desc",
+        },
+      ],
 
       take:
         4,
@@ -825,37 +897,39 @@ export default async function PropertyPage({
             </p>
 
             <div className="mt-6 border border-white/10 bg-[#111] p-5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
-                Valor do m²
-              </p>
-              <p className="mt-2 font-serif text-2xl text-white">
-                {formattedPropertyPricePerSquareMeter}
-              </p>
-              <p className="mt-3 text-xs leading-5 text-zinc-500">
-                Calculado com base no preço anunciado e na área informada no cadastro.
-              </p>
-
-              {formattedReferenceRange ? (
-                <div className="mt-5 border-t border-white/10 pt-5">
+              <div
+                className={
+                  formattedReferenceRange
+                    ? "grid gap-5 md:grid-cols-2"
+                    : undefined
+                }
+              >
+                <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
-                    Referência de mercado no bairro
+                    Valor do m²
                   </p>
-                  <p className="mt-2 font-serif text-xl text-amber-400">
-                    {formattedReferenceRange}
+                  <p className="mt-2 font-serif text-2xl text-white">
+                    {formattedPropertyPricePerSquareMeter}
                   </p>
                   <p className="mt-3 text-xs leading-5 text-zinc-500">
-                    Estimativa baseada em {marketReference?.sampleSize ?? 0} imóveis comparáveis anunciados no mercado.
+                    Calculado com base no preço anunciado e na área informada no cadastro.
                   </p>
-                  <div className="mt-5 border-t border-white/10 pt-5">
+                </div>
+
+                {formattedReferenceRange ? (
+                  <div className="border-t border-white/10 pt-5 md:border-l md:border-t-0 md:pl-5 md:pt-0">
                     <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
                       Referência de Mercado B&amp;B
+                    </p>
+                    <p className="mt-2 font-serif text-2xl text-amber-400">
+                      {formattedReferenceRange}
                     </p>
                     <p className="mt-3 text-xs leading-5 text-zinc-500">
                       Estimativa elaborada a partir de pesquisa periódica em portais imobiliários, ofertas públicas e imóveis comparáveis. Valores anunciados podem diferir dos valores efetivamente negociados.
                     </p>
                   </div>
-                </div>
-              ) : null}
+                ) : null}
+              </div>
             </div>
 
             <Link
