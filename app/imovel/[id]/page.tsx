@@ -5,7 +5,13 @@ import Header from "../../components/Header";
 import PropertyCard from "../../components/PropertyCard";
 import PropertyGallery from "../../components/PropertyGallery";
 import TrackedWhatsAppLink from "../../components/TrackedWhatsAppLink";
+import ApproximateLocationMap from "../../components/ApproximateLocationMap";
 import { prisma } from "../../../lib/prisma";
+import {
+  calculatePricePerSquareMeter,
+  formatPricePerSquareMeter,
+} from "../../../lib/property-metrics";
+import { normalizeLocationKey } from "../../../lib/location/normalize";
 
 export const dynamic = "force-dynamic";
 
@@ -232,6 +238,69 @@ export default async function PropertyPage({
     notFound();
   }
 
+  const referencePurpose =
+    property.purpose === "LOCACAO" ? "LOCACAO" : "VENDA";
+  const comparisonArea =
+    property.propertyType === "TERRENO"
+      ? property.landArea
+      : property.area;
+  const numericComparisonArea = decimalToNumber(comparisonArea);
+
+  const marketReferenceCandidates =
+    await prisma.marketReference.findMany({
+      where: {
+        active: true,
+        state: property.state,
+        city: property.city,
+        neighborhood: property.neighborhood,
+        purpose: referencePurpose,
+        propertyType: property.propertyType,
+        OR: [
+          { validUntil: null },
+          { validUntil: { gte: new Date() } },
+        ],
+      },
+      orderBy: { calculatedAt: "desc" },
+    });
+
+  const compatibleMarketReferences =
+    marketReferenceCandidates.filter((reference) => {
+      const minimumArea = decimalToNumber(reference.areaMin);
+      const maximumArea = decimalToNumber(reference.areaMax);
+
+      if (numericComparisonArea === null) {
+        return minimumArea === null && maximumArea === null;
+      }
+
+      return (
+        (minimumArea === null || numericComparisonArea >= minimumArea) &&
+        (maximumArea === null || numericComparisonArea <= maximumArea) &&
+        (reference.bedrooms === null || reference.bedrooms === property.bedrooms)
+      );
+    });
+
+  const marketReference =
+    compatibleMarketReferences.find(
+      (reference) => reference.bedrooms === property.bedrooms,
+    ) ??
+    compatibleMarketReferences.find(
+      (reference) => reference.bedrooms === null,
+    ) ??
+    null;
+
+  const neighborhoodMapLocation =
+    await prisma.neighborhoodMapLocation.findFirst({
+      where: {
+        active: true,
+        state: property.state,
+        city: property.city,
+        OR: [
+          { normalizedName: normalizeLocationKey(property.neighborhood) },
+          { aliases: { has: normalizeLocationKey(property.neighborhood) } },
+        ],
+      },
+    });
+
   const relatedProperties =
     await prisma.property.findMany({
       where: {
@@ -373,6 +442,37 @@ export default async function PropertyPage({
     )
       ? `A partir de ${salePrice}*`
       : salePrice;
+
+  const metricPrice =
+    referencePurpose === "LOCACAO"
+      ? property.rentalPrice
+      : property.price;
+  const propertyPricePerSquareMeter = calculatePricePerSquareMeter({
+    price: metricPrice,
+    area: comparisonArea,
+  });
+  const formattedPropertyPricePerSquareMeter =
+    formatPricePerSquareMeter(propertyPricePerSquareMeter);
+  const formattedReferenceRange = marketReference
+    ? `${new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        maximumFractionDigits: 0,
+      }).format(Number(marketReference.pricePerSquareMeterMin.toString()))} a ${new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        maximumFractionDigits: 0,
+      }).format(Number(marketReference.pricePerSquareMeterMax.toString()))}/m²`
+    : null;
+
+  const publicMapLocation =
+    property.mapEnabled && neighborhoodMapLocation
+      ? {
+          latitude: Number(neighborhoodMapLocation.latitude.toString()),
+          longitude: Number(neighborhoodMapLocation.longitude.toString()),
+          radiusMeters: neighborhoodMapLocation.radiusMeters,
+        }
+      : null;
 
   const whatsappMessage =
     encodeURIComponent(
@@ -699,6 +799,32 @@ export default async function PropertyPage({
               Consulte condições comerciais e disponibilidade.
             </p>
 
+            <div className="mt-6 border border-white/10 bg-[#111] p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                Valor do m²
+              </p>
+              <p className="mt-2 font-serif text-2xl text-white">
+                {formattedPropertyPricePerSquareMeter}
+              </p>
+              <p className="mt-3 text-xs leading-5 text-zinc-500">
+                Calculado com base no preço anunciado e na área informada no cadastro.
+              </p>
+
+              {formattedReferenceRange ? (
+                <div className="mt-5 border-t border-white/10 pt-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                    Valores de referência de mercado
+                  </p>
+                  <p className="mt-2 font-serif text-xl text-amber-400">
+                    {formattedReferenceRange}
+                  </p>
+                  <p className="mt-3 text-xs leading-5 text-zinc-500">
+                    Baseados em imóveis comparáveis anunciados no mercado.
+                  </p>
+                </div>
+              ) : null}
+            </div>
+
             <Link
               href={
                 scheduleUrl
@@ -800,6 +926,27 @@ export default async function PropertyPage({
               ),
             )}
           </div>
+        </div>
+      </section>
+
+      {publicMapLocation ? (
+        <ApproximateLocationMap
+          latitude={publicMapLocation.latitude}
+          longitude={publicMapLocation.longitude}
+          radiusMeters={publicMapLocation.radiusMeters}
+          neighborhood={property.neighborhood}
+          city={property.city}
+        />
+      ) : null}
+
+      <section className="mx-auto max-w-[1720px] px-6 py-10 lg:px-10 xl:px-12">
+        <div className="border border-white/10 bg-[#0a0a0a] p-6">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
+            Referência de Mercado B&amp;B
+          </p>
+          <p className="mt-3 max-w-5xl text-sm leading-7 text-zinc-400">
+            Estimativa elaborada a partir de pesquisa periódica em portais imobiliários, ofertas públicas e imóveis comparáveis. Valores anunciados podem diferir dos valores efetivamente negociados.
+          </p>
         </div>
       </section>
 

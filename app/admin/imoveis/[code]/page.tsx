@@ -228,6 +228,10 @@ export default async function EditarImovelPage({
 
     googleMapsUrl:
       property.googleMapsUrl,
+    mapEnabled:
+      property.mapEnabled,
+    mapRadiusMeters:
+      property.mapRadiusMeters,
 
     price:
       decimalToString(

@@ -1,0 +1,286 @@
+[
+  {
+    "state": "SP",
+    "city": "Jacareí",
+    "normalizedName": "jardim panorama",
+    "displayName": "Jardim Panorama",
+    "aliases": [],
+    "latitude": -23.3207521,
+    "longitude": -45.9798876,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Jardim+Panorama%2C+Jacare%C3%AD%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "Jacareí",
+    "normalizedName": "mirante do vale",
+    "displayName": "Mirante do Vale",
+    "aliases": [],
+    "latitude": -23.2748918,
+    "longitude": -45.924058,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Mirante+do+Vale%2C+Jacare%C3%AD%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "Jacareí",
+    "normalizedName": "residencial fogaca",
+    "displayName": "Residencial Fogaça",
+    "aliases": [],
+    "latitude": -23.3187351,
+    "longitude": -45.9864521,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Residencial+Foga%C3%A7a%2C+Jacare%C3%AD%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "bosque dos eucaliptos",
+    "displayName": "Bosque dos Eucaliptos",
+    "aliases": [],
+    "latitude": -23.2520433,
+    "longitude": -45.888645,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Bosque+dos+Eucaliptos%2C+S%C3%A3o+Jos%C3%A9+dos+Campos%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "esplanada do sol",
+    "displayName": "Esplanada do Sol",
+    "aliases": [],
+    "latitude": -23.1894801,
+    "longitude": -45.9123294,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Esplanada+do+Sol%2C+S%C3%A3o+Jos%C3%A9+dos+Campos%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "jardim aquarius",
+    "displayName": "Jardim Aquarius",
+    "aliases": [
+      "jardim aquuarius"
+    ],
+    "latitude": -23.2106013,
+    "longitude": -45.9045217,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Jardim+Aquarius%2C+S%C3%A3o+Jos%C3%A9+dos+Campos%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "jardim esplanada",
+    "displayName": "Jardim Esplanada",
+    "aliases": [],
+    "latitude": -23.1982687,
+    "longitude": -45.9031642,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Jardim+Esplanada%2C+S%C3%A3o+Jos%C3%A9+dos+Campos%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "jardim oriente",
+    "displayName": "Jardim Oriente",
+    "aliases": [],
+    "latitude": -23.2409807,
+    "longitude": -45.8963064,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Jardim+Oriente%2C+S%C3%A3o+Jos%C3%A9+dos+Campos%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "jardim satelite",
+    "displayName": "Jardim Satélite",
+    "aliases": [],
+    "latitude": -23.2280912,
+    "longitude": -45.8867116,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Jardim+Sat%C3%A9lite%2C+S%C3%A3o+Jos%C3%A9+dos+Campos%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "jardim das industrias",
+    "displayName": "Jardim das Indústrias",
+    "aliases": [
+      "jardim das industrias"
+    ],
+    "latitude": -23.2274141,
+    "longitude": -45.9194129,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Jardim+das+Ind%C3%BAstrias%2C+S%C3%A3o+Jos%C3%A9+dos+Campos%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "parque industrial",
+    "displayName": "Parque Industrial",
+    "aliases": [],
+    "latitude": -23.2309663,
+    "longitude": -45.905119,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Parque+Industrial%2C+S%C3%A3o+Jos%C3%A9+dos+Campos%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "residencial mantiqueira",
+    "displayName": "Residencial Mantiqueira",
+    "aliases": [],
+    "latitude": -23.1370558,
+    "longitude": -45.9151937,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Residencial+Mantiqueira%2C+S%C3%A3o+Jos%C3%A9+dos+Campos%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "urbanova",
+    "displayName": "Urbanova",
+    "aliases": [],
+    "latitude": -23.1841792,
+    "longitude": -45.932701,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Urbanova%2C+S%C3%A3o+Jos%C3%A9+dos+Campos%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "vila adyana",
+    "displayName": "Vila Adyana",
+    "aliases": [],
+    "latitude": -23.1964258,
+    "longitude": -45.8919176,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Vila+Adyana%2C+S%C3%A3o+Jos%C3%A9+dos+Campos%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "vila industrial",
+    "displayName": "Vila Industrial",
+    "aliases": [],
+    "latitude": -23.1763978,
+    "longitude": -45.8579079,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Vila+Industrial%2C+S%C3%A3o+Jos%C3%A9+dos+Campos%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "vila paiva",
+    "displayName": "Vila Paiva",
+    "aliases": [],
+    "latitude": -23.1390293,
+    "longitude": -45.9068245,
+    "radiusMeters": 700,
+    "source": "OpenStreetMap Nominatim",
+    "sourceUrl": "https://nominatim.openstreetmap.org/search?q=Vila+Paiva%2C+S%C3%A3o+Jos%C3%A9+dos+Campos%2C+SP%2C+Brasil&format=jsonv2&addressdetails=1&limit=3"
+  },
+  {
+    "state": "SP",
+    "city": "Ubatuba",
+    "normalizedName": "itagua",
+    "displayName": "Itaguá",
+    "aliases": [],
+    "latitude": -23.4509,
+    "longitude": -45.0647,
+    "radiusMeters": 700,
+    "source": "Prefeitura Municipal de Ubatuba",
+    "sourceUrl": "https://turismo.ubatuba.sp.gov.br/praias/praia-do-itagua/"
+  },
+  {
+    "state": "SP",
+    "city": "Jacareí",
+    "normalizedName": "villa branca",
+    "displayName": "Villa Branca",
+    "aliases": [],
+    "latitude": -23.26714,
+    "longitude": -45.94071,
+    "radiusMeters": 700,
+    "source": "Prefeitura Municipal de Jacareí e registro público de avaliação",
+    "sourceUrl": "https://www.jacarei.sp.gov.br/wp-content/uploads/2025/05/LC-126-2025-PLANO-DIRETOR-30abr2025.pdf"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "jardim das colinas",
+    "displayName": "Jardim das Colinas",
+    "aliases": [],
+    "latitude": -23.20652,
+    "longitude": -45.9122279,
+    "radiusMeters": 700,
+    "source": "Prefeitura Municipal de São José dos Campos e OpenStreetMap",
+    "sourceUrl": "https://servicos.sjc.sp.gov.br/mapas_de_loteamentos/"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "centro",
+    "displayName": "Centro",
+    "aliases": [],
+    "latitude": -23.18508,
+    "longitude": -45.88659,
+    "radiusMeters": 700,
+    "source": "Referência postal pública conferida para a Praça Afonso Pena",
+    "sourceUrl": "https://www.cepbusca.com.br/cep/12210-090"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "floresta",
+    "displayName": "Floresta",
+    "aliases": [],
+    "latitude": -23.1782762,
+    "longitude": -45.8281021,
+    "radiusMeters": 700,
+    "source": "Prefeitura Municipal de São José dos Campos e OpenStreetMap",
+    "sourceUrl": "https://servicos.sjc.sp.gov.br/mapas_de_loteamentos/"
+  },
+  {
+    "state": "SP",
+    "city": "São José dos Campos",
+    "normalizedName": "jardim altos do esplanada",
+    "displayName": "Jardim Altos do Esplanada",
+    "aliases": [
+      "jardim altos esplanada"
+    ],
+    "latitude": -23.2128,
+    "longitude": -45.90782,
+    "radiusMeters": 700,
+    "source": "Prefeitura Municipal de São José dos Campos e OpenStreetMap",
+    "sourceUrl": "https://servicos.sjc.sp.gov.br/mapas_de_loteamentos/"
+  },
+  {
+    "state": "SP",
+    "city": "Jacareí",
+    "normalizedName": "loteamento residencial parque lago dourado",
+    "displayName": "Loteamento Residencial Parque Lago Dourado",
+    "aliases": [
+      "residencial parque lago dourado"
+    ],
+    "latitude": -23.3347905,
+    "longitude": -46.0496752,
+    "radiusMeters": 700,
+    "source": "Prefeitura Municipal de Jacareí e referência postal pública",
+    "sourceUrl": "https://www.jacarei.sp.gov.br/wp-content/uploads/2023/09/MAPA-ATUA%C3%87%C3%83O-PROLAR-Atz.-jan_2023Rev-21-08-23-A0.pdf-A0.pdf"
+  }
+]

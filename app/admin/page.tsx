@@ -33,6 +33,18 @@ const managementLinks = [
     href: "/admin/bairros",
   },
   {
+    title: "Referências de mercado",
+    description:
+      "Registrar fontes, imóveis comparáveis e faixas de valor por metro quadrado.",
+    href: "/admin/referencias-mercado",
+  },
+  {
+    title: "Localização dos bairros",
+    description:
+      "Validar o ponto público usado pelo mapa de cada bairro, sem cadastrar o endereço do imóvel.",
+    href: "/admin/localizacoes-mapa",
+  },
+  {
     title: "Condomínios",
     description: "Gerenciar condomínios residenciais cadastrados.",
     href: "/admin/condominios",

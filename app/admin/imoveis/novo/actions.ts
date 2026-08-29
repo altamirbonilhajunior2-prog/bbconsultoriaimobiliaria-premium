@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "../../../../auth";
 import { getAccessContext } from "../../../../lib/admin/access";
+import { confirmedNeighborhoodLocation } from "../../../../lib/location/confirmed-neighborhood";
 import { prisma } from "../../../../lib/prisma";
 
 export type PropertyFormState = {
@@ -478,6 +479,10 @@ export async function createPropertyAction(
       ),
     );
 
+  const mapEnabled = formData.get("mapEnabled") === "on";
+  const requestedMapRadius = getOptionalInteger(formData, "mapRadiusMeters") ?? 700;
+  const mapRadiusMeters = Math.min(Math.max(requestedMapRadius, 300), 2000);
+
   if (
     latitude !== null &&
     (
@@ -684,6 +689,34 @@ export async function createPropertyAction(
               highestNumber + 1,
             ).padStart(3, "0")}`;
 
+          const confirmedLocation = confirmedNeighborhoodLocation(formData, {
+            state,
+            city,
+            neighborhood,
+          });
+          if (confirmedLocation) {
+            await tx.neighborhoodMapLocation.upsert({
+              where: {
+                state_city_normalizedName: {
+                  state: confirmedLocation.state,
+                  city: confirmedLocation.city,
+                  normalizedName: confirmedLocation.normalizedName,
+                },
+              },
+              update: {
+                ...confirmedLocation,
+                active: true,
+                verifiedAt: new Date(),
+              },
+              create: {
+                ...confirmedLocation,
+                aliases: [],
+                active: true,
+                verifiedAt: new Date(),
+              },
+            });
+          }
+
           return tx.property.create({
             data: {
               code,
@@ -765,6 +798,10 @@ export async function createPropertyAction(
                   formData,
                   "googleMapsUrl",
                 ),
+
+              mapEnabled,
+
+              mapRadiusMeters,
 
               price:
                 parseDecimal(

@@ -14,6 +14,7 @@ import {
   type PropertyFormAccessData,
   type PropertyFormState,
 } from "./actions";
+import NeighborhoodGeolocationField from "../../components/NeighborhoodGeolocationField";
 
 type PropertyType =
   keyof typeof propertyTypes;
@@ -697,19 +698,10 @@ export default function NovoImovelPage() {
                 />
               </label>
 
-              <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
-                  Bairro
-                </span>
-
-                <input
-                  name="neighborhood"
-                  type="text"
-                  required
-                  placeholder="Ex.: Urbanova"
-                  className={inputClass}
-                />
-              </label>
+              <NeighborhoodGeolocationField
+                inputClass={inputClass}
+                labelClass={labelTitleClass}
+              />
 
               <label className="flex flex-col gap-2">
                 <span className={labelTitleClass}>
@@ -759,6 +751,28 @@ export default function NovoImovelPage() {
                   name="location"
                   type="text"
                   placeholder="Ex.: Alphaville II, Urbanova — São José dos Campos/SP"
+                  className={inputClass}
+                />
+              </label>
+
+              <label className="flex min-h-14 items-center gap-3 border border-white/10 bg-[#111111] px-4 md:col-span-1">
+                <input
+                  name="mapEnabled"
+                  type="checkbox"
+                  defaultChecked
+                  className="h-4 w-4 accent-amber-500"
+                />
+                <span className="text-sm text-zinc-300">Exibir mapa aproximado</span>
+              </label>
+
+              <label className="flex flex-col gap-2 md:col-span-1">
+                <span className={labelTitleClass}>Raio aproximado (metros)</span>
+                <input
+                  name="mapRadiusMeters"
+                  type="number"
+                  min={300}
+                  max={2000}
+                  defaultValue={700}
                   className={inputClass}
                 />
               </label>
@@ -813,7 +827,7 @@ export default function NovoImovelPage() {
 
             <div className="mt-5 border border-dashed border-white/10 bg-black/20 px-5 py-5">
               <p className="text-sm leading-7 text-zinc-500">
-                A localização automática pelo endereço e a visualização do mapa poderão ser adicionadas posteriormente.
+                O portal mostra apenas uma área aproximada. A coordenada exata permanece protegida no servidor e não é enviada à página pública.
               </p>
             </div>
           </section>

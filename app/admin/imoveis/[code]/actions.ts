@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "../../../../auth";
 import { prisma } from "../../../../lib/prisma";
 import { getAccessContext } from "../../../../lib/admin/access";
+import { confirmedNeighborhoodLocation } from "../../../../lib/location/confirmed-neighborhood";
 
 export type PropertyEditState = {
   success: boolean;
@@ -538,6 +539,10 @@ export async function updatePropertyAction(
       ),
     );
 
+  const mapEnabled = formData.get("mapEnabled") === "on";
+  const requestedMapRadius = getOptionalInteger(formData, "mapRadiusMeters") ?? 700;
+  const mapRadiusMeters = Math.min(Math.max(requestedMapRadius, 300), 2000);
+
   if (
     latitude !== null &&
     (
@@ -641,7 +646,40 @@ export async function updatePropertyAction(
   }
 
   try {
-    await prisma.property.update({
+    const city =
+      getText(formData, "city") ||
+      "São José dos Campos";
+    const confirmedLocation = confirmedNeighborhoodLocation(formData, {
+      state,
+      city,
+      neighborhood,
+    });
+
+    await prisma.$transaction(async (tx) => {
+      if (confirmedLocation) {
+        await tx.neighborhoodMapLocation.upsert({
+          where: {
+            state_city_normalizedName: {
+              state: confirmedLocation.state,
+              city: confirmedLocation.city,
+              normalizedName: confirmedLocation.normalizedName,
+            },
+          },
+          update: {
+            ...confirmedLocation,
+            active: true,
+            verifiedAt: new Date(),
+          },
+          create: {
+            ...confirmedLocation,
+            aliases: [],
+            active: true,
+            verifiedAt: new Date(),
+          },
+        });
+      }
+
+      await tx.property.update({
       where: {
         code: originalCode,
       },
@@ -684,12 +722,7 @@ export async function updatePropertyAction(
         state:
           state.toUpperCase(),
 
-        city:
-          getText(
-            formData,
-            "city",
-          ) ||
-          "São José dos Campos",
+        city,
 
         neighborhood,
 
@@ -733,6 +766,10 @@ export async function updatePropertyAction(
             formData,
             "googleMapsUrl",
           ),
+
+        mapEnabled,
+
+        mapRadiusMeters,
 
         price:
           parseDecimal(
@@ -858,6 +895,7 @@ export async function updatePropertyAction(
             "seoImage",
           ),
       },
+      });
     });
 
     revalidatePath(

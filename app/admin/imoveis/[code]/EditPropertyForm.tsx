@@ -15,6 +15,7 @@ import {
   type PropertyEditState,
   updatePropertyAction,
 } from "./actions";
+import NeighborhoodGeolocationField from "../../components/NeighborhoodGeolocationField";
 
 type PropertyType =
   keyof typeof propertyTypes;
@@ -79,6 +80,8 @@ type EditableProperty = {
   latitude: string | null;
   longitude: string | null;
   googleMapsUrl: string | null;
+  mapEnabled: boolean;
+  mapRadiusMeters: number;
 
   price: string | null;
   rentalPrice: string | null;
@@ -817,16 +820,10 @@ export default function EditPropertyForm({
               </select>
             </Field>
 
-            <Field label="Bairro">
-              <input
-                name="neighborhood"
-                required
-                defaultValue={
-                  property.neighborhood
-                }
-                className={inputClass}
-              />
-            </Field>
+            <NeighborhoodGeolocationField
+              defaultValue={property.neighborhood}
+              inputClass={inputClass}
+            />
 
             <Field label="Condomínio ou edifício">
               <input
@@ -877,7 +874,32 @@ export default function EditPropertyForm({
                 className={inputClass}
               />
             </Field>
+
+            <label className="flex min-h-14 items-center gap-3 border border-white/10 bg-[#111111] px-4">
+              <input
+                name="mapEnabled"
+                type="checkbox"
+                defaultChecked={property.mapEnabled}
+                className="h-4 w-4 accent-amber-500"
+              />
+              <span className="text-sm text-zinc-300">Exibir mapa aproximado</span>
+            </label>
+
+            <Field label="Raio aproximado (metros)">
+              <input
+                name="mapRadiusMeters"
+                type="number"
+                min={300}
+                max={2000}
+                defaultValue={property.mapRadiusMeters}
+                className={inputClass}
+              />
+            </Field>
           </div>
+
+          <p className="mt-5 text-xs leading-6 text-zinc-500">
+            O endereço e as coordenadas exatas permanecem protegidos. O portal recebe somente um ponto deslocado dentro do raio escolhido.
+          </p>
         </section>
 
         <section className={sectionClass}>

@@ -71,6 +71,9 @@ model Property {
   longitude     Decimal? @db.Decimal(10, 7)
   googleMapsUrl String?  @db.Text
 
+  mapEnabled      Boolean @default(true)
+  mapRadiusMeters Int     @default(700)
+
   price       Decimal? @db.Decimal(15, 2)
   rentalPrice Decimal? @db.Decimal(15, 2)
 
@@ -316,4 +319,92 @@ model AcquisitionOpportunity {
   @@index([price])
   @@index([score])
   @@index([createdAt])
+}
+
+model MarketReference {
+  id Int @id @default(autoincrement())
+
+  state        String @default("SP") @db.VarChar(2)
+  city         String @db.VarChar(120)
+  neighborhood String @db.VarChar(150)
+
+  purpose      PropertyPurpose
+  propertyType PropertyType
+
+  areaMin Decimal? @db.Decimal(10, 2)
+  areaMax Decimal? @db.Decimal(10, 2)
+  bedrooms Int?
+
+  pricePerSquareMeterMin Decimal @db.Decimal(12, 2)
+  pricePerSquareMeterMax Decimal @db.Decimal(12, 2)
+
+  sampleSize Int @default(0)
+  active     Boolean @default(true)
+
+  calculatedAt DateTime @default(now())
+  validUntil   DateTime?
+  notes        String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  evidences MarketEvidence[]
+
+  @@index([city, neighborhood])
+  @@index([purpose, propertyType])
+  @@index([active, calculatedAt])
+}
+
+model MarketEvidence {
+  id Int @id @default(autoincrement())
+
+  marketReferenceId Int
+  marketReference   MarketReference @relation(fields: [marketReferenceId], references: [id], onDelete: Cascade)
+
+  source     String @db.VarChar(120)
+  sourceUrl  String @db.VarChar(1000)
+  researchedAt DateTime @default(now())
+
+  propertyType PropertyType
+  purpose      PropertyPurpose
+  area         Decimal? @db.Decimal(10, 2)
+  bedrooms     Int?
+  price        Decimal? @db.Decimal(15, 2)
+  pricePerSquareMeter Decimal? @db.Decimal(12, 2)
+
+  development String? @db.VarChar(180)
+  notes       String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([marketReferenceId])
+  @@index([source])
+  @@index([researchedAt])
+}
+
+model NeighborhoodMapLocation {
+  id Int @id @default(autoincrement())
+
+  state          String @default("SP") @db.VarChar(2)
+  city           String @db.VarChar(120)
+  normalizedName String @db.VarChar(180)
+  displayName    String @db.VarChar(180)
+  aliases        String[] @default([])
+
+  latitude  Decimal @db.Decimal(10, 7)
+  longitude Decimal @db.Decimal(10, 7)
+  radiusMeters Int @default(700)
+  active Boolean @default(true)
+
+  source     String? @db.VarChar(180)
+  sourceUrl  String? @db.VarChar(1000)
+  verifiedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([state, city, normalizedName])
+  @@index([state, city])
+  @@index([active])
 }
