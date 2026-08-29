@@ -897,13 +897,7 @@ export default async function PropertyPage({
             </p>
 
             <div className="mt-6 border border-white/10 bg-[#111] p-5">
-              <div
-                className={
-                  formattedReferenceRange
-                    ? "grid gap-5 md:grid-cols-2"
-                    : undefined
-                }
-              >
+              <div className="grid gap-5 md:grid-cols-2">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
                     Valor do m²
@@ -916,19 +910,19 @@ export default async function PropertyPage({
                   </p>
                 </div>
 
-                {formattedReferenceRange ? (
-                  <div className="border-t border-white/10 pt-5 md:border-l md:border-t-0 md:pl-5 md:pt-0">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
-                      Referência de Mercado B&amp;B
-                    </p>
+                <div className="border-t border-white/10 pt-5 md:border-l md:border-t-0 md:pl-5 md:pt-0">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
+                    Referência de Mercado B&amp;B
+                  </p>
+                  {formattedReferenceRange ? (
                     <p className="mt-2 font-serif text-2xl text-amber-400">
                       {formattedReferenceRange}
                     </p>
-                    <p className="mt-3 text-xs leading-5 text-zinc-500">
-                      Estimativa elaborada a partir de pesquisa periódica em portais imobiliários, ofertas públicas e imóveis comparáveis. Valores anunciados podem diferir dos valores efetivamente negociados.
-                    </p>
-                  </div>
-                ) : null}
+                  ) : null}
+                  <p className="mt-3 text-xs leading-5 text-zinc-500">
+                    Estimativa elaborada a partir de pesquisa periódica em portais imobiliários, ofertas públicas e imóveis comparáveis. Valores anunciados podem diferir dos valores efetivamente negociados.
+                  </p>
+                </div>
               </div>
             </div>
 
