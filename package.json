@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && tsx scripts/importar-localizacoes-bairros.ts && next build",
+    "build": "prisma generate && prisma migrate deploy && tsx scripts/importar-localizacoes-bairros.ts && tsx scripts/importar-referencia-jardim-das-colinas.ts && next build",
     "start": "next start",
     "lint": "eslint",
     "data:import-neighborhoods": "tsx scripts/importar-localizacoes-bairros.ts"

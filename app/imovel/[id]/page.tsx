@@ -813,13 +813,13 @@ export default async function PropertyPage({
               {formattedReferenceRange ? (
                 <div className="mt-5 border-t border-white/10 pt-5">
                   <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
-                    Valores de referência de mercado
+                    Referência de mercado no bairro
                   </p>
                   <p className="mt-2 font-serif text-xl text-amber-400">
                     {formattedReferenceRange}
                   </p>
                   <p className="mt-3 text-xs leading-5 text-zinc-500">
-                    Baseados em imóveis comparáveis anunciados no mercado.
+                    Estimativa baseada em {marketReference?.sampleSize ?? 0} imóveis comparáveis anunciados no mercado.
                   </p>
                 </div>
               ) : null}
@@ -939,16 +939,18 @@ export default async function PropertyPage({
         />
       ) : null}
 
-      <section className="mx-auto max-w-[1720px] px-6 py-10 lg:px-10 xl:px-12">
-        <div className="border border-white/10 bg-[#0a0a0a] p-6">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
-            Referência de Mercado B&amp;B
-          </p>
-          <p className="mt-3 max-w-5xl text-sm leading-7 text-zinc-400">
-            Estimativa elaborada a partir de pesquisa periódica em portais imobiliários, ofertas públicas e imóveis comparáveis. Valores anunciados podem diferir dos valores efetivamente negociados.
-          </p>
-        </div>
-      </section>
+      {formattedReferenceRange ? (
+        <section className="mx-auto max-w-[1720px] px-6 py-10 lg:px-10 xl:px-12">
+          <div className="border border-white/10 bg-[#0a0a0a] p-6">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
+              Referência de Mercado B&amp;B
+            </p>
+            <p className="mt-3 max-w-5xl text-sm leading-7 text-zinc-400">
+              Estimativa elaborada a partir de pesquisa periódica em portais imobiliários, ofertas públicas e imóveis comparáveis. Valores anunciados podem diferir dos valores efetivamente negociados.
+            </p>
+          </div>
+        </section>
+      ) : null}
 
       {relatedCards.length > 0 ? (
         <section className="mx-auto max-w-[1720px] px-6 py-16 lg:px-10 xl:px-12">
