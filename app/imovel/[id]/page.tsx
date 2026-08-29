@@ -610,7 +610,7 @@ export default async function PropertyPage({
           );
 
         const relatedBasePrice =
-          item.purpose ===
+          property.purpose ===
           "LOCACAO"
             ? formatCurrency(
                 item.rentalPrice,
@@ -620,7 +620,7 @@ export default async function PropertyPage({
               );
 
         const relatedPrice =
-          item.purpose !== "LOCACAO" &&
+          property.purpose !== "LOCACAO" &&
           item.opportunityProfiles.includes(
             "LANCAMENTO",
           )
