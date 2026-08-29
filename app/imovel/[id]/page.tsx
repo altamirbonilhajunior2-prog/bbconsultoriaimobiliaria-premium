@@ -821,6 +821,14 @@ export default async function PropertyPage({
                   <p className="mt-3 text-xs leading-5 text-zinc-500">
                     Estimativa baseada em {marketReference?.sampleSize ?? 0} imóveis comparáveis anunciados no mercado.
                   </p>
+                  <div className="mt-5 border-t border-white/10 pt-5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
+                      Referência de Mercado B&amp;B
+                    </p>
+                    <p className="mt-3 text-xs leading-5 text-zinc-500">
+                      Estimativa elaborada a partir de pesquisa periódica em portais imobiliários, ofertas públicas e imóveis comparáveis. Valores anunciados podem diferir dos valores efetivamente negociados.
+                    </p>
+                  </div>
                 </div>
               ) : null}
             </div>
@@ -937,19 +945,6 @@ export default async function PropertyPage({
           neighborhood={property.neighborhood}
           city={property.city}
         />
-      ) : null}
-
-      {formattedReferenceRange ? (
-        <section className="mx-auto max-w-[1720px] px-6 py-10 lg:px-10 xl:px-12">
-          <div className="border border-white/10 bg-[#0a0a0a] p-6">
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
-              Referência de Mercado B&amp;B
-            </p>
-            <p className="mt-3 max-w-5xl text-sm leading-7 text-zinc-400">
-              Estimativa elaborada a partir de pesquisa periódica em portais imobiliários, ofertas públicas e imóveis comparáveis. Valores anunciados podem diferir dos valores efetivamente negociados.
-            </p>
-          </div>
-        </section>
       ) : null}
 
       {relatedCards.length > 0 ? (
