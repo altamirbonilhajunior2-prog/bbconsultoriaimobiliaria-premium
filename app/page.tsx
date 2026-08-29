@@ -131,6 +131,18 @@ export default async function Home() {
 
       orderBy: [
         {
+          price: {
+            sort: "desc",
+            nulls: "last",
+          },
+        },
+        {
+          rentalPrice: {
+            sort: "desc",
+            nulls: "last",
+          },
+        },
+        {
           highlight: "desc",
         },
         {

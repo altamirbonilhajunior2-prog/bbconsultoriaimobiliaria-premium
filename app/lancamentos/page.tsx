@@ -99,6 +99,12 @@ export default async function LancamentosPage() {
 
       orderBy: [
         {
+          price: {
+            sort: "desc",
+            nulls: "last",
+          },
+        },
+        {
           highlight: "desc",
         },
         {

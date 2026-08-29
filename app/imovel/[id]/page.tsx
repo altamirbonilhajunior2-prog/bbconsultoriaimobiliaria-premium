@@ -343,16 +343,41 @@ export default async function PropertyPage({
         },
       },
 
-      orderBy: [
-        {
-          highlight:
-            "desc",
-        },
-        {
-          publishedAt:
-            "desc",
-        },
-      ],
+      orderBy:
+        property.purpose ===
+        "LOCACAO"
+          ? [
+              {
+                rentalPrice: {
+                  sort: "desc",
+                  nulls: "last",
+                },
+              },
+              {
+                highlight:
+                  "desc",
+              },
+              {
+                publishedAt:
+                  "desc",
+              },
+            ]
+          : [
+              {
+                price: {
+                  sort: "desc",
+                  nulls: "last",
+                },
+              },
+              {
+                highlight:
+                  "desc",
+              },
+              {
+                publishedAt:
+                  "desc",
+              },
+            ],
 
       take:
         4,

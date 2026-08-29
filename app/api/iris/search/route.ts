@@ -348,6 +348,19 @@ export async function POST(
         },
 
         orderBy: [
+          body.purpose === "Locação"
+            ? {
+                rentalPrice: {
+                  sort: "desc",
+                  nulls: "last",
+                },
+              }
+            : {
+                price: {
+                  sort: "desc",
+                  nulls: "last",
+                },
+              },
           {
             highlight: "desc",
           },
@@ -414,6 +427,19 @@ export async function POST(
           },
 
           orderBy: [
+            body.purpose === "Locação"
+              ? {
+                  rentalPrice: {
+                    sort: "desc",
+                    nulls: "last",
+                  },
+                }
+              : {
+                  price: {
+                    sort: "desc",
+                    nulls: "last",
+                  },
+                },
             {
               highlight: "desc",
             },

@@ -444,6 +444,12 @@ export default async function AlugarPage({
 
       orderBy: [
         {
+          rentalPrice: {
+            sort: "desc",
+            nulls: "last",
+          },
+        },
+        {
           highlight: "desc",
         },
         {

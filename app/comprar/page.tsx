@@ -454,6 +454,12 @@ export default async function ComprarPage({
 
       orderBy: [
         {
+          price: {
+            sort: "desc",
+            nulls: "last",
+          },
+        },
+        {
           highlight: "desc",
         },
         {
