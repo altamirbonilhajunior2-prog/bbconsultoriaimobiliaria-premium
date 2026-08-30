@@ -346,33 +346,25 @@ export async function registerUploadedImagesAction(
   }
 
   try {
-    await normalizePositions(
-      property.id,
-    );
-
     const existingImages =
-      await prisma.propertyImage.findMany({
+      await prisma.propertyImage.aggregate({
         where: {
           propertyId:
             property.id,
         },
 
-        orderBy: [
-          {
-            position: "asc",
-          },
-          {
-            id: "asc",
-          },
-        ],
-
-        select: {
+        _count: {
           id: true,
+        },
+
+        _max: {
+          position: true,
         },
       });
 
     const firstPosition =
-      existingImages.length;
+      (existingImages._max.position ??
+        -1) + 1;
 
     await prisma.propertyImage.createMany({
       data: cleanImages.map(
@@ -396,26 +388,23 @@ export async function registerUploadedImagesAction(
             index,
 
           isCover:
-            existingImages.length ===
+            existingImages._count.id ===
               0 &&
             index === 0,
         }),
       ),
     });
 
-    refreshPropertyPages(code);
-
-    return {
-      success: true,
-      message:
-        cleanImages.length === 1
-          ? "1 nova fotografia adicionada com sucesso."
-          : `${cleanImages.length} novas fotografias adicionadas com sucesso.`,
-    };
   } catch (error) {
     console.error(
       "Erro ao registrar imagens enviadas:",
       error,
+    );
+
+    await removeBlobUrls(
+      cleanImages.map(
+        (image) => image.url,
+      ),
     );
 
     return {
@@ -424,6 +413,23 @@ export async function registerUploadedImagesAction(
         "As fotos foram enviadas, mas não foi possível registrá-las no banco de dados.",
     };
   }
+
+  try {
+    refreshPropertyPages(code);
+  } catch (error) {
+    console.error(
+      "As fotos foram registradas, mas a atualização do cache falhou:",
+      error,
+    );
+  }
+
+  return {
+    success: true,
+    message:
+      cleanImages.length === 1
+        ? "1 nova fotografia adicionada com sucesso."
+        : `${cleanImages.length} novas fotografias adicionadas com sucesso.`,
+  };
 }
 
 export async function setCoverImageAction(
