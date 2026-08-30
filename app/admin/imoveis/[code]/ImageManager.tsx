@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import {
   type ImageActionState,
   moveImageAction,
+  moveSelectedImagesToStartAction,
   registerUploadedImagesAction,
   removeAllImagesAction,
   removeImageAction,
@@ -150,6 +151,15 @@ export default function ImageManager({
   );
 
   const [
+    moveSelectedState,
+    moveSelectedAction,
+    moveSelectedPending,
+  ] = useActionState(
+    moveSelectedImagesToStartAction,
+    initialState,
+  );
+
+  const [
     removeState,
     removeAction,
     removePending,
@@ -179,18 +189,21 @@ export default function ImageManager({
   const currentState =
     removeAllState.message
       ? removeAllState
-      : removeSelectedState.message
-        ? removeSelectedState
-        : removeState.message
-          ? removeState
-          : moveState.message
-            ? moveState
-            : coverState;
+      : moveSelectedState.message
+        ? moveSelectedState
+        : removeSelectedState.message
+          ? removeSelectedState
+          : removeState.message
+            ? removeState
+            : moveState.message
+              ? moveState
+              : coverState;
 
   useEffect(() => {
     if (
       coverState.success ||
       moveState.success ||
+      moveSelectedState.success ||
       removeState.success ||
       removeSelectedState.success ||
       removeAllState.success
@@ -200,6 +213,7 @@ export default function ImageManager({
     }, [
     coverState,
     moveState,
+    moveSelectedState,
     removeState,
     removeSelectedState,
     removeAllState,
@@ -209,6 +223,7 @@ export default function ImageManager({
     uploading ||
     coverPending ||
     movePending ||
+    moveSelectedPending ||
     removePending ||
     removeSelectedPending ||
     removeAllPending;
@@ -646,6 +661,43 @@ export default function ImageManager({
                   Limpar seleção
                 </button>
               ) : null}
+
+              <form
+                action={
+                  moveSelectedAction
+                }
+              >
+                <input
+                  type="hidden"
+                  name="code"
+                  value={code}
+                />
+
+                {selectedImageIds.map(
+                  (imageId) => (
+                    <input
+                      key={imageId}
+                      type="hidden"
+                      name="imageIds"
+                      value={imageId}
+                    />
+                  ),
+                )}
+
+                <button
+                  type="submit"
+                  disabled={
+                    isPending ||
+                    selectedImageIds.length ===
+                      0
+                  }
+                  className="inline-flex min-h-10 items-center justify-center border border-amber-500/40 px-4 text-[10px] font-bold uppercase tracking-[0.12em] text-amber-300 transition hover:border-amber-400 hover:text-amber-200 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {moveSelectedPending
+                    ? "Movendo..."
+                    : "Mover selecionadas para o início"}
+                </button>
+              </form>
 
               <form
                 action={

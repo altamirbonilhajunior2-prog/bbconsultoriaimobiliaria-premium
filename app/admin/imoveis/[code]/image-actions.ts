@@ -697,6 +697,171 @@ export async function moveImageAction(
   }
 }
 
+export async function moveSelectedImagesToStartAction(
+  _previousState: ImageActionState,
+  formData: FormData,
+): Promise<ImageActionState> {
+  const session = await auth();
+
+  if (!session?.user) {
+    return {
+      success: false,
+      message:
+        "Sessão expirada. Faça login novamente.",
+    };
+  }
+
+  const code =
+    normalizeCode(
+      formData.get("code"),
+    );
+
+  const imageIds =
+    parseImageIds(
+      formData.getAll(
+        "imageIds",
+      ),
+    );
+
+  if (!code || imageIds.length === 0) {
+    return {
+      success: false,
+      message:
+        "Selecione pelo menos uma fotografia para mover.",
+    };
+  }
+
+  const property =
+    await prisma.property.findUnique({
+      where: {
+        code,
+      },
+
+      select: {
+        id: true,
+      },
+    });
+
+  if (!property) {
+    return {
+      success: false,
+      message:
+        "Imóvel não encontrado.",
+    };
+  }
+
+  try {
+    const orderedImages =
+      await prisma.propertyImage.findMany({
+        where: {
+          propertyId:
+            property.id,
+        },
+
+        orderBy: [
+          {
+            position: "asc",
+          },
+          {
+            id: "asc",
+          },
+        ],
+
+        select: {
+          id: true,
+        },
+      });
+
+    const selectedIds =
+      new Set(imageIds);
+
+    const selectedImages =
+      orderedImages.filter(
+        (image) =>
+          selectedIds.has(
+            image.id,
+          ),
+      );
+
+    if (
+      selectedImages.length !==
+      imageIds.length
+    ) {
+      return {
+        success: false,
+        message:
+          "Uma ou mais fotografias selecionadas não pertencem a este imóvel.",
+      };
+    }
+
+    const remainingImages =
+      orderedImages.filter(
+        (image) =>
+          !selectedIds.has(
+            image.id,
+          ),
+      );
+
+    const reorderedImages = [
+      ...selectedImages,
+      ...remainingImages,
+    ];
+
+    const coverImageId =
+      selectedImages[0].id;
+
+    await prisma.$transaction([
+      prisma.propertyImage.updateMany({
+        where: {
+          propertyId:
+            property.id,
+        },
+
+        data: {
+          isCover: false,
+        },
+      }),
+
+      ...reorderedImages.map(
+        (image, index) =>
+          prisma.propertyImage.update({
+            where: {
+              id: image.id,
+            },
+
+            data: {
+              position: index,
+              isCover:
+                image.id ===
+                coverImageId,
+            },
+          }),
+      ),
+    ]);
+
+    refreshPropertyPages(code);
+
+    return {
+      success: true,
+      message:
+        selectedImages.length === 1
+          ? "A fotografia foi movida para o início e definida como capa."
+          : `${selectedImages.length} fotografias foram movidas para o início. A primeira foi definida como capa.`,
+    };
+  } catch (error) {
+    console.error(
+      "Erro ao mover fotografias selecionadas para o início:",
+      error,
+    );
+
+    return {
+      success: false,
+      message:
+        "Não foi possível mover as fotografias selecionadas para o início.",
+    };
+  }
+}
+
 export async function removeImageAction(
   _previousState: ImageActionState,
   formData: FormData,
