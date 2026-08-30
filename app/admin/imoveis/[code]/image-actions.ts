@@ -3,6 +3,7 @@
 import { del } from "@vercel/blob";
 import { revalidatePath } from "next/cache";
 import { auth } from "../../../../auth";
+import { Prisma } from "../../../../generated/prisma/client";
 import { prisma } from "../../../../lib/prisma";
 
 export type ImageActionState = {
@@ -810,36 +811,35 @@ export async function moveSelectedImagesToStartAction(
     const coverImageId =
       selectedImages[0].id;
 
-    await prisma.$transaction([
-      prisma.propertyImage.updateMany({
-        where: {
-          propertyId:
-            property.id,
-        },
-
-        data: {
-          isCover: false,
-        },
-      }),
-
-      ...reorderedImages.map(
+    const positionCases =
+      reorderedImages.map(
         (image, index) =>
-          prisma.propertyImage.update({
-            where: {
-              id: image.id,
-            },
+          Prisma.sql`WHEN ${image.id} THEN ${index}`,
+      );
 
-            data: {
-              position: index,
-              isCover:
-                image.id ===
-                coverImageId,
-            },
-          }),
-      ),
-    ]);
+    await prisma.$executeRaw`
+      UPDATE "PropertyImage"
+      SET
+        "position" = CASE "id"
+          ${Prisma.join(positionCases, " ")}
+          ELSE "position"
+        END,
+        "isCover" = CASE
+          WHEN "id" = ${coverImageId}
+            THEN TRUE
+          ELSE FALSE
+        END
+      WHERE "propertyId" = ${property.id}
+    `;
 
-    refreshPropertyPages(code);
+    try {
+      refreshPropertyPages(code);
+    } catch (error) {
+      console.error(
+        "A ordem foi salva, mas a atualização do cache falhou:",
+        error,
+      );
+    }
 
     return {
       success: true,
