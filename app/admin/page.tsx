@@ -82,6 +82,7 @@ export default async function AdminPage() {
     rentalProperties,
     availableProperties,
     analysisProperties,
+    newPortalLeads,
   ] = await Promise.all([
     prisma.property.count(),
 
@@ -118,6 +119,12 @@ export default async function AdminPage() {
         status: "EM_ANALISE",
       },
     }),
+
+    prisma.portalLead.count({
+      where: {
+        status: "NOVO",
+      },
+    }),
   ]);
 
   const indicators = [
@@ -150,6 +157,11 @@ export default async function AdminPage() {
       label: "Em análise",
       value: analysisProperties,
       detail: "Aguardando revisão",
+    },
+    {
+      label: "Novos leads",
+      value: newPortalLeads,
+      detail: "Aguardando atendimento",
     },
   ];
 

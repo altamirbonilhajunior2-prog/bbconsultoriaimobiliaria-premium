@@ -37,6 +37,16 @@ enum PropertyStatus {
   EM_ANALISE
 }
 
+enum PortalLeadStatus {
+  NOVO
+  CONTATADO
+  VISITA_AGENDADA
+  PROPOSTA
+  EM_NEGOCIACAO
+  CONVERTIDO
+  ENCERRADO
+}
+
 model Property {
   id   Int    @id @default(autoincrement())
   code String @unique @db.VarChar(30)
@@ -114,7 +124,8 @@ model Property {
   coCaptorId Int?
   coCaptor   Agent? @relation("PropertyCoCaptor", fields: [coCaptorId], references: [id], onDelete: SetNull)
 
-  images PropertyImage[]
+  images      PropertyImage[]
+  portalLeads PortalLead[]
 
   @@index([ownerId])
   @@index([captorId])
@@ -126,6 +137,46 @@ model Property {
   @@index([neighborhood])
   @@index([highlight])
   @@index([published])
+}
+
+model PortalLead {
+  id Int @id @default(autoincrement())
+
+  propertyId Int?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  propertyCode  String @db.VarChar(30)
+  propertyTitle String @db.VarChar(200)
+
+  name  String @db.VarChar(120)
+  phone String @db.VarChar(20)
+
+  status PortalLeadStatus @default(NOVO)
+  notes  String?          @db.Text
+
+  sourcePage String  @db.VarChar(1000)
+  referrer   String? @db.VarChar(1000)
+
+  utmSource   String? @db.VarChar(180)
+  utmMedium   String? @db.VarChar(180)
+  utmCampaign String? @db.VarChar(250)
+  utmTerm     String? @db.VarChar(250)
+  utmContent  String? @db.VarChar(250)
+  gclid       String? @db.VarChar(255)
+
+  consentVersion String   @db.VarChar(50)
+  consentText    String   @db.Text
+  consentedAt   DateTime @default(now())
+  contactedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([propertyId])
+  @@index([propertyCode])
+  @@index([phone])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model PropertyImage {

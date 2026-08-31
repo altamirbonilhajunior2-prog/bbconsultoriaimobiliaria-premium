@@ -8,6 +8,7 @@ type PropertyGalleryProps = {
   aiImageIndexes?: number[];
   title: string;
   tag: string;
+  onFirstInteraction?: () => void;
 };
 
 export default function PropertyGallery({
@@ -15,6 +16,7 @@ export default function PropertyGallery({
   aiImageIndexes = [],
   title,
   tag,
+  onFirstInteraction,
 }: PropertyGalleryProps) {
   const safeImages = images.length > 0 ? images : ["/hero-clean.png"];
 
@@ -28,6 +30,7 @@ export default function PropertyGallery({
   const formattedTotalImages = String(safeImages.length).padStart(2, "0");
 
   function selectImage(index: number) {
+    onFirstInteraction?.();
     setSelectedIndex(index);
   }
 
@@ -42,6 +45,7 @@ export default function PropertyGallery({
   );
 }, [safeImages.length]);
   function openLightbox() {
+    onFirstInteraction?.();
     setIsLightboxOpen(true);
   }
 
@@ -139,6 +143,7 @@ export default function PropertyGallery({
                 type="button"
                 onClick={(event) => {
                   event.stopPropagation();
+                  onFirstInteraction?.();
                   showPreviousImage();
                 }}
                 aria-label="Mostrar foto anterior"
@@ -151,6 +156,7 @@ export default function PropertyGallery({
                 type="button"
                 onClick={(event) => {
                   event.stopPropagation();
+                  onFirstInteraction?.();
                   showNextImage();
                 }}
                 aria-label="Mostrar próxima foto"
@@ -215,7 +221,7 @@ export default function PropertyGallery({
           aria-modal="true"
           aria-label={`Galeria ampliada de ${title}`}
           onClick={closeLightbox}
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm sm:p-8"
+          className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm sm:p-8"
         >
           <button
             type="button"
@@ -269,7 +275,10 @@ export default function PropertyGallery({
 
                 <button
                   type="button"
-                  onClick={showNextImage}
+                  onClick={() => {
+                    onFirstInteraction?.();
+                    showNextImage();
+                  }}
                   aria-label="Próxima foto"
                   className="absolute right-0 top-1/2 z-20 flex h-14 w-14 -translate-y-1/2 items-center justify-center border border-white/25 bg-black/70 text-3xl text-white transition hover:border-amber-500 hover:bg-amber-500 hover:text-black sm:right-4"
                 >

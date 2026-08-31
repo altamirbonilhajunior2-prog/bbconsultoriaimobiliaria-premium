@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Footer from "../../components/Footer";
 import Header from "../../components/Header";
 import PropertyCard from "../../components/PropertyCard";
-import PropertyGallery from "../../components/PropertyGallery";
+import PropertyLeadExperience from "../../components/PropertyLeadExperience";
 import TrackedWhatsAppLink from "../../components/TrackedWhatsAppLink";
 import ApproximateLocationMap from "../../components/ApproximateLocationMap";
 import { prisma } from "../../../lib/prisma";
@@ -731,15 +731,18 @@ export default async function PropertyPage({
       <section className="mx-auto max-w-[1720px] px-6 py-10 lg:px-10 xl:px-12">
         <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_420px]">
           <div>
-            <PropertyGallery
+            <PropertyLeadExperience
               images={
                 safeGalleryImages
               }
               aiImageIndexes={
                 aiImageIndexes
               }
-              title={
+              propertyTitle={
                 property.title
+              }
+              propertyCode={
+                property.code
               }
               tag={
                 tag
