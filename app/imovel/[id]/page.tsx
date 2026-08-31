@@ -177,6 +177,27 @@ function buildLocation(
     .join(" • ");
 }
 
+function isAiGeneratedPropertyImage(
+  image: {
+    alt: string | null;
+    url: string;
+  },
+) {
+  let decodedUrl = image.url;
+
+  try {
+    decodedUrl = decodeURIComponent(
+      image.url,
+    );
+  } catch {
+    // Mantém a URL original quando ela contém uma codificação inválida.
+  }
+
+  return /\bBB[A-Z]\s*\d+\s*-\s*\d{2}_/i.test(
+    `${image.alt ?? ""} ${decodedUrl}`,
+  );
+}
+
 export async function generateMetadata({
   params,
 }: PropertyPageProps) {
@@ -461,26 +482,35 @@ export default async function PropertyPage({
         image.isCover,
     );
 
-  const galleryImages =
+  const galleryImageRecords =
     coverImage
       ? [
-          coverImage.url,
+          coverImage,
 
           ...property.images
             .filter(
               (image) =>
                 image.id !==
                 coverImage.id,
-            )
-            .map(
-              (image) =>
-                image.url,
             ),
         ]
-      : property.images.map(
-          (image) =>
-            image.url,
-        );
+      : property.images;
+
+  const galleryImages =
+    galleryImageRecords.map(
+      (image) =>
+        image.url,
+    );
+
+  const aiImageIndexes =
+    galleryImageRecords.flatMap(
+      (image, index) =>
+        isAiGeneratedPropertyImage(
+          image,
+        )
+          ? [index]
+          : [],
+    );
 
   const safeGalleryImages =
     galleryImages.length > 0
@@ -704,6 +734,9 @@ export default async function PropertyPage({
             <PropertyGallery
               images={
                 safeGalleryImages
+              }
+              aiImageIndexes={
+                aiImageIndexes
               }
               title={
                 property.title

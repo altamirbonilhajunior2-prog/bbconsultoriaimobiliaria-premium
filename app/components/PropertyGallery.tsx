@@ -5,12 +5,14 @@ import { useCallback, useEffect, useState } from "react";
 
 type PropertyGalleryProps = {
   images: string[];
+  aiImageIndexes?: number[];
   title: string;
   tag: string;
 };
 
 export default function PropertyGallery({
   images,
+  aiImageIndexes = [],
   title,
   tag,
 }: PropertyGalleryProps) {
@@ -20,6 +22,7 @@ export default function PropertyGallery({
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   const selectedImage = safeImages[selectedIndex];
+  const isSelectedImageAi = aiImageIndexes.includes(selectedIndex);
 
   const formattedCurrentIndex = String(selectedIndex + 1).padStart(2, "0");
   const formattedTotalImages = String(safeImages.length).padStart(2, "0");
@@ -123,6 +126,12 @@ export default function PropertyGallery({
           <span className="pointer-events-none absolute bottom-5 right-5 z-20 border border-white/20 bg-black/75 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-white backdrop-blur-sm">
             {formattedCurrentIndex} / {formattedTotalImages}
           </span>
+
+          {isSelectedImageAi && (
+            <span className="pointer-events-none absolute bottom-5 left-5 right-32 z-20 border border-amber-500/70 bg-black/85 px-3 py-2 text-left text-[9px] font-bold uppercase leading-4 tracking-[0.1em] text-white backdrop-blur-sm sm:right-auto sm:px-4 sm:text-[10px] sm:tracking-[0.12em]">
+              Imagem meramente ilustrativa produzida por IA
+            </span>
+          )}
 
           {safeImages.length > 1 && (
             <>
@@ -240,6 +249,12 @@ export default function PropertyGallery({
                 className="object-contain"
               />
             </div>
+
+            {isSelectedImageAi && (
+              <span className="pointer-events-none absolute bottom-4 left-4 right-4 z-30 mx-auto w-fit max-w-[calc(100%-2rem)] border border-amber-500/70 bg-black/85 px-3 py-2 text-center text-[9px] font-bold uppercase leading-4 tracking-[0.1em] text-white backdrop-blur-sm sm:bottom-8 sm:left-8 sm:right-auto sm:mx-0 sm:max-w-none sm:px-4 sm:text-[10px] sm:tracking-[0.12em]">
+                Imagem meramente ilustrativa produzida por IA
+              </span>
+            )}
 
             {safeImages.length > 1 && (
               <>
