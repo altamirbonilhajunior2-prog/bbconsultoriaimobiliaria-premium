@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useState } from "react";
 
 import { PORTAL_LEAD_CONSENT_TEXT } from "../../lib/leads/consent";
 import PropertyGallery from "./PropertyGallery";
@@ -24,7 +24,6 @@ export default function PropertyLeadExperience({
   propertyTitle,
   tag,
 }: PropertyLeadExperienceProps) {
-  const galleryRef = useRef<HTMLDivElement>(null);
   const [isPromptOpen, setIsPromptOpen] = useState(false);
   const [submissionState, setSubmissionState] =
     useState<SubmissionState>("idle");
@@ -33,7 +32,9 @@ export default function PropertyLeadExperience({
 
   const storageKey = `bb-lead-prompted:${propertyCode}`;
 
-  const showPrompt = useCallback(() => {
+  const showPrompt = useCallback((imageIndex: number) => {
+    if (imageIndex !== 3) return;
+
     try {
       if (window.sessionStorage.getItem(storageKey)) return;
       window.sessionStorage.setItem(storageKey, "true");
@@ -43,23 +44,6 @@ export default function PropertyLeadExperience({
 
     setIsPromptOpen(true);
   }, [storageKey]);
-
-  useEffect(() => {
-    const gallery = galleryRef.current;
-    if (!gallery) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        showPrompt();
-        observer.disconnect();
-      },
-      { threshold: 0.35 },
-    );
-
-    observer.observe(gallery);
-    return () => observer.disconnect();
-  }, [showPrompt]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -129,13 +113,13 @@ export default function PropertyLeadExperience({
 
   return (
     <>
-      <div ref={galleryRef}>
+      <div>
         <PropertyGallery
           images={images}
           aiImageIndexes={aiImageIndexes}
           title={propertyTitle}
           tag={tag}
-          onFirstInteraction={showPrompt}
+          onImageViewed={showPrompt}
         />
       </div>
 
@@ -143,7 +127,7 @@ export default function PropertyLeadExperience({
         <aside
           role="dialog"
           aria-label={`Receber informações sobre ${propertyCode}`}
-          className="fixed bottom-3 left-3 right-3 z-[1050] max-h-[calc(100vh-1.5rem)] overflow-y-auto border border-amber-500/60 bg-[#090909]/98 p-5 text-white shadow-2xl backdrop-blur-xl sm:bottom-6 sm:left-auto sm:right-6 sm:w-[430px] sm:p-7"
+          className="fixed bottom-3 left-3 right-3 z-[1200] max-h-[calc(100vh-1.5rem)] overflow-y-auto border border-amber-500/60 bg-[#090909]/98 p-5 text-white shadow-2xl backdrop-blur-xl sm:bottom-6 sm:left-auto sm:right-6 sm:w-[430px] sm:p-7"
         >
           <button
             type="button"
