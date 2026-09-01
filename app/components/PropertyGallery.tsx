@@ -25,6 +25,7 @@ export default function PropertyGallery({
 
   const selectedImage = safeImages[selectedIndex];
   const isSelectedImageAi = aiImageIndexes.includes(selectedIndex);
+  const hasAiImages = aiImageIndexes.length > 0;
 
   const formattedCurrentIndex = String(selectedIndex + 1).padStart(2, "0");
   const formattedTotalImages = String(safeImages.length).padStart(2, "0");
@@ -167,6 +168,20 @@ export default function PropertyGallery({
             </>
           )}
         </div>
+
+        {hasAiImages && (
+          <div className="mt-4 border border-amber-500/35 bg-[#0a0a0a] p-4 sm:flex sm:items-center sm:gap-5 sm:p-5">
+            <span className="inline-flex shrink-0 border border-amber-500 bg-amber-500/10 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
+              Visualização de Potencial B&amp;B
+            </span>
+
+            <p className="mt-3 text-xs leading-6 text-zinc-400 sm:mt-0">
+              Algumas imagens desta galeria foram ambientadas digitalmente para
+              apresentar possibilidades de decoração e uso dos espaços. As
+              fotografias reais do imóvel também permanecem disponíveis.
+            </p>
+          </div>
+        )}
 
         <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {safeImages.map((image, index) => {
