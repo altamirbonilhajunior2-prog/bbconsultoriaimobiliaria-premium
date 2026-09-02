@@ -179,23 +179,10 @@ function buildLocation(
 
 function isAiGeneratedPropertyImage(
   image: {
-    alt: string | null;
-    url: string;
+    isAiGenerated: boolean;
   },
 ) {
-  let decodedUrl = image.url;
-
-  try {
-    decodedUrl = decodeURIComponent(
-      image.url,
-    );
-  } catch {
-    // Mantém a URL original quando ela contém uma codificação inválida.
-  }
-
-  return /\bBB[A-Z]\s*\d+\s*-\s*\d{2}_/i.test(
-    `${image.alt ?? ""} ${decodedUrl}`,
-  );
+  return image.isAiGenerated;
 }
 
 export async function generateMetadata({
@@ -1045,11 +1032,9 @@ export default async function PropertyPage({
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {features.map(
-              (feature) => (
+              (feature, index) => (
                 <div
-                  key={
-                    feature
-                  }
+                key={feature + "-" + index}
                   className="flex min-h-20 items-center gap-4 border border-white/10 bg-black/30 px-5 py-4"
                 >
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-amber-500/60 text-sm text-amber-400">

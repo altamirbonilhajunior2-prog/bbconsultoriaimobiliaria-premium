@@ -14,6 +14,7 @@ export type ImageActionState = {
 export type UploadedImageInput = {
   url: string;
   alt?: string;
+  isAiGenerated?: boolean;
 };
 
 function normalizeCode(
@@ -310,6 +311,9 @@ export async function registerUploadedImagesAction(
         alt: String(
           image.alt ?? "",
         ).trim(),
+
+        isAiGenerated:
+          image.isAiGenerated === true,
       }))
       .filter(
         (image) =>
@@ -392,6 +396,9 @@ export async function registerUploadedImagesAction(
             existingImages._count.id ===
               0 &&
             index === 0,
+
+          isAiGenerated:
+            image.isAiGenerated,
         }),
       ),
     });
@@ -431,6 +438,103 @@ export async function registerUploadedImagesAction(
         ? "1 nova fotografia adicionada com sucesso."
         : `${cleanImages.length} novas fotografias adicionadas com sucesso.`,
   };
+}
+
+export async function setAiImageFlagAction(
+  _previousState: ImageActionState,
+  formData: FormData,
+): Promise<ImageActionState> {
+  const session = await auth();
+
+  if (!session?.user) {
+    return {
+      success: false,
+      message:
+        "Sessão expirada. Faça login novamente.",
+    };
+  }
+
+  const code =
+    normalizeCode(
+      formData.get("code"),
+    );
+
+  const imageId =
+    parseImageId(
+      formData.get("imageId"),
+    );
+
+  const flagValue =
+    String(
+      formData.get(
+        "isAiGenerated",
+      ) ?? "",
+    )
+      .trim()
+      .toLowerCase();
+
+  if (
+    !code ||
+    !imageId ||
+    !["true", "false"].includes(
+      flagValue,
+    )
+  ) {
+    return {
+      success: false,
+      message:
+        "Dados inválidos para atualizar a identificação da imagem.",
+    };
+  }
+
+  const image =
+    await validateImage(
+      code,
+      imageId,
+    );
+
+  if (!image) {
+    return {
+      success: false,
+      message:
+        "A imagem não foi encontrada neste imóvel.",
+    };
+  }
+
+  const isAiGenerated =
+    flagValue === "true";
+
+  try {
+    await prisma.propertyImage.update({
+      where: {
+        id: image.id,
+      },
+
+      data: {
+        isAiGenerated,
+      },
+    });
+
+    refreshPropertyPages(code);
+
+    return {
+      success: true,
+      message: isAiGenerated
+        ? "Imagem marcada como ambientada por IA."
+        : "Imagem marcada como fotografia real.",
+    };
+  } catch (error) {
+    console.error(
+      "Erro ao atualizar a identificação de IA da imagem:",
+      error,
+    );
+
+    return {
+      success: false,
+      message:
+        "Não foi possível atualizar a identificação da imagem.",
+    };
+  }
 }
 
 export async function setCoverImageAction(

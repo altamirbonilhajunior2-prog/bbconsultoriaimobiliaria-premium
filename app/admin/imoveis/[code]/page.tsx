@@ -141,6 +141,9 @@ export default async function EditarImovelPage({
 
         isCover:
           image.isCover,
+
+        isAiGenerated:
+          image.isAiGenerated,
       }),
     );
 
@@ -341,6 +344,26 @@ export default async function EditarImovelPage({
             diretamente no banco de
             dados.
           </p>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href={`/admin/imoveis/${property.code.toLowerCase()}/fichas/visita`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-11 items-center justify-center border border-amber-500/40 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-300 transition hover:border-amber-400 hover:text-amber-200"
+            >
+              Imprimir ficha de visita
+            </Link>
+
+            <Link
+              href={`/admin/imoveis/${property.code.toLowerCase()}/fichas/imovel`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-11 items-center justify-center border border-white/15 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-300 transition hover:border-amber-500 hover:text-amber-300"
+            >
+              Imprimir ficha do imóvel
+            </Link>
+          </div>
 
           <div className="mt-6 border border-amber-500/20 bg-amber-500/5 px-5 py-4">
             <p className="text-sm leading-6 text-amber-200">

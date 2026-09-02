@@ -18,6 +18,7 @@ import {
   removeAllImagesAction,
   removeImageAction,
   removeSelectedImagesAction,
+  setAiImageFlagAction,
   setCoverImageAction,
 } from "./image-actions";
 
@@ -27,6 +28,7 @@ type PropertyImage = {
   alt: string | null;
   position: number;
   isCover: boolean;
+  isAiGenerated: boolean;
 };
 
 type ImageManagerProps = {
@@ -126,6 +128,11 @@ export default function ImageManager({
   ] = useState(0);
 
   const [
+    markUploadedAsAi,
+    setMarkUploadedAsAi,
+  ] = useState(false);
+
+  const [
     uploadState,
     setUploadState,
   ] = useState<ImageActionState>(
@@ -138,6 +145,15 @@ export default function ImageManager({
     coverPending,
   ] = useActionState(
     setCoverImageAction,
+    initialState,
+  );
+
+  const [
+    aiState,
+    aiAction,
+    aiPending,
+  ] = useActionState(
+    setAiImageFlagAction,
     initialState,
   );
 
@@ -187,20 +203,23 @@ export default function ImageManager({
   );
 
   const currentState =
-    removeAllState.message
-      ? removeAllState
-      : moveSelectedState.message
-        ? moveSelectedState
-        : removeSelectedState.message
-          ? removeSelectedState
-          : removeState.message
-            ? removeState
-            : moveState.message
-              ? moveState
-              : coverState;
+    aiState.message
+      ? aiState
+      : removeAllState.message
+        ? removeAllState
+        : moveSelectedState.message
+          ? moveSelectedState
+          : removeSelectedState.message
+            ? removeSelectedState
+            : removeState.message
+              ? removeState
+              : moveState.message
+                ? moveState
+                : coverState;
 
   useEffect(() => {
     if (
+      aiState.success ||
       coverState.success ||
       moveState.success ||
       moveSelectedState.success ||
@@ -211,6 +230,7 @@ export default function ImageManager({
       router.refresh();
     }
     }, [
+    aiState,
     coverState,
     moveState,
     moveSelectedState,
@@ -221,6 +241,7 @@ export default function ImageManager({
   ]);
     const isPending =
     uploading ||
+    aiPending ||
     coverPending ||
     movePending ||
     moveSelectedPending ||
@@ -349,6 +370,7 @@ export default function ImageManager({
       const uploadedImages: {
         url: string;
         alt: string;
+        isAiGenerated: boolean;
       }[] = [];
 
       for (
@@ -407,6 +429,8 @@ export default function ImageManager({
           url: blob.url,
           alt:
             `${code} - ${file.name}`,
+          isAiGenerated:
+            markUploadedAsAi,
         });
       }
 
@@ -424,6 +448,7 @@ export default function ImageManager({
 
       if (result.success) {
         setSelectedFiles([]);
+        setMarkUploadedAsAi(false);
 
         setInputKey(
           (current) =>
@@ -562,6 +587,30 @@ export default function ImageManager({
               : "Enviar fotografias"}
           </button>
         </div>
+
+        <label className="mt-4 flex cursor-pointer items-start gap-3 border border-white/10 bg-black/30 px-4 py-3">
+          <input
+            type="checkbox"
+            checked={markUploadedAsAi}
+            disabled={isPending}
+            onChange={(event) =>
+              setMarkUploadedAsAi(
+                event.target.checked,
+              )
+            }
+            className="mt-0.5 h-4 w-4 accent-amber-500"
+          />
+
+          <span>
+            <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-amber-300">
+              Imagens ambientadas por IA
+            </span>
+
+            <span className="mt-1 block text-xs leading-5 text-zinc-500">
+              Marque quando todas as imagens deste envio forem ambientações digitais.
+            </span>
+          </span>
+        </label>
 
         {selectedFiles.length >
         0 ? (
@@ -831,6 +880,12 @@ export default function ImageManager({
                           Capa
                         </span>
                       ) : null}
+
+                      {image.isAiGenerated ? (
+                        <span className="border border-amber-500/70 bg-black/85 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-300">
+                          IA
+                        </span>
+                      ) : null}
                     </div>
 
                     <label className="absolute right-3 top-3 flex cursor-pointer items-center gap-2 bg-black/80 px-3 py-2">
@@ -860,6 +915,61 @@ export default function ImageManager({
                     <p className="truncate text-xs text-zinc-400">
                       {image.url}
                     </p>
+
+                    <form
+                      action={aiAction}
+                      className="mt-4 border border-white/10 bg-black/30 p-3"
+                    >
+                      <input
+                        type="hidden"
+                        name="code"
+                        value={code}
+                      />
+
+                      <input
+                        type="hidden"
+                        name="imageId"
+                        value={image.id}
+                      />
+
+                      <input
+                        type="hidden"
+                        name="isAiGenerated"
+                        value={
+                          image.isAiGenerated
+                            ? "false"
+                            : "true"
+                        }
+                      />
+
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-300">
+                            Imagem ambientada por IA
+                          </p>
+
+                          <p className="mt-1 text-xs text-zinc-500">
+                            {image.isAiGenerated
+                              ? "O aviso de IA será exibido no portal."
+                              : "Tratada atualmente como fotografia real."}
+                          </p>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={isPending}
+                          className={`inline-flex min-h-9 shrink-0 items-center justify-center border px-3 text-[9px] font-bold uppercase tracking-[0.12em] transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                            image.isAiGenerated
+                              ? "border-amber-500 bg-amber-500/10 text-amber-300"
+                              : "border-white/15 text-zinc-400 hover:border-amber-500/60 hover:text-amber-300"
+                          }`}
+                        >
+                          {image.isAiGenerated
+                            ? "Marcar como foto real"
+                            : "Marcar como IA"}
+                        </button>
+                      </div>
+                    </form>
 
                     <div className="mt-4 grid grid-cols-2 gap-2">
                       <form action={coverAction}>
