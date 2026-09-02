@@ -16,6 +16,7 @@ import {
   updatePropertyAction,
 } from "./actions";
 import NeighborhoodGeolocationField from "../../components/NeighborhoodGeolocationField";
+import GoogleMapsInternalField from "../../components/GoogleMapsInternalField";
 
 type PropertyType =
   keyof typeof propertyTypes;
@@ -898,17 +899,21 @@ export default function EditPropertyForm({
           </div>
 
           <p className="mt-5 text-xs leading-6 text-zinc-500">
-            O endereço e as coordenadas exatas permanecem protegidos. O portal recebe somente um ponto deslocado dentro do raio escolhido.
+            O endereço e as coordenadas exatas permanecem protegidos. O portal usa somente o ponto de referência cadastrado para o bairro.
           </p>
         </section>
 
         <section className={sectionClass}>
           <p className={sectionTitleClass}>
-            04. Mapa e geolocalização
+            04. Mapa e geolocalização — uso interno
+          </p>
+
+          <p className="mt-3 max-w-4xl text-sm leading-7 text-zinc-400">
+            Campos opcionais para conferência da equipe e abertura de rota. Essas informações não são exibidas no portal público.
           </p>
 
           <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            <Field label="Latitude">
+            <Field label="Latitude (opcional)">
               <input
                 name="latitude"
                 defaultValue={
@@ -919,7 +924,7 @@ export default function EditPropertyForm({
               />
             </Field>
 
-            <Field label="Longitude">
+            <Field label="Longitude (opcional)">
               <input
                 name="longitude"
                 defaultValue={
@@ -930,20 +935,17 @@ export default function EditPropertyForm({
               />
             </Field>
 
-            <Field
-              label="Link Google Maps"
+            <GoogleMapsInternalField
+              defaultValue={property.googleMapsUrl}
+              inputClassName={inputClass}
               className="md:col-span-2"
-            >
-              <input
-                name="googleMapsUrl"
-                type="url"
-                defaultValue={
-                  property.googleMapsUrl ??
-                  ""
-                }
-                className={inputClass}
-              />
-            </Field>
+            />
+          </div>
+
+          <div className="mt-5 border border-dashed border-white/10 bg-black/20 px-5 py-5">
+            <p className="text-sm leading-7 text-zinc-500">
+              O mapa público usa exclusivamente o ponto de referência cadastrado para o bairro. A localização exata deste imóvel permanece restrita ao CRM.
+            </p>
           </div>
         </section>
 
