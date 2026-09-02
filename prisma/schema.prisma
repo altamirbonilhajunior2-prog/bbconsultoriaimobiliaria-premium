@@ -187,8 +187,9 @@ model PropertyImage {
   url String  @db.Text
   alt String? @db.VarChar(250)
 
-  position Int     @default(0)
-  isCover  Boolean @default(false)
+  position      Int     @default(0)
+  isCover       Boolean @default(false)
+  isAiGenerated Boolean @default(false)
 
   createdAt DateTime @default(now())
 
