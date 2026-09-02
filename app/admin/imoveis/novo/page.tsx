@@ -15,6 +15,7 @@ import {
   type PropertyFormState,
 } from "./actions";
 import NeighborhoodGeolocationField from "../../components/NeighborhoodGeolocationField";
+import GoogleMapsInternalField from "../../components/GoogleMapsInternalField";
 
 type PropertyType =
   keyof typeof propertyTypes;
@@ -781,13 +782,17 @@ export default function NovoImovelPage() {
 
           <section className={sectionClass}>
             <p className={sectionTitleClass}>
-              04. Mapa e geolocalização
+              04. Mapa e geolocalização — uso interno
+            </p>
+
+            <p className="mt-3 max-w-4xl text-sm leading-7 text-zinc-400">
+              Campos opcionais para conferência da equipe e abertura de rota. Essas informações não são exibidas no portal público.
             </p>
 
             <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
               <label className="flex flex-col gap-2">
                 <span className={labelTitleClass}>
-                  Latitude
+                  Latitude (opcional)
                 </span>
 
                 <input
@@ -800,7 +805,7 @@ export default function NovoImovelPage() {
 
               <label className="flex flex-col gap-2">
                 <span className={labelTitleClass}>
-                  Longitude
+                  Longitude (opcional)
                 </span>
 
                 <input
@@ -811,23 +816,15 @@ export default function NovoImovelPage() {
                 />
               </label>
 
-              <label className="flex flex-col gap-2 md:col-span-2">
-                <span className={labelTitleClass}>
-                  Link Google Maps
-                </span>
-
-                <input
-                  name="googleMapsUrl"
-                  type="url"
-                  placeholder="https://maps.google.com/..."
-                  className={inputClass}
-                />
-              </label>
+              <GoogleMapsInternalField
+                inputClassName={inputClass}
+                className="md:col-span-2"
+              />
             </div>
 
             <div className="mt-5 border border-dashed border-white/10 bg-black/20 px-5 py-5">
               <p className="text-sm leading-7 text-zinc-500">
-                O portal mostra apenas uma área aproximada. A coordenada exata permanece protegida no servidor e não é enviada à página pública.
+                O mapa público usa exclusivamente o ponto de referência cadastrado para o bairro. A localização exata deste imóvel permanece restrita ao CRM.
               </p>
             </div>
           </section>
