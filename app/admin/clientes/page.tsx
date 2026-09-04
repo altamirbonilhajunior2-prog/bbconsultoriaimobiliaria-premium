@@ -2,8 +2,12 @@ import Link from "next/link";
 
 import { getAccessContext } from "../../../lib/admin/access";
 import { prisma } from "../../../lib/prisma";
+
+import ConvertLeadButton from "./ConvertLeadButton";
 import DeleteLeadButton from "./DeleteLeadButton";
+
 import {
+  convertPortalLeadToClientAction,
   deletePortalLeadAction,
   updatePortalLeadAction,
 } from "./actions";
@@ -89,6 +93,7 @@ export default async function ClientesPage() {
     newLeads,
     visits,
     converted,
+    clients,
   ] = await Promise.all([
     prisma.portalLead.findMany({
       orderBy: {
@@ -118,6 +123,8 @@ export default async function ClientesPage() {
         status: "CONVERTIDO",
       },
     }),
+
+    prisma.client.count(),
   ]);
 
   const indicators = [
@@ -130,6 +137,11 @@ export default async function ClientesPage() {
       label:
         "Novos",
       value: newLeads,
+    },
+    {
+      label:
+        "Clientes cadastrados",
+      value: clients,
     },
     {
       label:
@@ -163,15 +175,18 @@ export default async function ClientesPage() {
           </h1>
 
           <p className="mt-4 max-w-3xl text-sm leading-7 text-zinc-400">
-            Contatos autorizados
-            pelo visitante,
-            identificados pelo
-            imóvel e pela origem
-            da campanha.
+            Acompanhe os contatos
+            recebidos pelo portal,
+            converta leads
+            qualificados em
+            clientes e mantenha o
+            histórico comercial da
+            B&amp;B centralizado no
+            CRM.
           </p>
         </header>
 
-        <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           {indicators.map(
             (indicator) => (
               <article
@@ -209,7 +224,7 @@ export default async function ClientesPage() {
                 (lead) => {
                   const message =
                     encodeURIComponent(
-                      `Olá, ${lead.name}. Sou da B&B Consultoria Imobiliária. Recebemos seu interesse no imóvel ${lead.propertyCode}. Como podemos ajudar?`,
+                      `Olá, ${lead.name}. Sou da B&B Consultoria Imobiliária. Recebemos seu interesse em ${lead.propertyCode === "GERAL" ? "nosso atendimento imobiliário" : `no imóvel ${lead.propertyCode}`}. Como podemos ajudar?`,
                     );
 
                   const deleteAction =
@@ -217,6 +232,16 @@ export default async function ClientesPage() {
                       null,
                       lead.id,
                     );
+
+                  const convertAction =
+                    convertPortalLeadToClientAction.bind(
+                      null,
+                      lead.id,
+                    );
+
+                  const isGeneralLead =
+                    lead.propertyCode ===
+                    "GERAL";
 
                   return (
                     <article
@@ -235,6 +260,12 @@ export default async function ClientesPage() {
                                 ]
                               }
                             </span>
+
+                            {lead.clientId ? (
+                              <span className="border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-emerald-300">
+                                Cliente
+                              </span>
+                            ) : null}
 
                             <span className="text-xs text-zinc-500">
                               {formatDate(
@@ -265,23 +296,31 @@ export default async function ClientesPage() {
 
                         <div className="text-sm leading-7 text-zinc-400">
                           <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
-                            Imóvel
-                            consultado
+                            {isGeneralLead
+                              ? "Atendimento"
+                              : "Imóvel consultado"}
                           </p>
 
-                          <Link
-                            href={`/imovel/${lead.propertyCode.toLowerCase()}`}
-                            target="_blank"
-                            className="mt-2 block font-medium text-white hover:text-amber-400"
-                          >
-                            {
-                              lead.propertyCode
-                            }{" "}
-                            —{" "}
-                            {
-                              lead.propertyTitle
-                            }
-                          </Link>
+                          {isGeneralLead ? (
+                            <p className="mt-2 font-medium text-white">
+                              Atendimento
+                              geral B&amp;B
+                            </p>
+                          ) : (
+                            <Link
+                              href={`/imovel/${lead.propertyCode.toLowerCase()}`}
+                              target="_blank"
+                              className="mt-2 block font-medium text-white hover:text-amber-400"
+                            >
+                              {
+                                lead.propertyCode
+                              }{" "}
+                              —{" "}
+                              {
+                                lead.propertyTitle
+                              }
+                            </Link>
+                          )}
 
                           <p className="mt-4 text-xs text-zinc-500">
                             Origem:{" "}
@@ -380,15 +419,26 @@ export default async function ClientesPage() {
                             </button>
                           </form>
 
-                          {access.isAdmin ? (
-                            <div className="mt-4 border-t border-white/10 pt-4">
+                          <div className="mt-4 flex flex-wrap gap-3 border-t border-white/10 pt-4">
+                            <ConvertLeadButton
+                              onConvert={
+                                convertAction
+                              }
+                              alreadyConverted={
+                                Boolean(
+                                  lead.clientId,
+                                )
+                              }
+                            />
+
+                            {access.isAdmin ? (
                               <DeleteLeadButton
                                 onDelete={
                                   deleteAction
                                 }
                               />
-                            </div>
-                          ) : null}
+                            ) : null}
+                          </div>
                         </div>
                       </div>
                     </article>

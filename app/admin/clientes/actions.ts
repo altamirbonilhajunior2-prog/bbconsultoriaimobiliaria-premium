@@ -109,6 +109,117 @@ export async function updatePortalLeadAction(
   );
 }
 
+export async function convertPortalLeadToClientAction(
+  leadId: number,
+) {
+  await requireUser();
+
+  if (
+    !Number.isInteger(
+      leadId,
+    ) ||
+    leadId <= 0
+  ) {
+    throw new Error(
+      "Lead inválido.",
+    );
+  }
+
+  const lead =
+    await prisma.portalLead.findUnique({
+      where: {
+        id: leadId,
+      },
+
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        clientId: true,
+      },
+    });
+
+  if (!lead) {
+    throw new Error(
+      "Lead não encontrado.",
+    );
+  }
+
+  if (lead.clientId) {
+    revalidatePath(
+      "/admin/clientes",
+    );
+
+    return;
+  }
+
+  const existingClient =
+    await prisma.client.findFirst({
+      where: {
+        phone:
+          lead.phone,
+      },
+
+      orderBy: {
+        createdAt:
+          "asc",
+      },
+
+      select: {
+        id: true,
+      },
+    });
+
+  if (existingClient) {
+    await prisma.portalLead.update({
+      where: {
+        id:
+          lead.id,
+      },
+
+      data: {
+        clientId:
+          existingClient.id,
+      },
+    });
+  } else {
+    const client =
+      await prisma.client.create({
+        data: {
+          name:
+            lead.name,
+
+          phone:
+            lead.phone,
+        },
+
+        select: {
+          id: true,
+        },
+      });
+
+    await prisma.portalLead.update({
+      where: {
+        id:
+          lead.id,
+      },
+
+      data: {
+        clientId:
+          client.id,
+      },
+    });
+  }
+
+  revalidatePath(
+    "/admin",
+  );
+
+  revalidatePath(
+    "/admin/clientes",
+  );
+}
+
 export async function deletePortalLeadAction(
   leadId: number,
 ) {
