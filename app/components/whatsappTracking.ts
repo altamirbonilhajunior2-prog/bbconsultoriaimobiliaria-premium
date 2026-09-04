@@ -4,6 +4,7 @@ export function trackWhatsAppClick() {
   };
 
   win.dataLayer = win.dataLayer || [];
+
   win.dataLayer.push({
     event: "whatsapp_click",
   });

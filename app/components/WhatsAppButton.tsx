@@ -1,19 +1,38 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 import TrackedWhatsAppLink from "./TrackedWhatsAppLink";
 
-export default function WhatsAppButton() {
-  const whatsappMessage = encodeURIComponent(
-    "Olá, gostaria de iniciar um atendimento com um consultor imobiliário.",
-  );
+const whatsappNumber = "5512978140636";
 
-  return (
-    <TrackedWhatsAppLink
-      href={`https://wa.me/5512978140636?text=${whatsappMessage}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Conversar com a B&B Consultoria Imobiliária pelo WhatsApp"
-      title="Conversar pelo WhatsApp"
-      className="fixed bottom-6 right-6 z-[999] flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-[#25D366] shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-green-500/40 focus:outline-none focus:ring-4 focus:ring-[#25D366]/40"
-    >
+const OPEN_LEAD_PROMPT_EVENT =
+  "bb:open-property-lead";
+
+export default function WhatsAppButton() {
+  const pathname = usePathname();
+
+  const isPropertyPage =
+    pathname.startsWith("/imovel/");
+
+  const whatsappMessage =
+    encodeURIComponent(
+      "Olá, gostaria de iniciar um atendimento com um consultor imobiliário.",
+    );
+
+  function handlePropertyLeadClick() {
+    window.dispatchEvent(
+      new CustomEvent(
+        OPEN_LEAD_PROMPT_EVENT,
+      ),
+    );
+  }
+
+  const commonClassName =
+    "fixed bottom-6 right-6 z-[999] flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-[#25D366] shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-green-500/40 focus:outline-none focus:ring-4 focus:ring-[#25D366]/40";
+
+  const icon = (
+    <>
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 448 512"
@@ -27,6 +46,39 @@ export default function WhatsAppButton() {
       <span className="sr-only">
         Conversar pelo WhatsApp
       </span>
+    </>
+  );
+
+  if (isPropertyPage) {
+    return (
+      <button
+        type="button"
+        onClick={
+          handlePropertyLeadClick
+        }
+        aria-label="Conversar com a B&B Consultoria Imobiliária pelo WhatsApp"
+        title="Conversar pelo WhatsApp"
+        className={
+          commonClassName
+        }
+      >
+        {icon}
+      </button>
+    );
+  }
+
+  return (
+    <TrackedWhatsAppLink
+      href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Conversar com a B&B Consultoria Imobiliária pelo WhatsApp"
+      title="Conversar pelo WhatsApp"
+      className={
+        commonClassName
+      }
+    >
+      {icon}
     </TrackedWhatsAppLink>
   );
 }
