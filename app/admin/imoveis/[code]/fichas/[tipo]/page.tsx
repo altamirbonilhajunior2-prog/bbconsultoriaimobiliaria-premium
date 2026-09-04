@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { getAccessContext } from "../../../../../../lib/admin/access";
 import { prisma } from "../../../../../../lib/prisma";
 import PrintControls from "./PrintControls";
+import SignaturePad from "./SignaturePad";
 
 export const dynamic = "force-dynamic";
 
@@ -109,27 +110,93 @@ function InfoItem({
   );
 }
 
-function BlankField({
+function EditableField({
   label,
+  name,
   wide = false,
-  tall = false,
+  type = "text",
+  placeholder = "",
 }: {
   label: string;
+  name: string;
   wide?: boolean;
-  tall?: boolean;
+  type?: "text" | "email" | "tel" | "date" | "time";
+  placeholder?: string;
 }) {
   return (
-    <div
-      className={`${
+    <label
+      className={`block ${
         wide ? "col-span-2" : ""
-      } ${tall ? "min-h-20" : "min-h-11"}`}
+      }`}
     >
-      <p className="text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+      <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-500">
         {label}
-      </p>
+      </span>
 
-      <div className="mt-5 border-b border-zinc-400" />
-    </div>
+      <input
+        type={type}
+        name={name}
+        placeholder={placeholder}
+        autoComplete="off"
+        className="mt-1 h-9 w-full border-0 border-b border-zinc-400 bg-transparent px-1 text-[11px] text-zinc-950 outline-none transition focus:border-amber-500 focus:ring-0 print:text-zinc-950"
+      />
+    </label>
+  );
+}
+
+function EditableTextArea({
+  label,
+  name,
+  wide = false,
+  rows = 4,
+  placeholder = "",
+}: {
+  label: string;
+  name: string;
+  wide?: boolean;
+  rows?: number;
+  placeholder?: string;
+}) {
+  return (
+    <label
+      className={`block ${
+        wide ? "col-span-2" : ""
+      }`}
+    >
+      <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+        {label}
+      </span>
+
+      <textarea
+        name={name}
+        rows={rows}
+        placeholder={placeholder}
+        className="mt-2 w-full resize-none border border-zinc-300 bg-transparent p-2 text-[10px] leading-5 text-zinc-950 outline-none transition focus:border-amber-500 focus:ring-0 print:text-zinc-950"
+      />
+    </label>
+  );
+}
+
+function CheckOption({
+  name,
+  value,
+  label,
+}: {
+  name: string;
+  value: string;
+  label: string;
+}) {
+  return (
+    <label className="inline-flex cursor-pointer items-center gap-1.5">
+      <input
+        type="checkbox"
+        name={name}
+        value={value}
+        className="h-3.5 w-3.5 border-zinc-400 accent-amber-500"
+      />
+
+      <span>{label}</span>
+    </label>
   );
 }
 
@@ -300,6 +367,26 @@ export default async function PrintableSheetPage({
             margin: 0 !important;
             box-shadow: none !important;
           }
+
+          input,
+          textarea {
+            color: #09090b !important;
+            -webkit-text-fill-color: #09090b !important;
+          }
+
+          textarea {
+            resize: none !important;
+          }
+
+          canvas {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          .signature-box {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
         }
       `}</style>
 
@@ -370,27 +457,63 @@ export default async function PrintableSheetPage({
               </SectionTitle>
 
               <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-4">
-                <BlankField
+                <EditableField
                   label="Nome completo"
+                  name="visitorName"
                   wide
+                  placeholder="Digite o nome completo"
                 />
 
-                <BlankField label="CPF ou RG" />
-                <BlankField label="Telefone" />
-                <BlankField label="E-mail" />
-                <BlankField label="Data de nascimento" />
+                <EditableField
+                  label="CPF ou RG"
+                  name="visitorDocument"
+                  placeholder="CPF ou RG"
+                />
 
-                <BlankField
+                <EditableField
+                  label="Telefone"
+                  name="visitorPhone"
+                  type="tel"
+                  placeholder="(00) 00000-0000"
+                />
+
+                <EditableField
+                  label="E-mail"
+                  name="visitorEmail"
+                  type="email"
+                  placeholder="nome@email.com"
+                />
+
+                <EditableField
+                  label="Data de nascimento"
+                  name="visitorBirthDate"
+                  type="date"
+                />
+
+                <EditableField
                   label="Endereço"
+                  name="visitorAddress"
                   wide
+                  placeholder="Rua, número, bairro, cidade"
                 />
 
-                <BlankField label="Data da visita" />
-                <BlankField label="Horário" />
+                <EditableField
+                  label="Data da visita"
+                  name="visitDate"
+                  type="date"
+                />
 
-                <BlankField
+                <EditableField
+                  label="Horário"
+                  name="visitTime"
+                  type="time"
+                />
+
+                <EditableField
                   label="Acompanhantes"
+                  name="companions"
                   wide
+                  placeholder="Informe os acompanhantes, se houver"
                 />
               </div>
             </section>
@@ -401,33 +524,85 @@ export default async function PrintableSheetPage({
               </SectionTitle>
 
               <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-5 text-[10px] text-zinc-700">
-                <p>
-                  Interesse: ☐ Alto &nbsp; ☐ Médio &nbsp; ☐ Baixo
-                </p>
+                <div>
+                  <p className="mb-2 text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                    Interesse
+                  </p>
 
-                <p>
-                  Retorno: ☐ Proposta &nbsp; ☐ Nova visita &nbsp; ☐ Sem interesse
-                </p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-2">
+                    <CheckOption
+                      name="interest"
+                      value="alto"
+                      label="Alto"
+                    />
 
-                <BlankField
+                    <CheckOption
+                      name="interest"
+                      value="medio"
+                      label="Médio"
+                    />
+
+                    <CheckOption
+                      name="interest"
+                      value="baixo"
+                      label="Baixo"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <p className="mb-2 text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                    Retorno
+                  </p>
+
+                  <div className="flex flex-wrap gap-x-4 gap-y-2">
+                    <CheckOption
+                      name="returnType"
+                      value="proposta"
+                      label="Proposta"
+                    />
+
+                    <CheckOption
+                      name="returnType"
+                      value="nova-visita"
+                      label="Nova visita"
+                    />
+
+                    <CheckOption
+                      name="returnType"
+                      value="sem-interesse"
+                      label="Sem interesse"
+                    />
+                  </div>
+                </div>
+
+                <EditableTextArea
                   label="Observações, dúvidas e condições comentadas"
+                  name="visitNotes"
                   wide
-                  tall
+                  rows={4}
+                  placeholder="Digite aqui as observações da visita..."
                 />
               </div>
             </section>
 
-            <section className="mt-8 grid grid-cols-2 gap-12">
-              <div className="pt-8 text-center">
-                <div className="border-t border-zinc-500 pt-2 text-[9px] text-zinc-600">
-                  Assinatura do visitante
-                </div>
-              </div>
+            <section className="mt-8">
+              <SectionTitle>
+                Assinaturas
+              </SectionTitle>
 
-              <div className="pt-8 text-center">
-                <div className="border-t border-zinc-500 pt-2 text-[9px] text-zinc-600">
-                  Assinatura do responsável pela visita
-                </div>
+              <p className="mt-2 text-[8px] leading-4 text-zinc-500 print:hidden">
+                As assinaturas podem ser feitas com dedo, caneta touch ou mouse.
+              </p>
+
+              <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 print:grid-cols-2">
+                <SignaturePad
+                  label="Assinatura do visitante"
+                />
+
+                <SignaturePad
+                  label="Assinatura do responsável pela visita"
+                />
               </div>
             </section>
 
@@ -556,9 +731,9 @@ export default async function PrintableSheetPage({
               {property.features.length > 0 ? (
                 <ul className="mt-3 grid grid-cols-2 gap-x-8 gap-y-2 text-[10px] leading-4 text-zinc-700">
                   {property.features.map(
-                    (feature) => (
+                    (feature, index) => (
                       <li
-                        key={feature}
+                        key={`${feature}-${index}`}
                         className="flex items-start gap-2"
                       >
                         <span className="mt-1 h-1.5 w-1.5 shrink-0 bg-amber-500" />
