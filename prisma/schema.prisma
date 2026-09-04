@@ -152,14 +152,49 @@ model Property {
   @@index([published])
 }
 
+enum ClientStatus {
+  ATIVO
+  INATIVO
+  CONVERTIDO
+}
+
+model Client {
+  id Int @id @default(autoincrement())
+
+  name  String @db.VarChar(180)
+  phone String @db.VarChar(30)
+
+  email     String?   @db.VarChar(180)
+  document  String?   @db.VarChar(40)
+  birthDate DateTime?
+
+  address String? @db.VarChar(300)
+
+  notes String? @db.Text
+
+  status ClientStatus @default(ATIVO)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  portalLeads PortalLead[]
+  visits      PropertyVisit[]
+
+  @@index([name])
+  @@index([phone])
+  @@index([email])
+  @@index([status])
+}
+
 model PortalLead {
   id Int @id @default(autoincrement())
 
-  propertyId Int?
-  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-
-  propertyCode  String @db.VarChar(30)
-  propertyTitle String @db.VarChar(200)
+  propertyId    Int?
+  property      Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  clientId      Int?
+  client        Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  propertyCode  String    @db.VarChar(30)
+  propertyTitle String    @db.VarChar(200)
 
   name  String @db.VarChar(120)
   phone String @db.VarChar(20)
@@ -177,9 +212,9 @@ model PortalLead {
   utmContent  String? @db.VarChar(250)
   gclid       String? @db.VarChar(255)
 
-  consentVersion String   @db.VarChar(50)
-  consentText    String   @db.Text
-  consentedAt    DateTime @default(now())
+  consentVersion String    @db.VarChar(50)
+  consentText    String    @db.Text
+  consentedAt    DateTime  @default(now())
   contactedAt    DateTime?
 
   createdAt DateTime @default(now())
@@ -190,6 +225,7 @@ model PortalLead {
   @@index([phone])
   @@index([status])
   @@index([createdAt])
+  @@index([clientId])
 }
 
 model PropertyVisit {
@@ -198,15 +234,18 @@ model PropertyVisit {
   propertyId Int
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
-  visitorName      String  @db.VarChar(180)
-  visitorDocument  String? @db.VarChar(40)
-  visitorPhone     String? @db.VarChar(30)
-  visitorEmail     String? @db.VarChar(180)
+  clientId Int?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  visitorName      String    @db.VarChar(180)
+  visitorDocument  String?   @db.VarChar(40)
+  visitorPhone     String?   @db.VarChar(30)
+  visitorEmail     String?   @db.VarChar(180)
   visitorBirthDate DateTime?
-  visitorAddress   String? @db.VarChar(300)
+  visitorAddress   String?   @db.VarChar(300)
 
   visitDate DateTime
-  visitTime String? @db.VarChar(10)
+  visitTime String?  @db.VarChar(10)
 
   companions String? @db.Text
 
@@ -222,6 +261,7 @@ model PropertyVisit {
   updatedAt DateTime @updatedAt
 
   @@index([propertyId])
+  @@index([clientId])
   @@index([visitDate])
   @@index([visitorName])
   @@index([visitorPhone])
@@ -352,17 +392,17 @@ model AcquisitionOpportunity {
   id Int @id @default(autoincrement())
 
   source    AcquisitionSource
-  sourceUrl String @unique @db.VarChar(1000)
+  sourceUrl String            @unique @db.VarChar(1000)
 
   origin AcquisitionOrigin?
 
-  status              AcquisitionStatus  @default(ENCONTRADO)
+  status              AcquisitionStatus   @default(ENCONTRADO)
   authorizationStatus AuthorizationStatus @default(NAO_SOLICITADA)
 
   sourceTitle String? @db.VarChar(250)
 
-  state        String @default("SP") @db.VarChar(2)
-  city         String @default("São José dos Campos") @db.VarChar(120)
+  state        String  @default("SP") @db.VarChar(2)
+  city         String  @default("São José dos Campos") @db.VarChar(120)
   neighborhood String? @db.VarChar(150)
 
   development String? @db.VarChar(180)
@@ -400,11 +440,11 @@ model AcquisitionOpportunity {
 
   authorizationNotes String? @db.Text
 
-  authorizedToAdvertise Boolean @default(false)
-  authorizedToUseImages Boolean @default(false)
+  authorizedToAdvertise  Boolean @default(false)
+  authorizedToUseImages  Boolean @default(false)
   authorizedToEditImages Boolean @default(false)
 
-  firstSeenAt   DateTime @default(now())
+  firstSeenAt   DateTime  @default(now())
   lastCheckedAt DateTime?
 
   createdAt DateTime @default(now())
@@ -441,9 +481,9 @@ model MarketReference {
   sampleSize Int     @default(0)
   active     Boolean @default(true)
 
-  calculatedAt DateTime @default(now())
+  calculatedAt DateTime  @default(now())
   validUntil   DateTime?
-  notes        String?  @db.Text
+  notes        String?   @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -467,9 +507,9 @@ model MarketEvidence {
 
   propertyType PropertyType
   purpose      PropertyPurpose
-  area         Decimal? @db.Decimal(10, 2)
+  area         Decimal?        @db.Decimal(10, 2)
   bedrooms     Int?
-  price        Decimal? @db.Decimal(15, 2)
+  price        Decimal?        @db.Decimal(15, 2)
 
   pricePerSquareMeter Decimal? @db.Decimal(12, 2)
 
