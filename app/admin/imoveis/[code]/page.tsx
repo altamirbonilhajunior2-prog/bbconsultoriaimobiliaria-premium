@@ -631,15 +631,24 @@ export default async function EditarImovelPage({
                           </div>
                         </div>
 
-                        {access.isAdmin ? (
-                          <div className="shrink-0">
+                        <div className="flex shrink-0 flex-wrap gap-2 lg:flex-col">
+                          <Link
+                            href={`/admin/imoveis/${property.code.toLowerCase()}/visitas/${visit.id}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex min-h-9 items-center justify-center border border-amber-500/40 px-3 text-[9px] font-bold uppercase tracking-[0.12em] text-amber-300 transition hover:border-amber-400 hover:text-amber-200"
+                          >
+                            Abrir visita
+                          </Link>
+
+                          {access.isAdmin ? (
                             <DeleteVisitButton
                               onDelete={
                                 deleteAction
                               }
                             />
-                          </div>
-                        ) : null}
+                          ) : null}
+                        </div>
                       </div>
                     </article>
                   );

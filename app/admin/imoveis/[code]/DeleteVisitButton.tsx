@@ -32,7 +32,7 @@ export default function DeleteVisitButton({
       type="button"
       onClick={handleDelete}
       disabled={isPending}
-      className="inline-flex min-h-9 items-center justify-center border border-red-500/40 px-3 text-[9px] font-bold uppercase tracking-[0.12em] text-red-300 transition hover:border-red-400 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-50"
+      className="inline-flex min-h-11 items-center justify-center bg-amber-500 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
     >
       {isPending
         ? "Excluindo..."
