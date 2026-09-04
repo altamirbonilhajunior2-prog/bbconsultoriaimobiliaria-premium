@@ -6,6 +6,7 @@ import { getAccessContext } from "../../../../../../lib/admin/access";
 import { prisma } from "../../../../../../lib/prisma";
 import PrintControls from "./PrintControls";
 import SignaturePad from "./SignaturePad";
+import { savePropertyVisit } from "./visit-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,10 @@ type PrintableSheetPageProps = {
   params: Promise<{
     code: string;
     tipo: string;
+  }>;
+
+  searchParams: Promise<{
+    salvo?: string;
   }>;
 };
 
@@ -116,12 +121,14 @@ function EditableField({
   wide = false,
   type = "text",
   placeholder = "",
+  required = false,
 }: {
   label: string;
   name: string;
   wide?: boolean;
   type?: "text" | "email" | "tel" | "date" | "time";
   placeholder?: string;
+  required?: boolean;
 }) {
   return (
     <label
@@ -131,6 +138,7 @@ function EditableField({
     >
       <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-500">
         {label}
+        {required ? " *" : ""}
       </span>
 
       <input
@@ -138,6 +146,7 @@ function EditableField({
         name={name}
         placeholder={placeholder}
         autoComplete="off"
+        required={required}
         className="mt-1 h-9 w-full border-0 border-b border-zinc-400 bg-transparent px-1 text-[11px] text-zinc-950 outline-none transition focus:border-amber-500 focus:ring-0 print:text-zinc-950"
       />
     </label>
@@ -177,7 +186,7 @@ function EditableTextArea({
   );
 }
 
-function CheckOption({
+function ChoiceOption({
   name,
   value,
   label,
@@ -189,7 +198,7 @@ function CheckOption({
   return (
     <label className="inline-flex cursor-pointer items-center gap-1.5">
       <input
-        type="checkbox"
+        type="radio"
         name={name}
         value={value}
         className="h-3.5 w-3.5 border-zinc-400 accent-amber-500"
@@ -257,8 +266,10 @@ function SectionTitle({
 
 export default async function PrintableSheetPage({
   params,
+  searchParams,
 }: PrintableSheetPageProps) {
   const { code, tipo } = await params;
+  const { salvo } = await searchParams;
 
   if (
     tipo !== "visita" &&
@@ -342,6 +353,12 @@ export default async function PrintableSheetPage({
   const isVisitSheet =
     tipo === "visita";
 
+  const saveVisitAction =
+    savePropertyVisit.bind(
+      null,
+      property.code,
+    );
+
   return (
     <main className="min-h-screen bg-zinc-200 px-4 py-7 text-zinc-950 print:bg-white print:p-0">
       <style>{`
@@ -399,18 +416,20 @@ export default async function PrintableSheetPage({
         }
       />
 
-      <article className="print-sheet mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white p-[12mm] shadow-2xl print:p-0">
-        <SheetHeader
-          title={
-            isVisitSheet
-              ? "Ficha de visita"
-              : "Ficha do imóvel"
-          }
-          code={property.code}
-        />
+      {isVisitSheet && salvo === "1" ? (
+        <div className="mx-auto mb-4 w-full max-w-[210mm] border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 print:hidden">
+          Visita salva com sucesso.
+        </div>
+      ) : null}
 
-        {isVisitSheet ? (
-          <>
+      {isVisitSheet ? (
+        <form action={saveVisitAction}>
+          <article className="print-sheet mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white p-[12mm] shadow-2xl print:p-0">
+            <SheetHeader
+              title="Ficha de visita"
+              code={property.code}
+            />
+
             <section className="mt-6">
               <SectionTitle>
                 Identificação do imóvel
@@ -461,6 +480,7 @@ export default async function PrintableSheetPage({
                   label="Nome completo"
                   name="visitorName"
                   wide
+                  required
                   placeholder="Digite o nome completo"
                 />
 
@@ -501,6 +521,7 @@ export default async function PrintableSheetPage({
                   label="Data da visita"
                   name="visitDate"
                   type="date"
+                  required
                 />
 
                 <EditableField
@@ -530,21 +551,21 @@ export default async function PrintableSheetPage({
                   </p>
 
                   <div className="flex flex-wrap gap-x-4 gap-y-2">
-                    <CheckOption
+                    <ChoiceOption
                       name="interest"
-                      value="alto"
+                      value="ALTO"
                       label="Alto"
                     />
 
-                    <CheckOption
+                    <ChoiceOption
                       name="interest"
-                      value="medio"
+                      value="MEDIO"
                       label="Médio"
                     />
 
-                    <CheckOption
+                    <ChoiceOption
                       name="interest"
-                      value="baixo"
+                      value="BAIXO"
                       label="Baixo"
                     />
                   </div>
@@ -556,21 +577,21 @@ export default async function PrintableSheetPage({
                   </p>
 
                   <div className="flex flex-wrap gap-x-4 gap-y-2">
-                    <CheckOption
+                    <ChoiceOption
                       name="returnType"
-                      value="proposta"
+                      value="PROPOSTA"
                       label="Proposta"
                     />
 
-                    <CheckOption
+                    <ChoiceOption
                       name="returnType"
-                      value="nova-visita"
+                      value="NOVA_VISITA"
                       label="Nova visita"
                     />
 
-                    <CheckOption
+                    <ChoiceOption
                       name="returnType"
-                      value="sem-interesse"
+                      value="SEM_INTERESSE"
                       label="Sem interesse"
                     />
                   </div>
@@ -598,209 +619,235 @@ export default async function PrintableSheetPage({
               <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2 print:grid-cols-2">
                 <SignaturePad
                   label="Assinatura do visitante"
+                  name="visitorSignature"
                 />
 
                 <SignaturePad
                   label="Assinatura do responsável pela visita"
+                  name="responsibleSignature"
                 />
               </div>
             </section>
 
+            <div className="mt-8 flex justify-end print:hidden">
+              <button
+                type="submit"
+                className="inline-flex min-h-11 items-center justify-center bg-emerald-600 px-7 text-[10px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-emerald-500"
+              >
+                Salvar visita
+              </button>
+            </div>
+
             <p className="mt-7 border-t border-zinc-200 pt-3 text-[8px] leading-4 text-zinc-500">
               Os dados preenchidos nesta ficha devem ser utilizados exclusivamente para o atendimento imobiliário e protegidos contra acesso indevido.
             </p>
-          </>
-        ) : (
-          <>
-            <section className="mt-6">
-              <div className="flex items-start justify-between gap-6 border-b border-zinc-200 pb-4">
-                <div>
-                  <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-amber-700">
-                    {propertyTypeLabels[
-                      property.propertyType
-                    ] ?? property.propertyType}
+
+            <footer className="mt-6 flex items-center justify-between border-t border-zinc-200 pt-3 text-[7px] uppercase tracking-[0.1em] text-zinc-400">
+              <span>
+                Documento interno • B&amp;B Consultoria Imobiliária
+              </span>
+
+              <span>
+                Gerado em {generatedAt}
+              </span>
+            </footer>
+          </article>
+        </form>
+      ) : (
+        <article className="print-sheet mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white p-[12mm] shadow-2xl print:p-0">
+          <SheetHeader
+            title="Ficha do imóvel"
+            code={property.code}
+          />
+
+          <section className="mt-6">
+            <div className="flex items-start justify-between gap-6 border-b border-zinc-200 pb-4">
+              <div>
+                <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-amber-700">
+                  {propertyTypeLabels[
+                    property.propertyType
+                  ] ?? property.propertyType}
+                </p>
+
+                <h2 className="mt-1 font-serif text-2xl font-semibold leading-tight text-zinc-950">
+                  {property.title}
+                </h2>
+
+                <p className="mt-2 text-[10px] leading-5 text-zinc-600">
+                  {address}
+                </p>
+              </div>
+
+              <span className="shrink-0 border border-zinc-300 px-3 py-2 text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-700">
+                {statusLabels[
+                  property.status
+                ] ?? property.status}
+              </span>
+            </div>
+          </section>
+
+          <section className="mt-6">
+            <SectionTitle>
+              Informações comerciais
+            </SectionTitle>
+
+            <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-4">
+              <InfoItem label="Finalidade">
+                {purposeLabels[
+                  property.purpose
+                ] ?? property.purpose}
+              </InfoItem>
+
+              <InfoItem label="Categoria">
+                {property.category}
+              </InfoItem>
+
+              <InfoItem label="Valor de venda">
+                {formatCurrency(
+                  property.price,
+                )}
+              </InfoItem>
+
+              <InfoItem label="Valor de locação">
+                {formatCurrency(
+                  property.rentalPrice,
+                )}
+              </InfoItem>
+
+              <InfoItem label="Condomínio">
+                {formatCurrency(
+                  property.condominium,
+                )}
+              </InfoItem>
+
+              <InfoItem label="IPTU">
+                {formatCurrency(
+                  property.iptu,
+                )}
+              </InfoItem>
+            </div>
+          </section>
+
+          <section className="mt-6">
+            <SectionTitle>
+              Características
+            </SectionTitle>
+
+            <div className="mt-4 grid grid-cols-4 gap-3">
+              {[
+                ["Área útil", formatArea(property.area)],
+                ["Área do terreno", formatArea(property.landArea)],
+                ["Dormitórios", property.bedrooms],
+                ["Suítes", property.suites],
+                ["Banheiros", property.bathrooms],
+                ["Vagas", property.parking],
+                ["Bairro", property.neighborhood],
+                ["Empreendimento", property.development ?? "Não informado"],
+              ].map(([label, value]) => (
+                <div
+                  key={String(label)}
+                  className="border border-zinc-300 p-3"
+                >
+                  <p className="text-[7px] font-bold uppercase tracking-[0.1em] text-zinc-500">
+                    {label}
                   </p>
 
-                  <h2 className="mt-1 font-serif text-2xl font-semibold leading-tight text-zinc-950">
-                    {property.title}
-                  </h2>
-
-                  <p className="mt-2 text-[10px] leading-5 text-zinc-600">
-                    {address}
+                  <p className="mt-1 text-[10px] font-semibold leading-4 text-zinc-950">
+                    {value}
                   </p>
                 </div>
+              ))}
+            </div>
+          </section>
 
-                <span className="shrink-0 border border-zinc-300 px-3 py-2 text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-700">
-                  {statusLabels[
-                    property.status
-                  ] ?? property.status}
-                </span>
-              </div>
-            </section>
+          <section className="mt-6">
+            <SectionTitle>
+              Descrição do imóvel
+            </SectionTitle>
 
-            <section className="mt-6">
-              <SectionTitle>
-                Informações comerciais
-              </SectionTitle>
+            <p className="mt-3 whitespace-pre-wrap text-[10px] leading-5 text-zinc-700">
+              {property.description ??
+                "Descrição não informada."}
+            </p>
+          </section>
 
-              <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-4">
-                <InfoItem label="Finalidade">
-                  {purposeLabels[
-                    property.purpose
-                  ] ?? property.purpose}
-                </InfoItem>
+          <section className="mt-6">
+            <SectionTitle>
+              Diferenciais e comodidades
+            </SectionTitle>
 
-                <InfoItem label="Categoria">
-                  {property.category}
-                </InfoItem>
-
-                <InfoItem label="Valor de venda">
-                  {formatCurrency(
-                    property.price,
-                  )}
-                </InfoItem>
-
-                <InfoItem label="Valor de locação">
-                  {formatCurrency(
-                    property.rentalPrice,
-                  )}
-                </InfoItem>
-
-                <InfoItem label="Condomínio">
-                  {formatCurrency(
-                    property.condominium,
-                  )}
-                </InfoItem>
-
-                <InfoItem label="IPTU">
-                  {formatCurrency(
-                    property.iptu,
-                  )}
-                </InfoItem>
-              </div>
-            </section>
-
-            <section className="mt-6">
-              <SectionTitle>
-                Características
-              </SectionTitle>
-
-              <div className="mt-4 grid grid-cols-4 gap-3">
-                {[
-                  ["Área útil", formatArea(property.area)],
-                  ["Área do terreno", formatArea(property.landArea)],
-                  ["Dormitórios", property.bedrooms],
-                  ["Suítes", property.suites],
-                  ["Banheiros", property.bathrooms],
-                  ["Vagas", property.parking],
-                  ["Bairro", property.neighborhood],
-                  ["Empreendimento", property.development ?? "Não informado"],
-                ].map(([label, value]) => (
-                  <div
-                    key={String(label)}
-                    className="border border-zinc-300 p-3"
-                  >
-                    <p className="text-[7px] font-bold uppercase tracking-[0.1em] text-zinc-500">
-                      {label}
-                    </p>
-
-                    <p className="mt-1 text-[10px] font-semibold leading-4 text-zinc-950">
-                      {value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="mt-6">
-              <SectionTitle>
-                Descrição do imóvel
-              </SectionTitle>
-
-              <p className="mt-3 whitespace-pre-wrap text-[10px] leading-5 text-zinc-700">
-                {property.description ??
-                  "Descrição não informada."}
+            {property.features.length > 0 ? (
+              <ul className="mt-3 grid grid-cols-2 gap-x-8 gap-y-2 text-[10px] leading-4 text-zinc-700">
+                {property.features.map(
+                  (feature, index) => (
+                    <li
+                      key={`${feature}-${index}`}
+                      className="flex items-start gap-2"
+                    >
+                      <span className="mt-1 h-1.5 w-1.5 shrink-0 bg-amber-500" />
+                      <span>{feature}</span>
+                    </li>
+                  ),
+                )}
+              </ul>
+            ) : (
+              <p className="mt-3 text-[10px] text-zinc-600">
+                Nenhum diferencial cadastrado.
               </p>
-            </section>
+            )}
+          </section>
 
-            <section className="mt-6">
-              <SectionTitle>
-                Diferenciais e comodidades
-              </SectionTitle>
+          <section className="mt-6 border-t border-zinc-300 pt-4">
+            <div className="grid grid-cols-2 gap-8">
+              <InfoItem label="Captador responsável">
+                <span className="font-semibold">
+                  {captorName}
+                </span>
 
-              {property.features.length > 0 ? (
-                <ul className="mt-3 grid grid-cols-2 gap-x-8 gap-y-2 text-[10px] leading-4 text-zinc-700">
-                  {property.features.map(
-                    (feature, index) => (
-                      <li
-                        key={`${feature}-${index}`}
-                        className="flex items-start gap-2"
-                      >
-                        <span className="mt-1 h-1.5 w-1.5 shrink-0 bg-amber-500" />
-                        <span>{feature}</span>
-                      </li>
-                    ),
-                  )}
-                </ul>
-              ) : (
-                <p className="mt-3 text-[10px] text-zinc-600">
-                  Nenhum diferencial cadastrado.
-                </p>
-              )}
-            </section>
-
-            <section className="mt-6 border-t border-zinc-300 pt-4">
-              <div className="grid grid-cols-2 gap-8">
-                <InfoItem label="Captador responsável">
-                  <span className="font-semibold">
-                    {captorName}
+                {captorDetails ? (
+                  <span className="block text-[9px] text-zinc-600">
+                    {captorDetails}
                   </span>
+                ) : null}
+              </InfoItem>
 
-                  {captorDetails ? (
-                    <span className="block text-[9px] text-zinc-600">
-                      {captorDetails}
+              <InfoItem label="Cocaptador">
+                {property.coCaptor ? (
+                  <>
+                    <span className="font-semibold">
+                      {property.coCaptor.name}
                     </span>
-                  ) : null}
-                </InfoItem>
 
-                <InfoItem label="Cocaptador">
-                  {property.coCaptor ? (
-                    <>
-                      <span className="font-semibold">
-                        {property.coCaptor.name}
-                      </span>
+                    <span className="block text-[9px] text-zinc-600">
+                      {[
+                        property.coCaptor.creci
+                          ? `CRECI ${property.coCaptor.creci}`
+                          : null,
+                        property.coCaptor.phone,
+                        property.coCaptor.email,
+                      ]
+                        .filter(Boolean)
+                        .join(" • ")}
+                    </span>
+                  </>
+                ) : (
+                  "Não informado"
+                )}
+              </InfoItem>
+            </div>
+          </section>
 
-                      <span className="block text-[9px] text-zinc-600">
-                        {[
-                          property.coCaptor.creci
-                            ? `CRECI ${property.coCaptor.creci}`
-                            : null,
-                          property.coCaptor.phone,
-                          property.coCaptor.email,
-                        ]
-                          .filter(Boolean)
-                          .join(" • ")}
-                      </span>
-                    </>
-                  ) : (
-                    "Não informado"
-                  )}
-                </InfoItem>
-              </div>
-            </section>
-          </>
-        )}
+          <footer className="mt-6 flex items-center justify-between border-t border-zinc-200 pt-3 text-[7px] uppercase tracking-[0.1em] text-zinc-400">
+            <span>
+              Documento interno • B&amp;B Consultoria Imobiliária
+            </span>
 
-        <footer className="mt-6 flex items-center justify-between border-t border-zinc-200 pt-3 text-[7px] uppercase tracking-[0.1em] text-zinc-400">
-          <span>
-            Documento interno • B&amp;B Consultoria Imobiliária
-          </span>
-
-          <span>
-            Gerado em {generatedAt}
-          </span>
-        </footer>
-      </article>
+            <span>
+              Gerado em {generatedAt}
+            </span>
+          </footer>
+        </article>
+      )}
     </main>
   );
 }

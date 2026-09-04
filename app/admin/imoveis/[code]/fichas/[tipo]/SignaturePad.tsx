@@ -10,15 +10,19 @@ import {
 
 type SignaturePadProps = {
   label: string;
+  name: string;
 };
 
 export default function SignaturePad({
   label,
+  name,
 }: SignaturePadProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
+
   const [hasSignature, setHasSignature] = useState(false);
+  const [signatureData, setSignatureData] = useState("");
 
   const prepareCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -32,6 +36,7 @@ export default function SignaturePad({
     const pixelRatio = window.devicePixelRatio || 1;
 
     const oldCanvas = document.createElement("canvas");
+
     oldCanvas.width = canvas.width;
     oldCanvas.height = canvas.height;
 
@@ -115,6 +120,15 @@ export default function SignaturePad({
     };
   }
 
+  function updateSignatureData() {
+    const canvas = canvasRef.current;
+
+    if (!canvas) return;
+
+    const dataUrl = canvas.toDataURL("image/png");
+    setSignatureData(dataUrl);
+  }
+
   function handlePointerDown(
     event: ReactPointerEvent<HTMLCanvasElement>,
   ) {
@@ -148,17 +162,31 @@ export default function SignaturePad({
     if (!context) return;
 
     context.beginPath();
-    context.moveTo(previousPoint.x, previousPoint.y);
-    context.lineTo(currentPoint.x, currentPoint.y);
+
+    context.moveTo(
+      previousPoint.x,
+      previousPoint.y,
+    );
+
+    context.lineTo(
+      currentPoint.x,
+      currentPoint.y,
+    );
+
     context.stroke();
 
     lastPointRef.current = currentPoint;
-    setHasSignature(true);
+
+    if (!hasSignature) {
+      setHasSignature(true);
+    }
   }
 
   function stopDrawing(
     event?: ReactPointerEvent<HTMLCanvasElement>,
   ) {
+    if (!drawingRef.current) return;
+
     drawingRef.current = false;
     lastPointRef.current = null;
 
@@ -168,6 +196,8 @@ export default function SignaturePad({
     ) {
       canvasRef.current.releasePointerCapture(event.pointerId);
     }
+
+    updateSignatureData();
   }
 
   function clearSignature() {
@@ -187,10 +217,18 @@ export default function SignaturePad({
     );
 
     setHasSignature(false);
+    setSignatureData("");
   }
 
   return (
     <div className="min-w-0">
+      <input
+        type="hidden"
+        name={name}
+        value={signatureData}
+        readOnly
+      />
+
       <div className="signature-box relative overflow-hidden border border-zinc-300 bg-white">
         <canvas
           ref={canvasRef}
