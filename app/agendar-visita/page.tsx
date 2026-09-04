@@ -7,9 +7,11 @@ import {
   useMemo,
   useState,
 } from "react";
+
 import Footer from "../components/Footer";
 import Header from "../components/Header";
 import { trackWhatsAppClick } from "../components/whatsappTracking";
+import { PORTAL_LEAD_CONSENT_TEXT } from "../../lib/leads/consent";
 
 const whatsappNumber = "5512978140636";
 
@@ -115,6 +117,11 @@ const rentalQuestions = [
   },
 ] as const;
 
+type SubmissionState =
+  | "idle"
+  | "sending"
+  | "error";
+
 export default function AgendarVisitaPage() {
   const [
     propertyCode,
@@ -136,6 +143,14 @@ export default function AgendarVisitaPage() {
     setError,
   ] = useState("");
 
+  const [
+    submissionState,
+    setSubmissionState,
+  ] =
+    useState<SubmissionState>(
+      "idle",
+    );
+
   useEffect(() => {
     const searchParams =
       new URLSearchParams(
@@ -143,10 +158,14 @@ export default function AgendarVisitaPage() {
       );
 
     const code =
-      searchParams.get("imovel");
+      searchParams.get(
+        "imovel",
+      );
 
     const title =
-      searchParams.get("titulo");
+      searchParams.get(
+        "titulo",
+      );
 
     const purpose =
       searchParams.get(
@@ -196,18 +215,22 @@ export default function AgendarVisitaPage() {
       ? rentalQuestions
       : purchaseQuestions;
 
-  function handleSubmit(
+  async function handleSubmit(
     event:
       FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
     setError("");
+    setSubmissionState(
+      "sending",
+    );
+
+    const form =
+      event.currentTarget;
 
     const formData =
-      new FormData(
-        event.currentTarget,
-      );
+      new FormData(form);
 
     const unansweredQuestion =
       questions.find(
@@ -222,48 +245,216 @@ export default function AgendarVisitaPage() {
         "Responda todas as perguntas antes de continuar.",
       );
 
+      setSubmissionState(
+        "idle",
+      );
+
       return;
     }
 
-    const propertyIdentification =
-      propertyCode &&
-      propertyTitle
-        ? `${propertyCode} — ${propertyTitle}`
-        : propertyCode
-          ? propertyCode
-          : propertyTitle ||
-            "Ainda não definido";
+    const name =
+      String(
+        formData.get("name") ??
+          "",
+      ).trim();
 
-    const message = [
-      "Olá, gostaria de agendar uma visita.",
-      "",
-      `Imóvel: ${propertyIdentification}`,
-      `Finalidade: ${
-        isRental
-          ? "Locação"
-          : "Compra"
-      }`,
-      ...questions.map(
-        (question) =>
-          `${question.label}: ${String(
-            formData.get(
-              question.name,
-            ) ?? "",
-          )}`,
-      ),
-    ].join("\n");
+    const phone =
+      String(
+        formData.get(
+          "phone",
+        ) ?? "",
+      ).trim();
 
-    const whatsappUrl =
-      `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-        message,
-      )}`;
+    const consent =
+      formData.get(
+        "consent",
+      ) === "on";
 
-    trackWhatsAppClick();
-    window.open(
-      whatsappUrl,
-      "_blank",
-      "noopener,noreferrer",
-    );
+    if (
+      name.length < 2 ||
+      !phone ||
+      !consent
+    ) {
+      setError(
+        "Preencha seu nome, um WhatsApp válido e autorize o contato.",
+      );
+
+      setSubmissionState(
+        "idle",
+      );
+
+      return;
+    }
+
+    const searchParams =
+      new URLSearchParams(
+        window.location.search,
+      );
+
+    try {
+      const response =
+        await fetch(
+          "/api/leads",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify({
+                propertyCode:
+                  propertyCode ||
+                  null,
+
+                name,
+                phone,
+                consent,
+
+                company:
+                  formData.get(
+                    "company",
+                  ),
+
+                sourcePage:
+                  `${window.location.pathname}${window.location.search}`,
+
+                referrer:
+                  document.referrer ||
+                  null,
+
+                utmSource:
+                  searchParams.get(
+                    "utm_source",
+                  ),
+
+                utmMedium:
+                  searchParams.get(
+                    "utm_medium",
+                  ),
+
+                utmCampaign:
+                  searchParams.get(
+                    "utm_campaign",
+                  ),
+
+                utmTerm:
+                  searchParams.get(
+                    "utm_term",
+                  ),
+
+                utmContent:
+                  searchParams.get(
+                    "utm_content",
+                  ),
+
+                gclid:
+                  searchParams.get(
+                    "gclid",
+                  ),
+              }),
+          },
+        );
+
+      const result =
+        (await response.json()) as {
+          success?: boolean;
+          error?: string;
+        };
+
+      if (
+        !response.ok ||
+        !result.success
+      ) {
+        throw new Error(
+          result.error ||
+            "Não foi possível registrar seu contato.",
+        );
+      }
+
+      const propertyIdentification =
+        propertyCode &&
+        propertyTitle
+          ? `${propertyCode} — ${propertyTitle}`
+          : propertyCode
+            ? propertyCode
+            : propertyTitle ||
+              "Ainda não definido";
+
+      const message = [
+        `Olá, sou ${name} e gostaria de agendar uma visita.`,
+        "",
+        `Imóvel: ${propertyIdentification}`,
+        `Finalidade: ${
+          isRental
+            ? "Locação"
+            : "Compra"
+        }`,
+        ...questions.map(
+          (question) =>
+            `${question.label}: ${String(
+              formData.get(
+                question.name,
+              ) ?? "",
+            )}`,
+        ),
+      ].join("\n");
+
+      const whatsappUrl =
+        `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
+          message,
+        )}`;
+
+      const trackedWindow =
+        window as typeof window & {
+          dataLayer?: Record<
+            string,
+            unknown
+          >[];
+        };
+
+      trackedWindow.dataLayer =
+        trackedWindow.dataLayer ||
+        [];
+
+      trackedWindow.dataLayer.push(
+        {
+          event:
+            "portal_lead_created",
+
+          property_code:
+            propertyCode ||
+            "GERAL",
+
+          lead_origin:
+            "agendar_visita",
+        },
+      );
+
+      trackWhatsAppClick();
+
+      window.open(
+        whatsappUrl,
+        "_blank",
+        "noopener,noreferrer",
+      );
+
+      setSubmissionState(
+        "idle",
+      );
+    } catch (error) {
+      setSubmissionState(
+        "error",
+      );
+
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível registrar seu contato.",
+      );
+    }
   }
 
   const hasSelectedProperty =
@@ -303,7 +494,7 @@ export default function AgendarVisitaPage() {
           <div className="mt-8 max-w-4xl">
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-400">
               Atendimento consultivo
-              B&B
+              B&amp;B
             </p>
 
             <h1 className="mt-4 font-serif text-4xl font-normal leading-tight sm:text-5xl">
@@ -365,11 +556,15 @@ export default function AgendarVisitaPage() {
           <div className="mt-7 border-t border-white/10 pt-6">
             <p className="text-sm leading-7 text-zinc-400">
               O preenchimento leva
-              menos de um minuto.
-              Ao finalizar, você
-              será direcionado ao
-              WhatsApp da B&B com
-              suas respostas
+              menos de dois
+              minutos. Ao
+              finalizar, seu
+              contato será
+              registrado no CRM da
+              B&amp;B e você será
+              direcionado ao
+              WhatsApp com suas
+              respostas
               organizadas.
             </p>
           </div>
@@ -406,9 +601,12 @@ export default function AgendarVisitaPage() {
             </h2>
 
             <p className="mt-4 text-sm leading-7 text-zinc-500">
-              Selecione uma
-              resposta em cada
-              etapa.
+              Responda às etapas e,
+              ao final, informe seus
+              dados para que a
+              equipe B&amp;B possa
+              dar continuidade ao
+              atendimento.
             </p>
           </div>
 
@@ -418,6 +616,23 @@ export default function AgendarVisitaPage() {
               handleSubmit
             }
           >
+            <div
+              className="hidden"
+              aria-hidden="true"
+            >
+              <label htmlFor="company">
+                Empresa
+              </label>
+
+              <input
+                id="company"
+                name="company"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </div>
+
             <div className="space-y-9">
               {questions.map(
                 (
@@ -459,7 +674,7 @@ export default function AgendarVisitaPage() {
 
                             <span className="flex min-h-16 items-center border border-white/15 bg-black/30 px-5 py-4 text-sm leading-6 text-zinc-300 transition-all duration-300 group-hover:border-amber-500/60 group-hover:text-white peer-checked:border-amber-500 peer-checked:bg-amber-500/10 peer-checked:text-amber-400 peer-focus-visible:ring-2 peer-focus-visible:ring-amber-500 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-black">
                               <span className="mr-4 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-zinc-600">
-                                <span className="h-2 w-2 rounded-full bg-amber-500 opacity-0 transition peer-checked:opacity-100" />
+                                <span className="h-2 w-2 rounded-full bg-amber-500 opacity-0 transition group-has-[input:checked]:opacity-100" />
                               </span>
 
                               {
@@ -475,31 +690,103 @@ export default function AgendarVisitaPage() {
               )}
             </div>
 
+            <section className="mt-10 border-t border-white/10 pt-9">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                Seus dados
+              </p>
+
+              <h3 className="mt-3 font-serif text-2xl font-normal">
+                Como podemos entrar
+                em contato?
+              </h3>
+
+              <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+                    Nome
+                  </span>
+
+                  <input
+                    name="name"
+                    type="text"
+                    required
+                    minLength={2}
+                    maxLength={120}
+                    autoComplete="name"
+                    className="min-h-12 w-full border border-white/15 bg-black/50 px-4 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-amber-500"
+                    placeholder="Seu nome"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+                    WhatsApp com DDD
+                  </span>
+
+                  <input
+                    name="phone"
+                    type="tel"
+                    required
+                    maxLength={20}
+                    autoComplete="tel"
+                    inputMode="tel"
+                    className="min-h-12 w-full border border-white/15 bg-black/50 px-4 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-amber-500"
+                    placeholder="(12) 99999-9999"
+                  />
+                </label>
+              </div>
+
+              <label className="mt-6 flex cursor-pointer items-start gap-3 text-xs leading-5 text-zinc-400">
+                <input
+                  name="consent"
+                  type="checkbox"
+                  required
+                  className="mt-1 h-4 w-4 shrink-0 accent-amber-500"
+                />
+
+                <span>
+                  {
+                    PORTAL_LEAD_CONSENT_TEXT
+                  }{" "}
+                  Você poderá
+                  solicitar a
+                  interrupção do
+                  contato a qualquer
+                  momento.
+                </span>
+              </label>
+            </section>
+
             {error ? (
               <div
                 role="alert"
                 aria-live="polite"
                 className="mt-7 border border-red-500/40 bg-red-500/10 px-5 py-4 text-sm text-red-300"
               >
-                {
-                  error
-                }
+                {error}
               </div>
             ) : null}
 
             <button
               type="submit"
-              className="mt-9 inline-flex min-h-16 w-full items-center justify-center bg-amber-500 px-7 text-center text-xs font-bold uppercase tracking-[0.16em] text-black transition hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-black"
+              disabled={
+                submissionState ===
+                "sending"
+              }
+              className="mt-9 inline-flex min-h-16 w-full items-center justify-center bg-amber-500 px-7 text-center text-xs font-bold uppercase tracking-[0.16em] text-black transition hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-black disabled:cursor-wait disabled:opacity-60"
             >
-              Continuar pelo
-              WhatsApp
+              {submissionState ===
+              "sending"
+                ? "Registrando atendimento..."
+                : "Registrar e continuar pelo WhatsApp"}
             </button>
 
             <p className="mt-5 text-center text-[11px] leading-5 text-zinc-600">
-              Suas respostas serão
-              utilizadas apenas
-              para personalizar o
-              atendimento.
+              Seus dados e respostas
+              serão utilizados
+              exclusivamente para
+              atendimento imobiliário
+              pela B&amp;B.
             </p>
           </form>
         </div>

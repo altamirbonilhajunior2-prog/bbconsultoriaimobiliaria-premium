@@ -1,16 +1,20 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
 import Footer from "../../components/Footer";
 import Header from "../../components/Header";
 import PropertyCard from "../../components/PropertyCard";
 import PropertyLeadExperience from "../../components/PropertyLeadExperience";
 import TrackedWhatsAppLink from "../../components/TrackedWhatsAppLink";
 import ApproximateLocationMap from "../../components/ApproximateLocationMap";
+
 import { prisma } from "../../../lib/prisma";
+
 import {
   calculatePricePerSquareMeter,
   formatPricePerSquareMeter,
 } from "../../../lib/property-metrics";
+
 import { normalizeLocationKey } from "../../../lib/location/normalize";
 
 export const dynamic = "force-dynamic";
@@ -65,7 +69,9 @@ function getSalePriceRange(
   }
 
   if (value <= 500_000) {
-    return { lte: 500_000 };
+    return {
+      lte: 500_000,
+    };
   }
 
   if (value <= 1_000_000) {
@@ -89,7 +95,9 @@ function getSalePriceRange(
     };
   }
 
-  return { gt: 3_000_000 };
+  return {
+    gt: 3_000_000,
+  };
 }
 
 function getRentalPriceRange(
@@ -100,7 +108,9 @@ function getRentalPriceRange(
   }
 
   if (value <= 5_000) {
-    return { lte: 5_000 };
+    return {
+      lte: 5_000,
+    };
   }
 
   if (value <= 10_000) {
@@ -117,7 +127,9 @@ function getRentalPriceRange(
     };
   }
 
-  return { gt: 20_000 };
+  return {
+    gt: 20_000,
+  };
 }
 
 function formatCurrency(
@@ -310,12 +322,19 @@ export default async function PropertyPage({
   }
 
   const referencePurpose =
-    property.purpose === "LOCACAO" ? "LOCACAO" : "VENDA";
+    property.purpose === "LOCACAO"
+      ? "LOCACAO"
+      : "VENDA";
+
   const comparisonArea =
     property.propertyType === "TERRENO"
       ? property.landArea
       : property.area;
-  const numericComparisonArea = decimalToNumber(comparisonArea);
+
+  const numericComparisonArea =
+    decimalToNumber(
+      comparisonArea,
+    );
 
   const marketReferenceCandidates =
     await prisma.marketReference.findMany({
@@ -323,54 +342,116 @@ export default async function PropertyPage({
         active: true,
         state: property.state,
         city: property.city,
-        neighborhood: property.neighborhood,
-        purpose: referencePurpose,
-        propertyType: property.propertyType,
+        neighborhood:
+          property.neighborhood,
+        purpose:
+          referencePurpose,
+        propertyType:
+          property.propertyType,
+
         OR: [
-          { validUntil: null },
-          { validUntil: { gte: new Date() } },
+          {
+            validUntil: null,
+          },
+          {
+            validUntil: {
+              gte: new Date(),
+            },
+          },
         ],
       },
-      orderBy: { calculatedAt: "desc" },
+
+      orderBy: {
+        calculatedAt: "desc",
+      },
     });
 
   const compatibleMarketReferences =
-    marketReferenceCandidates.filter((reference) => {
-      const minimumArea = decimalToNumber(reference.areaMin);
-      const maximumArea = decimalToNumber(reference.areaMax);
+    marketReferenceCandidates.filter(
+      (reference) => {
+        const minimumArea =
+          decimalToNumber(
+            reference.areaMin,
+          );
 
-      if (numericComparisonArea === null) {
-        return minimumArea === null && maximumArea === null;
-      }
+        const maximumArea =
+          decimalToNumber(
+            reference.areaMax,
+          );
 
-      return (
-        (minimumArea === null || numericComparisonArea >= minimumArea) &&
-        (maximumArea === null || numericComparisonArea <= maximumArea) &&
-        (reference.bedrooms === null || reference.bedrooms === property.bedrooms)
-      );
-    });
+        if (
+          numericComparisonArea ===
+          null
+        ) {
+          return (
+            minimumArea === null &&
+            maximumArea === null
+          );
+        }
+
+        return (
+          (
+            minimumArea === null ||
+            numericComparisonArea >=
+              minimumArea
+          ) &&
+          (
+            maximumArea === null ||
+            numericComparisonArea <=
+              maximumArea
+          ) &&
+          (
+            reference.bedrooms ===
+              null ||
+            reference.bedrooms ===
+              property.bedrooms
+          )
+        );
+      },
+    );
 
   const marketReference =
     compatibleMarketReferences.find(
-      (reference) => reference.bedrooms === property.bedrooms,
+      (reference) =>
+        reference.bedrooms ===
+        property.bedrooms,
     ) ??
     compatibleMarketReferences.find(
-      (reference) => reference.bedrooms === null,
+      (reference) =>
+        reference.bedrooms ===
+        null,
     ) ??
     null;
 
   const neighborhoodMapLocation =
-    await prisma.neighborhoodMapLocation.findFirst({
-      where: {
-        active: true,
-        state: property.state,
-        city: property.city,
-        OR: [
-          { normalizedName: normalizeLocationKey(property.neighborhood) },
-          { aliases: { has: normalizeLocationKey(property.neighborhood) } },
-        ],
+    await prisma.neighborhoodMapLocation.findFirst(
+      {
+        where: {
+          active: true,
+          state:
+            property.state,
+          city:
+            property.city,
+
+          OR: [
+            {
+              normalizedName:
+                normalizeLocationKey(
+                  property.neighborhood,
+                ),
+            },
+            {
+              aliases: {
+                has:
+                  normalizeLocationKey(
+                    property.neighborhood,
+                  ),
+              },
+            },
+          ],
+        },
       },
-    });
+    );
 
   const relatedPrice =
     decimalToNumber(
@@ -459,8 +540,7 @@ export default async function PropertyPage({
         },
       ],
 
-      take:
-        4,
+      take: 4,
     });
 
   const coverImage =
@@ -474,12 +554,11 @@ export default async function PropertyPage({
       ? [
           coverImage,
 
-          ...property.images
-            .filter(
-              (image) =>
-                image.id !==
-                coverImage.id,
-            ),
+          ...property.images.filter(
+            (image) =>
+              image.id !==
+              coverImage.id,
+          ),
         ]
       : property.images;
 
@@ -558,33 +637,78 @@ export default async function PropertyPage({
       : salePrice;
 
   const metricPrice =
-    referencePurpose === "LOCACAO"
+    referencePurpose ===
+    "LOCACAO"
       ? property.rentalPrice
       : property.price;
-  const propertyPricePerSquareMeter = calculatePricePerSquareMeter({
-    price: metricPrice,
-    area: comparisonArea,
-  });
+
+  const propertyPricePerSquareMeter =
+    calculatePricePerSquareMeter({
+      price:
+        metricPrice,
+
+      area:
+        comparisonArea,
+    });
+
   const formattedPropertyPricePerSquareMeter =
-    formatPricePerSquareMeter(propertyPricePerSquareMeter);
-  const formattedReferenceRange = marketReference
-    ? `${new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-        maximumFractionDigits: 0,
-      }).format(Number(marketReference.pricePerSquareMeterMin.toString()))} a ${new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-        maximumFractionDigits: 0,
-      }).format(Number(marketReference.pricePerSquareMeterMax.toString()))}/m²`
-    : null;
+    formatPricePerSquareMeter(
+      propertyPricePerSquareMeter,
+    );
+
+  const formattedReferenceRange =
+    marketReference
+      ? `${new Intl.NumberFormat(
+          "pt-BR",
+          {
+            style:
+              "currency",
+
+            currency:
+              "BRL",
+
+            maximumFractionDigits:
+              0,
+          },
+        ).format(
+          Number(
+            marketReference.pricePerSquareMeterMin.toString(),
+          ),
+        )} a ${new Intl.NumberFormat(
+          "pt-BR",
+          {
+            style:
+              "currency",
+
+            currency:
+              "BRL",
+
+            maximumFractionDigits:
+              0,
+          },
+        ).format(
+          Number(
+            marketReference.pricePerSquareMeterMax.toString(),
+          ),
+        )}/m²`
+      : null;
 
   const publicMapLocation =
-    property.mapEnabled && neighborhoodMapLocation
+    property.mapEnabled &&
+    neighborhoodMapLocation
       ? {
-          latitude: Number(neighborhoodMapLocation.latitude.toString()),
-          longitude: Number(neighborhoodMapLocation.longitude.toString()),
-          radiusMeters: neighborhoodMapLocation.radiusMeters,
+          latitude:
+            Number(
+              neighborhoodMapLocation.latitude.toString(),
+            ),
+
+          longitude:
+            Number(
+              neighborhoodMapLocation.longitude.toString(),
+            ),
+
+          radiusMeters:
+            neighborhoodMapLocation.radiusMeters,
         }
       : null;
 
@@ -637,7 +761,8 @@ export default async function PropertyPage({
               );
 
         const relatedPrice =
-          property.purpose !== "LOCACAO" &&
+          property.purpose !==
+            "LOCACAO" &&
           item.opportunityProfiles.includes(
             "LANCAMENTO",
           )
@@ -705,9 +830,7 @@ export default async function PropertyPage({
       <section className="border-b border-white/10 bg-[#090909]">
         <div className="mx-auto max-w-[1720px] px-6 py-8 lg:px-10 xl:px-12">
           <Link
-            href={
-              backUrl
-            }
+            href={backUrl}
             className="text-[11px] font-bold uppercase tracking-[0.16em] text-amber-400 transition hover:text-amber-300"
           >
             ← Voltar para imóveis
@@ -731,9 +854,7 @@ export default async function PropertyPage({
               propertyCode={
                 property.code
               }
-              tag={
-                tag
-              }
+              tag={tag}
             />
           </div>
 
@@ -743,9 +864,7 @@ export default async function PropertyPage({
             </p>
 
             <h1 className="mt-4 font-serif text-4xl font-normal leading-[1.08]">
-              {
-                property.title
-              }
+              {property.title}
             </h1>
 
             <p className="mt-4 text-sm leading-7 text-zinc-400">
@@ -767,13 +886,15 @@ export default async function PropertyPage({
 
               <div>
                 <strong className="block font-serif text-2xl font-normal">
-                  {property.suites > 0
+                  {property.suites >
+                  0
                     ? property.suites
                     : property.bedrooms}
                 </strong>
 
                 <span className="mt-2 block text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-500">
-                  {property.suites > 0
+                  {property.suites >
+                  0
                     ? "Suítes"
                     : "Dormitórios"}
                 </span>
@@ -897,7 +1018,9 @@ export default async function PropertyPage({
                 </p>
 
                 <p className="mt-2 font-serif text-3xl text-amber-400">
-                  {displayedSalePrice}
+                  {
+                    displayedSalePrice
+                  }
                 </p>
               </div>
             ) : null}
@@ -916,7 +1039,9 @@ export default async function PropertyPage({
             ) : null}
 
             <p className="mt-3 text-xs leading-5 text-zinc-500">
-              Consulte condições comerciais e disponibilidade.
+              Consulte condições
+              comerciais e
+              disponibilidade.
             </p>
 
             <div className="mt-6 border border-white/10 bg-[#111] p-5">
@@ -925,49 +1050,82 @@ export default async function PropertyPage({
                   <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
                     Valor do m²
                   </p>
+
                   <p className="mt-2 font-serif text-2xl text-white">
-                    {formattedPropertyPricePerSquareMeter}
+                    {
+                      formattedPropertyPricePerSquareMeter
+                    }
                   </p>
+
                   <p className="mt-3 text-xs leading-5 text-zinc-500">
-                    Calculado com base no preço anunciado e na área informada no cadastro.
+                    Calculado com
+                    base no preço
+                    anunciado e na
+                    área informada
+                    no cadastro.
                   </p>
                 </div>
 
                 <div className="border-t border-white/10 pt-5 md:border-l md:border-t-0 md:pl-5 md:pt-0">
                   <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
-                    Referência de Mercado B&amp;B
+                    Referência de
+                    Mercado B&amp;B
                   </p>
+
                   {formattedReferenceRange ? (
                     <p className="mt-2 font-serif text-2xl text-amber-400">
-                      {formattedReferenceRange}
+                      {
+                        formattedReferenceRange
+                      }
                     </p>
                   ) : null}
+
                   <p className="mt-3 text-xs leading-5 text-zinc-500">
-                    Estimativa elaborada a partir de pesquisa periódica em portais imobiliários, ofertas públicas e imóveis comparáveis. Valores anunciados podem diferir dos valores efetivamente negociados.
+                    Estimativa
+                    elaborada a
+                    partir de
+                    pesquisa
+                    periódica em
+                    portais
+                    imobiliários,
+                    ofertas
+                    públicas e
+                    imóveis
+                    comparáveis.
+                    Valores
+                    anunciados
+                    podem diferir
+                    dos valores
+                    efetivamente
+                    negociados.
                   </p>
                 </div>
               </div>
             </div>
 
-            <Link
-              href={
-                scheduleUrl
-              }
+            <a
+              href={scheduleUrl}
               className="mt-6 inline-flex min-h-16 w-full items-center justify-center bg-amber-500 px-7 text-center text-xs font-bold uppercase tracking-[0.18em] text-black transition hover:bg-amber-400"
             >
               Agendar visita
-            </Link>
+            </a>
 
             <TrackedWhatsAppLink
-  href={`https://wa.me/5512978140636?text=${whatsappMessage}`}
-  className="mt-4 inline-flex min-h-16 w-full items-center justify-center border border-amber-500 px-7 text-center text-xs font-bold uppercase tracking-[0.18em] text-amber-400 transition hover:bg-amber-500 hover:text-black"
->
-  Solicitar informações
-</TrackedWhatsAppLink>
+              href={`https://wa.me/5512978140636?text=${whatsappMessage}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-4 inline-flex min-h-16 w-full items-center justify-center border border-amber-500 px-7 text-center text-xs font-bold uppercase tracking-[0.18em] text-amber-400 transition hover:bg-amber-500 hover:text-black"
+            >
+              Solicitar informações
+            </TrackedWhatsAppLink>
 
             <p className="mt-6 text-center text-[10px] leading-5 text-zinc-500">
-              Nós analisamos cada imóvel antes de indicá-lo aos nossos
-              clientes. Durante o atendimento, apresentaremos nossa
+              Nós analisamos cada
+              imóvel antes de
+              indicá-lo aos nossos
+              clientes. Durante o
+              atendimento,
+              apresentaremos nossa
               avaliação consultiva.
             </p>
           </aside>
@@ -981,9 +1139,7 @@ export default async function PropertyPage({
           </p>
 
           <h2 className="mt-3 font-serif text-4xl font-normal">
-            {
-              property.title
-            }
+            {property.title}
           </h2>
 
           <div className="mt-7 whitespace-pre-line text-base leading-8 text-zinc-400">
@@ -1001,9 +1157,7 @@ export default async function PropertyPage({
             {analyzedDifferentials.map(
               (item) => (
                 <div
-                  key={
-                    item
-                  }
+                  key={item}
                   className="flex items-center gap-4 border-b border-white/10 pb-4 last:border-0 last:pb-0"
                 >
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-amber-500 text-xs text-amber-400">
@@ -1027,14 +1181,18 @@ export default async function PropertyPage({
           </p>
 
           <h2 className="mt-3 font-serif text-4xl font-normal">
-            Estrutura e diferenciais do imóvel
+            Estrutura e
+            diferenciais do imóvel
           </h2>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {features.map(
-              (feature, index) => (
+              (
+                feature,
+                index,
+              ) => (
                 <div
-                key={feature + "-" + index}
+                  key={`${feature}-${index}`}
                   className="flex min-h-20 items-center gap-4 border border-white/10 bg-black/30 px-5 py-4"
                 >
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-amber-500/60 text-sm text-amber-400">
@@ -1053,15 +1211,26 @@ export default async function PropertyPage({
 
       {publicMapLocation ? (
         <ApproximateLocationMap
-          latitude={publicMapLocation.latitude}
-          longitude={publicMapLocation.longitude}
-          radiusMeters={publicMapLocation.radiusMeters}
-          neighborhood={property.neighborhood}
-          city={property.city}
+          latitude={
+            publicMapLocation.latitude
+          }
+          longitude={
+            publicMapLocation.longitude
+          }
+          radiusMeters={
+            publicMapLocation.radiusMeters
+          }
+          neighborhood={
+            property.neighborhood
+          }
+          city={
+            property.city
+          }
         />
       ) : null}
 
-      {relatedCards.length > 0 ? (
+      {relatedCards.length >
+      0 ? (
         <section className="mx-auto max-w-[1720px] px-6 py-16 lg:px-10 xl:px-12">
           <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-400">
             Outras oportunidades
@@ -1073,9 +1242,7 @@ export default async function PropertyPage({
             </h2>
 
             <Link
-              href={
-                backUrl
-              }
+              href={backUrl}
               className="hidden border-b border-amber-500 pb-2 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400 sm:inline-flex"
             >
               Ver todos →
