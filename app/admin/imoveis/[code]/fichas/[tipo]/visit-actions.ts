@@ -10,13 +10,18 @@ function getOptionalText(
   formData: FormData,
   field: string,
 ) {
-  const value = formData.get(field);
+  const value =
+    formData.get(field);
 
-  if (typeof value !== "string") {
+  if (
+    typeof value !==
+    "string"
+  ) {
     return null;
   }
 
-  const trimmed = value.trim();
+  const trimmed =
+    value.trim();
 
   return trimmed.length > 0
     ? trimmed
@@ -28,10 +33,11 @@ function getRequiredText(
   field: string,
   label: string,
 ) {
-  const value = getOptionalText(
-    formData,
-    field,
-  );
+  const value =
+    getOptionalText(
+      formData,
+      field,
+    );
 
   if (!value) {
     throw new Error(
@@ -49,9 +55,10 @@ function parseOptionalDate(
     return null;
   }
 
-  const parsedDate = new Date(
-    `${value}T12:00:00-03:00`,
-  );
+  const parsedDate =
+    new Date(
+      `${value}T12:00:00-03:00`,
+    );
 
   if (
     Number.isNaN(
@@ -69,7 +76,9 @@ function parseRequiredDate(
   label: string,
 ) {
   const parsedDate =
-    parseOptionalDate(value);
+    parseOptionalDate(
+      value,
+    );
 
   if (!parsedDate) {
     throw new Error(
@@ -108,6 +117,36 @@ function parseReturnType(
   return null;
 }
 
+function normalizePhone(
+  value: string | null,
+) {
+  if (!value) {
+    return null;
+  }
+
+  const digits =
+    value.replace(/\D/g, "");
+
+  if (
+    digits.length === 10 ||
+    digits.length === 11
+  ) {
+    return `55${digits}`;
+  }
+
+  if (
+    (
+      digits.length === 12 ||
+      digits.length === 13
+    ) &&
+    digits.startsWith("55")
+  ) {
+    return digits;
+  }
+
+  return value;
+}
+
 export async function savePropertyVisit(
   propertyCode: string,
   formData: FormData,
@@ -122,7 +161,8 @@ export async function savePropertyVisit(
   const property =
     await prisma.property.findUnique({
       where: {
-        code: normalizedCode,
+        code:
+          normalizedCode,
       },
 
       select: {
@@ -231,14 +271,48 @@ export async function savePropertyVisit(
       "responsibleSignature",
     );
 
+  const normalizedVisitorPhone =
+    normalizePhone(
+      visitorPhone,
+    );
+
+  const existingClient =
+    normalizedVisitorPhone
+      ? await prisma.client.findFirst(
+          {
+            where: {
+              phone:
+                normalizedVisitorPhone,
+            },
+
+            orderBy: {
+              createdAt:
+                "asc",
+            },
+
+            select: {
+              id: true,
+            },
+          },
+        )
+      : null;
+
   await prisma.propertyVisit.create({
     data: {
       propertyId:
         property.id,
 
+      clientId:
+        existingClient?.id ??
+        null,
+
       visitorName,
       visitorDocument,
-      visitorPhone,
+
+      visitorPhone:
+        normalizedVisitorPhone ??
+        visitorPhone,
+
       visitorEmail,
       visitorBirthDate,
       visitorAddress,
@@ -260,7 +334,13 @@ export async function savePropertyVisit(
   const path =
     `/admin/imoveis/${property.code.toLowerCase()}/fichas/visita`;
 
-  revalidatePath(path);
+  revalidatePath(
+    path,
+  );
+
+  revalidatePath(
+    "/admin/clientes",
+  );
 
   redirect(
     `${path}?salvo=1`,
