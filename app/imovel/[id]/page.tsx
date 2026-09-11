@@ -197,6 +197,143 @@ function isAiGeneratedPropertyImage(
   return image.isAiGenerated;
 }
 
+function normalizeNeighborhoodKey(
+  value: string,
+) {
+  const normalized =
+    normalizeLocationKey(value);
+
+  const aliases: Record<
+    string,
+    string
+  > = {
+    "jardim aquairus":
+      "jardim aquarius",
+  };
+
+  return aliases[normalized] ??
+    normalized;
+}
+
+function normalizeDevelopmentKey(
+  value: string | null,
+) {
+  if (!value) {
+    return null;
+  }
+
+  let normalized =
+    normalizeLocationKey(value);
+
+  normalized = normalized
+    .replace(
+      /\bcondominio\b/g,
+      " ",
+    )
+    .replace(
+      /\bresidencial\b/g,
+      " ",
+    )
+    .replace(
+      /\bedificio\b/g,
+      " ",
+    )
+    .replace(
+      /\bresidence\b/g,
+      " ",
+    )
+    .replace(
+      /\btower\b/g,
+      " ",
+    )
+    .replace(
+      /\s+/g,
+      " ",
+    )
+    .trim();
+
+  normalized = normalized
+    .split(" ")
+    .map((part) => {
+      if (part === "i") {
+        return "1";
+      }
+
+      if (part === "ii") {
+        return "2";
+      }
+
+      if (part === "iii") {
+        return "3";
+      }
+
+      if (part === "iv") {
+        return "4";
+      }
+
+      return part;
+    })
+    .join(" ");
+
+  const aliases: Record<
+    string,
+    string
+  > = {
+    "patio":
+      "patio sao jose",
+    "patio sao jose smart living":
+      "patio sao jose",
+
+    "aquarius resort":
+      "aquarius resort",
+
+    "aquarius resort resort":
+      "aquarius resort",
+
+    "new life":
+      "new life",
+
+    "sevilha":
+      "sevilha",
+
+    "wonder":
+      "wonder",
+
+    "alphaville 2":
+      "alphaville 2",
+
+    "altos da serra 2":
+      "altos da serra 2",
+
+    "montserrat":
+      "montserrat",
+
+    "terras alpha":
+      "terras alpha",
+
+    "jaguary":
+      "jaguary",
+
+    "colinas do paratehy":
+      "colinas do paratehy",
+
+    "home club urbanova":
+      "home club urbanova",
+
+    "sunshine":
+      "sunshine",
+
+    "blue view":
+      "blue view",
+
+    "varandas do oriente":
+      "varandas do oriente",
+  };
+
+  return aliases[normalized] ??
+    normalized;
+}
+
 export async function generateMetadata({
   params,
 }: PropertyPageProps) {
@@ -321,107 +458,326 @@ export default async function PropertyPage({
     notFound();
   }
 
-  const referencePurpose =
-    property.purpose === "LOCACAO"
-      ? "LOCACAO"
-      : "VENDA";
+  const currentProperty =
+    property;
 
   const comparisonArea =
-    property.propertyType === "TERRENO"
-      ? property.landArea
-      : property.area;
+    currentProperty.propertyType ===
+    "TERRENO"
+      ? currentProperty.landArea
+      : currentProperty.area;
 
   const numericComparisonArea =
     decimalToNumber(
       comparisonArea,
     );
 
-  const marketReferenceCandidates =
-    await prisma.marketReference.findMany({
-      where: {
-        active: true,
-        state: property.state,
-        city: property.city,
-        neighborhood:
-          property.neighborhood,
-        purpose:
-          referencePurpose,
-        propertyType:
-          property.propertyType,
+  async function findBestMarketReference(
+    purpose: "VENDA" | "LOCACAO",
+  ) {
+    const allCandidates =
+      await prisma.marketReference.findMany({
+        where: {
+          active: true,
+          state:
+            currentProperty.state,
+          city:
+            currentProperty.city,
+          purpose,
+          propertyType:
+            currentProperty.propertyType,
 
-        OR: [
-          {
-            validUntil: null,
-          },
-          {
-            validUntil: {
-              gte: new Date(),
+          OR: [
+            {
+              validUntil: null,
             },
-          },
-        ],
-      },
+            {
+              validUntil: {
+                gte: new Date(),
+              },
+            },
+          ],
+        },
 
-      orderBy: {
-        calculatedAt: "desc",
-      },
-    });
+        orderBy: {
+          calculatedAt: "desc",
+        },
+      });
 
-  const compatibleMarketReferences =
-    marketReferenceCandidates.filter(
-      (reference) => {
-        const minimumArea =
-          decimalToNumber(
-            reference.areaMin,
-          );
+    const propertyNeighborhoodKey =
+      normalizeNeighborhoodKey(
+        currentProperty.neighborhood,
+      );
 
-        const maximumArea =
-          decimalToNumber(
-            reference.areaMax,
-          );
+    const neighborhoodCandidates =
+      allCandidates.filter(
+        (reference) =>
+          normalizeNeighborhoodKey(
+            reference.neighborhood,
+          ) ===
+          propertyNeighborhoodKey,
+      );
 
-        if (
-          numericComparisonArea ===
-          null
-        ) {
-          return (
-            minimumArea === null &&
-            maximumArea === null
-          );
-        }
+    if (
+      neighborhoodCandidates.length ===
+      0
+    ) {
+      return null;
+    }
 
-        return (
-          (
-            minimumArea === null ||
-            numericComparisonArea >=
-              minimumArea
-          ) &&
-          (
-            maximumArea === null ||
-            numericComparisonArea <=
-              maximumArea
-          ) &&
-          (
-            reference.bedrooms ===
-              null ||
-            reference.bedrooms ===
-              property.bedrooms
-          )
+    const propertyDevelopmentKey =
+      normalizeDevelopmentKey(
+        currentProperty.development,
+      );
+
+    const isGeneralReference = (
+      reference:
+        (typeof neighborhoodCandidates)[number],
+    ) => {
+      if (!reference.development) {
+        return true;
+      }
+
+      const referenceDevelopmentKey =
+        normalizeDevelopmentKey(
+          reference.development,
         );
-      },
-    );
 
-  const marketReference =
-    compatibleMarketReferences.find(
-      (reference) =>
-        reference.bedrooms ===
-        property.bedrooms,
-    ) ??
-    compatibleMarketReferences.find(
-      (reference) =>
-        reference.bedrooms ===
-        null,
-    ) ??
-    null;
+      const referenceNeighborhoodKey =
+        normalizeDevelopmentKey(
+          reference.neighborhood,
+        );
+
+      return (
+        referenceDevelopmentKey !==
+          null &&
+        referenceDevelopmentKey ===
+          referenceNeighborhoodKey
+      );
+    };
+
+    const sameDevelopmentCandidates =
+      propertyDevelopmentKey
+        ? neighborhoodCandidates.filter(
+            (reference) => {
+              if (
+                isGeneralReference(
+                  reference,
+                )
+              ) {
+                return false;
+              }
+
+              return (
+                normalizeDevelopmentKey(
+                  reference.development,
+                ) ===
+                propertyDevelopmentKey
+              );
+            },
+          )
+        : [];
+
+    const generalCandidates =
+      neighborhoodCandidates.filter(
+        isGeneralReference,
+      );
+
+    const candidates =
+      sameDevelopmentCandidates.length >
+      0
+        ? sameDevelopmentCandidates
+        : generalCandidates;
+
+    if (candidates.length === 0) {
+      return null;
+    }
+
+    const getAreaDistance = (
+      reference:
+        (typeof candidates)[number],
+    ) => {
+      if (
+        numericComparisonArea ===
+        null
+      ) {
+        return 0;
+      }
+
+      const minimumArea =
+        decimalToNumber(
+          reference.areaMin,
+        );
+
+      const maximumArea =
+        decimalToNumber(
+          reference.areaMax,
+        );
+
+      if (
+        minimumArea !== null &&
+        numericComparisonArea <
+          minimumArea
+      ) {
+        return (
+          minimumArea -
+          numericComparisonArea
+        );
+      }
+
+      if (
+        maximumArea !== null &&
+        numericComparisonArea >
+          maximumArea
+      ) {
+        return (
+          numericComparisonArea -
+          maximumArea
+        );
+      }
+
+      return 0;
+    };
+
+    const isAreaCompatible = (
+      reference:
+        (typeof candidates)[number],
+    ) => {
+      const minimumArea =
+        decimalToNumber(
+          reference.areaMin,
+        );
+
+      const maximumArea =
+        decimalToNumber(
+          reference.areaMax,
+        );
+
+      if (
+        numericComparisonArea ===
+        null
+      ) {
+        return (
+          minimumArea === null &&
+          maximumArea === null
+        );
+      }
+
+      return (
+        (
+          minimumArea === null ||
+          numericComparisonArea >=
+            minimumArea
+        ) &&
+        (
+          maximumArea === null ||
+          numericComparisonArea <=
+            maximumArea
+        )
+      );
+    };
+
+    const areaCompatibleCandidates =
+      candidates.filter(
+        isAreaCompatible,
+      );
+
+    const exactBedroomAndArea =
+      areaCompatibleCandidates.find(
+        (reference) =>
+          reference.bedrooms ===
+          currentProperty.bedrooms,
+      );
+
+    if (exactBedroomAndArea) {
+      return exactBedroomAndArea;
+    }
+
+    const candidatesWithBedrooms =
+      candidates.filter(
+        (reference) =>
+          reference.bedrooms !==
+          null,
+      );
+
+    if (
+      candidatesWithBedrooms.length >
+      0
+    ) {
+      return [
+        ...candidatesWithBedrooms,
+      ].sort(
+        (a, b) => {
+          const bedroomDistanceA =
+            Math.abs(
+              (a.bedrooms ??
+                currentProperty.bedrooms) -
+                currentProperty.bedrooms,
+            );
+
+          const bedroomDistanceB =
+            Math.abs(
+              (b.bedrooms ??
+                currentProperty.bedrooms) -
+                currentProperty.bedrooms,
+            );
+
+          if (
+            bedroomDistanceA !==
+            bedroomDistanceB
+          ) {
+            return (
+              bedroomDistanceA -
+              bedroomDistanceB
+            );
+          }
+
+          return (
+            getAreaDistance(a) -
+            getAreaDistance(b)
+          );
+        },
+      )[0];
+    }
+
+    const genericBedroomCandidates =
+      candidates.filter(
+        (reference) =>
+          reference.bedrooms ===
+          null,
+      );
+
+    if (
+      genericBedroomCandidates.length >
+      0
+    ) {
+      return [
+        ...genericBedroomCandidates,
+      ].sort(
+        (a, b) =>
+          getAreaDistance(a) -
+          getAreaDistance(b),
+      )[0];
+    }
+
+    return null;
+  }
+
+  const saleMarketReference =
+    currentProperty.purpose !==
+    "LOCACAO"
+      ? await findBestMarketReference(
+          "VENDA",
+        )
+      : null;
+
+  const rentalMarketReference =
+    currentProperty.purpose !==
+    "VENDA"
+      ? await findBestMarketReference(
+          "LOCACAO",
+        )
+      : null;
 
   const neighborhoodMapLocation =
     await prisma.neighborhoodMapLocation.findFirst(
@@ -429,22 +785,22 @@ export default async function PropertyPage({
         where: {
           active: true,
           state:
-            property.state,
+            currentProperty.state,
           city:
-            property.city,
+            currentProperty.city,
 
           OR: [
             {
               normalizedName:
                 normalizeLocationKey(
-                  property.neighborhood,
+                  currentProperty.neighborhood,
                 ),
             },
             {
               aliases: {
                 has:
                   normalizeLocationKey(
-                    property.neighborhood,
+                    currentProperty.neighborhood,
                   ),
               },
             },
@@ -455,14 +811,14 @@ export default async function PropertyPage({
 
   const relatedPrice =
     decimalToNumber(
-      property.purpose ===
+      currentProperty.purpose ===
       "LOCACAO"
-        ? property.rentalPrice
-        : property.price,
+        ? currentProperty.rentalPrice
+        : currentProperty.price,
     );
 
   const relatedPriceRange =
-    property.purpose ===
+    currentProperty.purpose ===
     "LOCACAO"
       ? getRentalPriceRange(
           relatedPrice,
@@ -477,15 +833,15 @@ export default async function PropertyPage({
         published: true,
 
         propertyType:
-          property.propertyType,
+          currentProperty.propertyType,
 
         code: {
           not:
-            property.code,
+            currentProperty.code,
         },
 
         purpose:
-          property.purpose ===
+          currentProperty.purpose ===
           "LOCACAO"
             ? {
                 in: [
@@ -501,7 +857,7 @@ export default async function PropertyPage({
               },
 
         ...(relatedPriceRange
-          ? property.purpose ===
+          ? currentProperty.purpose ===
             "LOCACAO"
             ? {
                 rentalPrice:
@@ -544,7 +900,7 @@ export default async function PropertyPage({
     });
 
   const coverImage =
-    property.images.find(
+    currentProperty.images.find(
       (image) =>
         image.isCover,
     );
@@ -554,13 +910,13 @@ export default async function PropertyPage({
       ? [
           coverImage,
 
-          ...property.images.filter(
+          ...currentProperty.images.filter(
             (image) =>
               image.id !==
               coverImage.id,
           ),
         ]
-      : property.images;
+      : currentProperty.images;
 
   const galleryImages =
     galleryImageRecords.map(
@@ -586,32 +942,33 @@ export default async function PropertyPage({
         ];
 
   const features =
-    property.features.length > 0
-      ? property.features
+    currentProperty.features.length >
+    0
+      ? currentProperty.features
       : defaultFeatures;
 
   const location =
     buildLocation(
-      property.neighborhood,
-      property.city,
-      property.state,
-      property.location,
+      currentProperty.neighborhood,
+      currentProperty.city,
+      currentProperty.state,
+      currentProperty.location,
     );
 
   const tag =
-    property.tag ||
+    currentProperty.tag ||
     (
-      property.highlight
+      currentProperty.highlight
         ? "Destaque"
         : "Selecionado"
     );
 
   const isRentalOnly =
-    property.purpose ===
+    currentProperty.purpose ===
     "LOCACAO";
 
   const isApartment =
-    property.propertyType ===
+    currentProperty.propertyType ===
     "APARTAMENTO";
 
   const backUrl =
@@ -621,80 +978,104 @@ export default async function PropertyPage({
 
   const salePrice =
     formatCurrency(
-      property.price,
+      currentProperty.price,
     );
 
   const rentalPrice =
     formatCurrency(
-      property.rentalPrice,
+      currentProperty.rentalPrice,
     );
 
   const displayedSalePrice =
-    property.opportunityProfiles.includes(
+    currentProperty.opportunityProfiles.includes(
       "LANCAMENTO",
     )
       ? `A partir de ${salePrice}*`
       : salePrice;
 
-  const metricPrice =
-    referencePurpose ===
+  const salePricePerSquareMeter =
+    currentProperty.purpose !==
     "LOCACAO"
-      ? property.rentalPrice
-      : property.price;
+      ? calculatePricePerSquareMeter({
+          price:
+            currentProperty.price,
 
-  const propertyPricePerSquareMeter =
-    calculatePricePerSquareMeter({
-      price:
-        metricPrice,
-
-      area:
-        comparisonArea,
-    });
-
-  const formattedPropertyPricePerSquareMeter =
-    formatPricePerSquareMeter(
-      propertyPricePerSquareMeter,
-    );
-
-  const formattedReferenceRange =
-    marketReference
-      ? `${new Intl.NumberFormat(
-          "pt-BR",
-          {
-            style:
-              "currency",
-
-            currency:
-              "BRL",
-
-            maximumFractionDigits:
-              0,
-          },
-        ).format(
-          Number(
-            marketReference.pricePerSquareMeterMin.toString(),
-          ),
-        )} a ${new Intl.NumberFormat(
-          "pt-BR",
-          {
-            style:
-              "currency",
-
-            currency:
-              "BRL",
-
-            maximumFractionDigits:
-              0,
-          },
-        ).format(
-          Number(
-            marketReference.pricePerSquareMeterMax.toString(),
-          ),
-        )}/m²`
+          area:
+            comparisonArea,
+        })
       : null;
 
+  const rentalPricePerSquareMeter =
+    currentProperty.purpose !==
+    "VENDA"
+      ? calculatePricePerSquareMeter({
+          price:
+            currentProperty.rentalPrice,
+
+          area:
+            comparisonArea,
+        })
+      : null;
+
+  const formattedSalePricePerSquareMeter =
+    formatPricePerSquareMeter(
+      salePricePerSquareMeter,
+    );
+
+  const formattedRentalPricePerSquareMeter =
+    formatPricePerSquareMeter(
+      rentalPricePerSquareMeter,
+    );
+
+  function formatMarketReferenceRange(
+    reference:
+      | {
+          pricePerSquareMeterMin: {
+            toString(): string;
+          };
+          pricePerSquareMeterMax: {
+            toString(): string;
+          };
+        }
+      | null,
+  ) {
+    if (!reference) {
+      return null;
+    }
+
+    const formatter =
+      new Intl.NumberFormat(
+        "pt-BR",
+        {
+          style: "currency",
+          currency: "BRL",
+          maximumFractionDigits: 0,
+        },
+      );
+
+    return `${formatter.format(
+      Number(
+        reference.pricePerSquareMeterMin.toString(),
+      ),
+    )} a ${formatter.format(
+      Number(
+        reference.pricePerSquareMeterMax.toString(),
+      ),
+    )}/m²`;
+  }
+
+  const formattedSaleReferenceRange =
+    formatMarketReferenceRange(
+      saleMarketReference,
+    );
+
+  const formattedRentalReferenceRange =
+    formatMarketReferenceRange(
+      rentalMarketReference,
+    );
+
   const publicMapLocation =
-    property.mapEnabled &&
+    currentProperty.mapEnabled &&
     neighborhoodMapLocation
       ? {
           latitude:
@@ -714,20 +1095,20 @@ export default async function PropertyPage({
 
   const whatsappMessage =
     encodeURIComponent(
-      `Olá! Gostaria de iniciar um atendimento com um consultor sobre este imóvel. Referência: ${property.code} — ${property.title}.`,
+      `Olá! Gostaria de iniciar um atendimento com um consultor sobre este imóvel. Referência: ${currentProperty.code} — ${currentProperty.title}.`,
     );
 
   const schedulePurpose =
-    property.purpose ===
+    currentProperty.purpose ===
     "LOCACAO"
       ? "locacao"
       : "venda";
 
   const scheduleUrl =
     `/agendar-visita?imovel=${encodeURIComponent(
-      property.code,
+      currentProperty.code,
     )}&titulo=${encodeURIComponent(
-      property.title,
+      currentProperty.title,
     )}&finalidade=${encodeURIComponent(
       schedulePurpose,
     )}`;
@@ -751,7 +1132,7 @@ export default async function PropertyPage({
           );
 
         const relatedBasePrice =
-          property.purpose ===
+          currentProperty.purpose ===
           "LOCACAO"
             ? formatCurrency(
                 item.rentalPrice,
@@ -761,7 +1142,7 @@ export default async function PropertyPage({
               );
 
         const relatedPrice =
-          property.purpose !==
+          currentProperty.purpose !==
             "LOCACAO" &&
           item.opportunityProfiles.includes(
             "LANCAMENTO",
@@ -849,10 +1230,10 @@ export default async function PropertyPage({
                 aiImageIndexes
               }
               propertyTitle={
-                property.title
+                currentProperty.title
               }
               propertyCode={
-                property.code
+                currentProperty.code
               }
               tag={tag}
             />
@@ -864,7 +1245,7 @@ export default async function PropertyPage({
             </p>
 
             <h1 className="mt-4 font-serif text-4xl font-normal leading-[1.08]">
-              {property.title}
+              {currentProperty.title}
             </h1>
 
             <p className="mt-4 text-sm leading-7 text-zinc-400">
@@ -875,7 +1256,7 @@ export default async function PropertyPage({
               <div>
                 <strong className="block font-serif text-2xl font-normal">
                   {formatArea(
-                    property.area,
+                    currentProperty.area,
                   )}
                 </strong>
 
@@ -886,14 +1267,14 @@ export default async function PropertyPage({
 
               <div>
                 <strong className="block font-serif text-2xl font-normal">
-                  {property.suites >
+                  {currentProperty.suites >
                   0
-                    ? property.suites
-                    : property.bedrooms}
+                    ? currentProperty.suites
+                    : currentProperty.bedrooms}
                 </strong>
 
                 <span className="mt-2 block text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-500">
-                  {property.suites >
+                  {currentProperty.suites >
                   0
                     ? "Suítes"
                     : "Dormitórios"}
@@ -903,7 +1284,7 @@ export default async function PropertyPage({
               <div>
                 <strong className="block font-serif text-2xl font-normal">
                   {
-                    property.parking
+                    currentProperty.parking
                   }
                 </strong>
 
@@ -922,7 +1303,7 @@ export default async function PropertyPage({
 
                   <strong className="mt-2 block font-medium text-white">
                     {formatArea(
-                      property.landArea,
+                      currentProperty.landArea,
                     )}
                   </strong>
                 </div>
@@ -935,7 +1316,7 @@ export default async function PropertyPage({
 
                 <strong className="mt-2 block font-medium text-white">
                   {
-                    property.bedrooms
+                    currentProperty.bedrooms
                   }
                 </strong>
               </div>
@@ -946,7 +1327,7 @@ export default async function PropertyPage({
                 </span>
 
                 <strong className="mt-2 block font-medium text-white">
-                  {property.bathrooms ||
+                  {currentProperty.bathrooms ||
                     "Consulte"}
                 </strong>
               </div>
@@ -958,7 +1339,7 @@ export default async function PropertyPage({
 
                 <strong className="mt-2 block font-medium text-white">
                   {formatCurrency(
-                    property.condominium,
+                    currentProperty.condominium,
                   )}
                 </strong>
               </div>
@@ -970,7 +1351,7 @@ export default async function PropertyPage({
 
                 <strong className="mt-2 block font-medium text-white">
                   {formatCurrency(
-                    property.iptu,
+                    currentProperty.iptu,
                   )}
                 </strong>
               </div>
@@ -994,7 +1375,7 @@ export default async function PropertyPage({
 
                 <strong className="font-medium text-white">
                   {
-                    property.code
+                    currentProperty.code
                   }
                 </strong>
               </p>
@@ -1010,7 +1391,7 @@ export default async function PropertyPage({
               </p>
             </div>
 
-            {property.purpose !==
+            {currentProperty.purpose !==
             "LOCACAO" ? (
               <div className="mt-8 border border-amber-500/25 bg-black/40 p-5">
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
@@ -1025,7 +1406,7 @@ export default async function PropertyPage({
               </div>
             ) : null}
 
-            {property.purpose !==
+            {currentProperty.purpose !==
             "VENDA" ? (
               <div className="mt-4 border border-amber-500/25 bg-black/40 p-5">
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
@@ -1044,64 +1425,137 @@ export default async function PropertyPage({
               disponibilidade.
             </p>
 
-            <div className="mt-6 border border-white/10 bg-[#111] p-5">
-              <div className="grid gap-5 md:grid-cols-2">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
-                    Valor do m²
+            {currentProperty.purpose ===
+            "VENDA_E_LOCACAO" ? (
+              <div className="mt-6 space-y-4">
+                <div className="border border-white/10 bg-[#111] p-5">
+                  <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                    Análise de venda
                   </p>
 
-                  <p className="mt-2 font-serif text-2xl text-white">
-                    {
-                      formattedPropertyPricePerSquareMeter
-                    }
-                  </p>
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                        Valor do m²
+                      </p>
 
-                  <p className="mt-3 text-xs leading-5 text-zinc-500">
-                    Calculado com
-                    base no preço
-                    anunciado e na
-                    área informada
-                    no cadastro.
-                  </p>
+                      <p className="mt-2 font-serif text-2xl text-white">
+                        {
+                          formattedSalePricePerSquareMeter
+                        }
+                      </p>
+
+                      <p className="mt-3 text-xs leading-5 text-zinc-500">
+                        Calculado com base no preço anunciado e na área informada no cadastro.
+                      </p>
+                    </div>
+
+                    <div className="border-t border-white/10 pt-5 md:border-l md:border-t-0 md:pl-5 md:pt-0">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
+                        Referência de Mercado B&amp;B
+                      </p>
+
+                      {formattedSaleReferenceRange ? (
+                        <p className="mt-2 font-serif text-2xl text-amber-400">
+                          {
+                            formattedSaleReferenceRange
+                          }
+                        </p>
+                      ) : null}
+
+                      <p className="mt-3 text-xs leading-5 text-zinc-500">
+                        Estimativa elaborada a partir de pesquisa periódica em portais imobiliários, ofertas públicas e imóveis comparáveis. Valores anunciados podem diferir dos valores efetivamente negociados.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="border-t border-white/10 pt-5 md:border-l md:border-t-0 md:pl-5 md:pt-0">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
-                    Referência de
-                    Mercado B&amp;B
+                <div className="border border-white/10 bg-[#111] p-5">
+                  <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                    Análise de locação
                   </p>
 
-                  {formattedReferenceRange ? (
-                    <p className="mt-2 font-serif text-2xl text-amber-400">
-                      {
-                        formattedReferenceRange
-                      }
-                    </p>
-                  ) : null}
+                  <div className="grid gap-5 md:grid-cols-2">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                        Valor do m²
+                      </p>
 
-                  <p className="mt-3 text-xs leading-5 text-zinc-500">
-                    Estimativa
-                    elaborada a
-                    partir de
-                    pesquisa
-                    periódica em
-                    portais
-                    imobiliários,
-                    ofertas
-                    públicas e
-                    imóveis
-                    comparáveis.
-                    Valores
-                    anunciados
-                    podem diferir
-                    dos valores
-                    efetivamente
-                    negociados.
-                  </p>
+                      <p className="mt-2 font-serif text-2xl text-white">
+                        {
+                          formattedRentalPricePerSquareMeter
+                        }
+                      </p>
+
+                      <p className="mt-3 text-xs leading-5 text-zinc-500">
+                        Calculado com base no preço anunciado e na área informada no cadastro.
+                      </p>
+                    </div>
+
+                    <div className="border-t border-white/10 pt-5 md:border-l md:border-t-0 md:pl-5 md:pt-0">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
+                        Referência de Mercado B&amp;B
+                      </p>
+
+                      {formattedRentalReferenceRange ? (
+                        <p className="mt-2 font-serif text-2xl text-amber-400">
+                          {
+                            formattedRentalReferenceRange
+                          }
+                        </p>
+                      ) : null}
+
+                      <p className="mt-3 text-xs leading-5 text-zinc-500">
+                        Estimativa elaborada a partir de pesquisa periódica em portais imobiliários, ofertas públicas e imóveis comparáveis. Valores anunciados podem diferir dos valores efetivamente negociados.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="mt-6 border border-white/10 bg-[#111] p-5">
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                      Valor do m²
+                    </p>
+
+                    <p className="mt-2 font-serif text-2xl text-white">
+                      {currentProperty.purpose ===
+                      "LOCACAO"
+                        ? formattedRentalPricePerSquareMeter
+                        : formattedSalePricePerSquareMeter}
+                    </p>
+
+                    <p className="mt-3 text-xs leading-5 text-zinc-500">
+                      Calculado com base no preço anunciado e na área informada no cadastro.
+                    </p>
+                  </div>
+
+                  <div className="border-t border-white/10 pt-5 md:border-l md:border-t-0 md:pl-5 md:pt-0">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
+                      Referência de Mercado B&amp;B
+                    </p>
+
+                    {(currentProperty.purpose ===
+                    "LOCACAO"
+                      ? formattedRentalReferenceRange
+                      : formattedSaleReferenceRange) ? (
+                      <p className="mt-2 font-serif text-2xl text-amber-400">
+                        {currentProperty.purpose ===
+                        "LOCACAO"
+                          ? formattedRentalReferenceRange
+                          : formattedSaleReferenceRange}
+                      </p>
+                    ) : null}
+
+                    <p className="mt-3 text-xs leading-5 text-zinc-500">
+                      Estimativa elaborada a partir de pesquisa periódica em portais imobiliários, ofertas públicas e imóveis comparáveis. Valores anunciados podem diferir dos valores efetivamente negociados.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <a
               href={scheduleUrl}
@@ -1120,13 +1574,7 @@ export default async function PropertyPage({
             </TrackedWhatsAppLink>
 
             <p className="mt-6 text-center text-[10px] leading-5 text-zinc-500">
-              Nós analisamos cada
-              imóvel antes de
-              indicá-lo aos nossos
-              clientes. Durante o
-              atendimento,
-              apresentaremos nossa
-              avaliação consultiva.
+              Nós analisamos cada imóvel antes de indicá-lo aos nossos clientes. Durante o atendimento, apresentaremos nossa avaliação consultiva.
             </p>
           </aside>
         </div>
@@ -1139,11 +1587,11 @@ export default async function PropertyPage({
           </p>
 
           <h2 className="mt-3 font-serif text-4xl font-normal">
-            {property.title}
+            {currentProperty.title}
           </h2>
 
           <div className="mt-7 whitespace-pre-line text-base leading-8 text-zinc-400">
-            {property.description ||
+            {currentProperty.description ||
               "Entre em contato com a B&B Consultoria Imobiliária para receber a apresentação completa deste imóvel."}
           </div>
         </div>
@@ -1181,8 +1629,7 @@ export default async function PropertyPage({
           </p>
 
           <h2 className="mt-3 font-serif text-4xl font-normal">
-            Estrutura e
-            diferenciais do imóvel
+            Estrutura e diferenciais do imóvel
           </h2>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -1221,10 +1668,10 @@ export default async function PropertyPage({
             publicMapLocation.radiusMeters
           }
           neighborhood={
-            property.neighborhood
+            currentProperty.neighborhood
           }
           city={
-            property.city
+            currentProperty.city
           }
         />
       ) : null}

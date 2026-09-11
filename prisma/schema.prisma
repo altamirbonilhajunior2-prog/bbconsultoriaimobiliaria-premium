@@ -212,9 +212,9 @@ model PortalLead {
   utmContent  String? @db.VarChar(250)
   gclid       String? @db.VarChar(255)
 
-  consentVersion String    @db.VarChar(50)
-  consentText    String    @db.Text
-  consentedAt    DateTime  @default(now())
+  consentVersion String   @db.VarChar(50)
+  consentText    String   @db.Text
+  consentedAt    DateTime @default(now())
   contactedAt    DateTime?
 
   createdAt DateTime @default(now())
@@ -245,7 +245,7 @@ model PropertyVisit {
   visitorAddress   String?   @db.VarChar(300)
 
   visitDate DateTime
-  visitTime String?  @db.VarChar(10)
+  visitTime String? @db.VarChar(10)
 
   companions String? @db.Text
 
@@ -328,8 +328,8 @@ enum AgentRole {
 model Agent {
   id Int @id @default(autoincrement())
 
-  name  String  @db.VarChar(180)
-  email String  @unique @db.VarChar(180)
+  name  String @db.VarChar(180)
+  email String @unique @db.VarChar(180)
   phone String? @db.VarChar(30)
   creci String? @db.VarChar(50)
 
@@ -467,6 +467,7 @@ model MarketReference {
   state        String @default("SP") @db.VarChar(2)
   city         String @db.VarChar(120)
   neighborhood String @db.VarChar(150)
+  development  String? @db.VarChar(180)
 
   purpose      PropertyPurpose
   propertyType PropertyType
@@ -481,9 +482,9 @@ model MarketReference {
   sampleSize Int     @default(0)
   active     Boolean @default(true)
 
-  calculatedAt DateTime  @default(now())
+  calculatedAt DateTime @default(now())
   validUntil   DateTime?
-  notes        String?   @db.Text
+  notes        String? @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -491,6 +492,7 @@ model MarketReference {
   evidences MarketEvidence[]
 
   @@index([city, neighborhood])
+  @@index([city, neighborhood, development])
   @@index([purpose, propertyType])
   @@index([active, calculatedAt])
 }
@@ -507,9 +509,9 @@ model MarketEvidence {
 
   propertyType PropertyType
   purpose      PropertyPurpose
-  area         Decimal?        @db.Decimal(10, 2)
+  area         Decimal? @db.Decimal(10, 2)
   bedrooms     Int?
-  price        Decimal?        @db.Decimal(15, 2)
+  price        Decimal? @db.Decimal(15, 2)
 
   pricePerSquareMeter Decimal? @db.Decimal(12, 2)
 
