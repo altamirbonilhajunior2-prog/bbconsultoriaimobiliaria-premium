@@ -13,16 +13,54 @@ export default function ApproximateLocationMap({
   neighborhood,
   city,
 }: ApproximateLocationMapProps) {
-  const latitudeSpan = Math.max(radiusMeters / 55_660, 0.009);
-  const longitudeScale = Math.cos((latitude * Math.PI) / 180);
-  const longitudeSpan = Math.max(radiusMeters / (55_660 * longitudeScale), 0.009);
+  /*
+   * O mapa público utiliza somente a localização
+   * aproximada do bairro, nunca o endereço exato
+   * do imóvel.
+   *
+   * O container do portal é bastante horizontal.
+   * Por isso o bbox precisa acompanhar aproximadamente
+   * essa proporção para o OpenStreetMap preencher
+   * corretamente toda a área disponível.
+   */
+
+  const latitudeSpan = Math.max(
+    radiusMeters / 55_660,
+    0.009,
+  );
+
+  const longitudeScale = Math.max(
+    Math.cos(
+      (latitude * Math.PI) / 180,
+    ),
+    0.2,
+  );
+
+  const baseLongitudeSpan =
+    radiusMeters /
+    (55_660 * longitudeScale);
+
+  /*
+   * Aproxima a proporção visual do mapa
+   * (largura muito maior que altura).
+   */
+  const longitudeSpan = Math.max(
+    baseLongitudeSpan * 2.2,
+    latitudeSpan * 2.2,
+    0.02,
+  );
+
   const bbox = [
     longitude - longitudeSpan,
     latitude - latitudeSpan,
     longitude + longitudeSpan,
     latitude + latitudeSpan,
   ].join(",");
-  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(bbox)}&layer=mapnik`;
+
+  const mapUrl =
+    `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(
+      bbox,
+    )}&layer=mapnik`;
 
   return (
     <section className="border-y border-white/10 bg-[#090909]">
@@ -37,14 +75,15 @@ export default function ApproximateLocationMap({
           </h2>
         </div>
 
-        <div className="relative mt-8 h-[420px] overflow-hidden border border-white/10 bg-[#111]">
+        <div className="relative mt-8 h-[420px] w-full overflow-hidden border border-white/10 bg-[#111]">
           <iframe
-            title={`Mapa de ${neighborhood}`}
+            title={`Mapa aproximado de ${neighborhood}, ${city}`}
             src={mapUrl}
-            className="h-full w-full grayscale-[0.35]"
+            className="absolute inset-0 h-full w-full border-0 grayscale-[0.35]"
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
           />
+
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="relative flex h-36 w-36 items-center justify-center rounded-full border-2 border-amber-400 bg-amber-400/20 shadow-[0_0_0_18px_rgba(245,158,11,0.08)] sm:h-44 sm:w-44">
               <svg
@@ -58,13 +97,21 @@ export default function ApproximateLocationMap({
                   strokeWidth="1.2"
                   d="M12 2a7 7 0 0 0-7 7c0 5.35 7 13 7 13s7-7.65 7-13a7 7 0 0 0-7-7Z"
                 />
-                <circle cx="12" cy="9" r="2.5" fill="#ffffff" />
+
+                <circle
+                  cx="12"
+                  cy="9"
+                  r="2.5"
+                  fill="#ffffff"
+                />
               </svg>
             </div>
           </div>
         </div>
 
         <p className="mt-4 text-xs leading-6 text-zinc-500">
+          Localização aproximada do bairro. O endereço exato
+          do imóvel não é exibido por questões de privacidade.
           Mapa © OpenStreetMap contributors.
         </p>
       </div>
