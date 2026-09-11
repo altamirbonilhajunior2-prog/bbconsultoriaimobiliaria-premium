@@ -36,6 +36,8 @@ type PropertySearchProps = {
   searchState?: HomeSearchState;
 };
 
+type DynamicCitiesByState = Record<string, string[]>;
+
 const opportunityProfiles = [
   "Moradia",
   "Investimento",
@@ -207,14 +209,60 @@ export default function PropertySearch({
     setIsCustomSearchOpen,
   ] = useState(false);
 
-  const cities = useMemo(
-    () => [
+  const [
+    dynamicCitiesByState,
+    setDynamicCitiesByState,
+  ] = useState<DynamicCitiesByState>({});
+
+  const cities = useMemo(() => {
+    const baseCities = [
       ...getCities(
         state as "SP",
       ),
-    ],
-    [state],
-  );
+    ];
+
+    const dynamicCities =
+      dynamicCitiesByState[state] ?? [];
+
+    return Array.from(
+      new Set([
+        ...baseCities,
+        ...dynamicCities,
+      ]),
+    ).sort((a, b) =>
+      a.localeCompare(
+        b,
+        "pt-BR",
+      ),
+    );
+  }, [
+    dynamicCitiesByState,
+    state,
+  ]);
+
+  useEffect(() => {
+    if (
+      cities.length === 0 ||
+      cities.includes(city)
+    ) {
+      return;
+    }
+
+    setCity(
+      cities[0] ?? "",
+    );
+
+    setNeighborhood(
+      allNeighborhoodsLabel,
+    );
+
+    setDevelopment(
+      allDevelopmentsLabel,
+    );
+  }, [
+    cities,
+    city,
+  ]);
 
   const neighborhoods =
     useMemo(
@@ -284,6 +332,43 @@ export default function PropertySearch({
     propertyType === "Casa" ||
     propertyType ===
       "Apartamento";
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDynamicCities() {
+      try {
+        const response = await fetch(
+          "/api/search-cities",
+          {
+            cache: "no-store",
+          },
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data =
+          (await response.json()) as
+            DynamicCitiesByState;
+
+        if (!cancelled) {
+          setDynamicCitiesByState(
+            data,
+          );
+        }
+      } catch {
+        // Mantém cities.ts como fallback.
+      }
+    }
+
+    loadDynamicCities();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const purposeFromUrl =
@@ -450,11 +535,29 @@ export default function PropertySearch({
     const selectedState =
       event.target.value;
 
-    const nextCities = [
+    const baseCities = [
       ...getCities(
         selectedState as "SP",
       ),
     ];
+
+    const dynamicCities =
+      dynamicCitiesByState[
+        selectedState
+      ] ?? [];
+
+    const nextCities =
+      Array.from(
+        new Set([
+          ...baseCities,
+          ...dynamicCities,
+        ]),
+      ).sort((a, b) =>
+        a.localeCompare(
+          b,
+          "pt-BR",
+        ),
+      );
 
     const nextCity =
       nextCities[0] || "";
