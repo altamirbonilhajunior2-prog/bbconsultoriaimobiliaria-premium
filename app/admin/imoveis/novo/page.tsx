@@ -14,7 +14,7 @@ import {
   type PropertyFormAccessData,
   type PropertyFormState,
 } from "./actions";
-import NeighborhoodGeolocationField from "../../components/NeighborhoodGeolocationField";
+import PropertyAddressFields from "../../components/PropertyAddressFields";
 import GoogleMapsInternalField from "../../components/GoogleMapsInternalField";
 
 type PropertyType =
@@ -670,36 +670,7 @@ export default function NovoImovelPage() {
             </p>
 
             <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-              <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
-                  Estado
-                </span>
-
-                <input
-                  name="state"
-                  type="text"
-                  required
-                  maxLength={2}
-                  defaultValue="SP"
-                  className={inputClass}
-                />
-              </label>
-
-              <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
-                  Cidade
-                </span>
-
-                <input
-                  name="city"
-                  type="text"
-                  required
-                  defaultValue="São José dos Campos"
-                  className={inputClass}
-                />
-              </label>
-
-              <NeighborhoodGeolocationField
+              <PropertyAddressFields
                 inputClass={inputClass}
                 labelClass={labelTitleClass}
               />
@@ -713,32 +684,6 @@ export default function NovoImovelPage() {
                   name="development"
                   type="text"
                   placeholder="Ex.: Alphaville II"
-                  className={inputClass}
-                />
-              </label>
-
-              <label className="flex flex-col gap-2 md:col-span-2 xl:col-span-3">
-                <span className={labelTitleClass}>
-                  Endereço
-                </span>
-
-                <input
-                  name="address"
-                  type="text"
-                  placeholder="Rua, avenida, número e complemento"
-                  className={inputClass}
-                />
-              </label>
-
-              <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
-                  CEP
-                </span>
-
-                <input
-                  name="zipCode"
-                  type="text"
-                  placeholder="00000-000"
                   className={inputClass}
                 />
               </label>
@@ -763,11 +708,17 @@ export default function NovoImovelPage() {
                   defaultChecked
                   className="h-4 w-4 accent-amber-500"
                 />
-                <span className="text-sm text-zinc-300">Exibir mapa aproximado</span>
+
+                <span className="text-sm text-zinc-300">
+                  Exibir mapa aproximado
+                </span>
               </label>
 
               <label className="flex flex-col gap-2 md:col-span-1">
-                <span className={labelTitleClass}>Raio aproximado (metros)</span>
+                <span className={labelTitleClass}>
+                  Raio aproximado (metros)
+                </span>
+
                 <input
                   name="mapRadiusMeters"
                   type="number"
@@ -1071,6 +1022,7 @@ Ar-condicionado`}
                     setPhotoNames(
                       [],
                     );
+
                     return;
                   }
 

@@ -15,7 +15,7 @@ import {
   type PropertyEditState,
   updatePropertyAction,
 } from "./actions";
-import NeighborhoodGeolocationField from "../../components/NeighborhoodGeolocationField";
+import PropertyAddressFields from "../../components/PropertyAddressFields";
 import GoogleMapsInternalField from "../../components/GoogleMapsInternalField";
 
 type PropertyType =
@@ -769,28 +769,15 @@ export default function EditPropertyForm({
           </p>
 
           <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-            <Field label="Estado">
-              <input
-                name="state"
-                required
-                maxLength={2}
-                defaultValue={
-                  property.state
-                }
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="Cidade">
-              <input
-                name="city"
-                required
-                defaultValue={
-                  property.city
-                }
-                className={inputClass}
-              />
-            </Field>
+            <PropertyAddressFields
+              inputClass={inputClass}
+              labelClass={labelTitleClass}
+              defaultState={property.state}
+              defaultCity={property.city}
+              defaultNeighborhood={property.neighborhood}
+              defaultAddress={property.address ?? ""}
+              defaultZipCode={property.zipCode ?? ""}
+            />
 
             <Field label="Proprietário">
               <select
@@ -821,41 +808,11 @@ export default function EditPropertyForm({
               </select>
             </Field>
 
-            <NeighborhoodGeolocationField
-              defaultValue={property.neighborhood}
-              inputClass={inputClass}
-            />
-
             <Field label="Condomínio ou edifício">
               <input
                 name="development"
                 defaultValue={
                   property.development ??
-                  ""
-                }
-                className={inputClass}
-              />
-            </Field>
-
-            <Field
-              label="Endereço"
-              className="md:col-span-2 xl:col-span-3"
-            >
-              <input
-                name="address"
-                defaultValue={
-                  property.address ??
-                  ""
-                }
-                className={inputClass}
-              />
-            </Field>
-
-            <Field label="CEP">
-              <input
-                name="zipCode"
-                defaultValue={
-                  property.zipCode ??
                   ""
                 }
                 className={inputClass}
