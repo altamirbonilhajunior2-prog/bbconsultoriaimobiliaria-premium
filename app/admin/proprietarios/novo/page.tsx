@@ -7,26 +7,42 @@ import { createOwner } from "../actions";
 const fieldClass =
   "h-14 w-full border border-white/10 bg-[#0b0b0b] px-4 text-sm text-white outline-none focus:border-amber-500";
 
-export default async function NovoProprietarioPage() {
-  const access = await getAccessContext();
+type PageProps = {
+  searchParams: Promise<{
+    erro?: string;
+  }>;
+};
 
-  const agents = access.isAdmin
-    ? await prisma.agent.findMany({
-        where: {
-          active: true,
-        },
+export default async function NovoProprietarioPage({
+  searchParams,
+}: PageProps) {
+  const access =
+    await getAccessContext();
 
-        orderBy: {
-          name: "asc",
-        },
+  const { erro } =
+    await searchParams;
 
-        select: {
-          id: true,
-          name: true,
-          creci: true,
-        },
-      })
-    : [];
+  const duplicateError =
+    erro === "duplicado";
+
+  const agents =
+    access.isAdmin
+      ? await prisma.agent.findMany({
+          where: {
+            active: true,
+          },
+
+          orderBy: {
+            name: "asc",
+          },
+
+          select: {
+            id: true,
+            name: true,
+            creci: true,
+          },
+        })
+      : [];
 
   return (
     <main className="min-h-screen bg-[#050505] text-white">
@@ -48,6 +64,18 @@ export default async function NovoProprietarioPage() {
             : "Este proprietário ficará automaticamente vinculado à sua captação."}
         </p>
 
+        {duplicateError ? (
+          <div className="mt-8 border border-amber-500/40 bg-amber-500/10 px-5 py-4">
+            <p className="text-sm font-semibold text-amber-300">
+              Já existe um proprietário cadastrado com estes dados.
+            </p>
+
+            <p className="mt-2 text-xs leading-5 text-zinc-400">
+              Consulte o cadastro existente antes de tentar cadastrar novamente.
+            </p>
+          </div>
+        ) : null}
+
         <form
           action={createOwner}
           className="mt-10 space-y-8"
@@ -67,17 +95,19 @@ export default async function NovoProprietarioPage() {
                   Não definido
                 </option>
 
-                {agents.map((agent) => (
-                  <option
-                    key={agent.id}
-                    value={agent.id}
-                  >
-                    {agent.name}
-                    {agent.creci
-                      ? ` — CRECI ${agent.creci}`
-                      : ""}
-                  </option>
-                ))}
+                {agents.map(
+                  (agent) => (
+                    <option
+                      key={agent.id}
+                      value={agent.id}
+                    >
+                      {agent.name}
+                      {agent.creci
+                        ? ` — CRECI ${agent.creci}`
+                        : ""}
+                    </option>
+                  ),
+                )}
               </select>
             </label>
           ) : null}

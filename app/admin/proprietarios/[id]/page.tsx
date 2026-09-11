@@ -3,7 +3,12 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "../../../../lib/prisma";
 import { getAccessContext } from "../../../../lib/admin/access";
-import { updateOwner } from "../actions";
+import {
+  deleteOwner,
+  updateOwner,
+} from "../actions";
+
+import DeleteOwnerButton from "./DeleteOwnerButton";
 
 export const dynamic = "force-dynamic";
 
@@ -14,17 +19,36 @@ type PageProps = {
   params: Promise<{
     id: string;
   }>;
+
+  searchParams: Promise<{
+    erro?: string;
+  }>;
 };
 
 export default async function EditarProprietarioPage({
   params,
+  searchParams,
 }: PageProps) {
-  const access = await getAccessContext();
+  const access =
+    await getAccessContext();
 
-  const { id } = await params;
-  const ownerId = Number(id);
+  const { id } =
+    await params;
 
-  if (!Number.isInteger(ownerId)) {
+  const { erro } =
+    await searchParams;
+
+  const duplicateError =
+    erro === "duplicado";
+
+  const ownerId =
+    Number(id);
+
+  if (
+    !Number.isInteger(
+      ownerId,
+    )
+  ) {
     notFound();
   }
 
@@ -37,7 +61,8 @@ export default async function EditarProprietarioPage({
           ? {}
           : {
               capturedById:
-                access.agentId ?? -1,
+                access.agentId ??
+                -1,
             }),
       },
 
@@ -66,26 +91,33 @@ export default async function EditarProprietarioPage({
     notFound();
   }
 
-  const agents = access.isAdmin
-    ? await prisma.agent.findMany({
-        where: {
-          active: true,
-        },
+  const agents =
+    access.isAdmin
+      ? await prisma.agent.findMany({
+          where: {
+            active: true,
+          },
 
-        orderBy: {
-          name: "asc",
-        },
+          orderBy: {
+            name: "asc",
+          },
 
-        select: {
-          id: true,
-          name: true,
-          creci: true,
-        },
-      })
-    : [];
+          select: {
+            id: true,
+            name: true,
+            creci: true,
+          },
+        })
+      : [];
 
-  const action =
+  const updateAction =
     updateOwner.bind(
+      null,
+      owner.id,
+    );
+
+  const deleteAction =
+    deleteOwner.bind(
       null,
       owner.id,
     );
@@ -110,8 +142,20 @@ export default async function EditarProprietarioPage({
             "Não definido"}
         </p>
 
+        {duplicateError ? (
+          <div className="mt-8 border border-amber-500/40 bg-amber-500/10 px-5 py-4">
+            <p className="text-sm font-semibold text-amber-300">
+              Já existe um proprietário cadastrado com estes dados.
+            </p>
+
+            <p className="mt-2 text-xs leading-5 text-zinc-400">
+              Verifique o cadastro existente antes de salvar alterações.
+            </p>
+          </div>
+        ) : null}
+
         <form
-          action={action}
+          action={updateAction}
           className="mt-10 space-y-8"
         >
           {access.isAdmin ? (
@@ -126,23 +170,31 @@ export default async function EditarProprietarioPage({
                   owner.capturedById?.toString() ??
                   ""
                 }
-                className={fieldClass}
+                className={
+                  fieldClass
+                }
               >
                 <option value="">
                   Não definido
                 </option>
 
-                {agents.map((agent) => (
-                  <option
-                    key={agent.id}
-                    value={agent.id}
-                  >
-                    {agent.name}
-                    {agent.creci
-                      ? ` — CRECI ${agent.creci}`
-                      : ""}
-                  </option>
-                ))}
+                {agents.map(
+                  (agent) => (
+                    <option
+                      key={
+                        agent.id
+                      }
+                      value={
+                        agent.id
+                      }
+                    >
+                      {agent.name}
+                      {agent.creci
+                        ? ` — CRECI ${agent.creci}`
+                        : ""}
+                    </option>
+                  ),
+                )}
               </select>
             </label>
           ) : null}
@@ -151,69 +203,91 @@ export default async function EditarProprietarioPage({
             <Field
               label="Nome completo *"
               name="name"
-              value={owner.name}
+              value={
+                owner.name
+              }
               required
             />
 
             <Field
               label="Telefone / WhatsApp"
               name="phone"
-              value={owner.phone}
+              value={
+                owner.phone
+              }
             />
 
             <Field
               label="E-mail"
               name="email"
-              value={owner.email}
+              value={
+                owner.email
+              }
               type="email"
             />
 
             <Field
               label="RG"
               name="rg"
-              value={owner.rg}
+              value={
+                owner.rg
+              }
             />
 
             <Field
               label="CPF"
               name="cpf"
-              value={owner.cpf}
+              value={
+                owner.cpf
+              }
             />
 
             <Field
               label="CEP"
               name="zipCode"
-              value={owner.zipCode}
+              value={
+                owner.zipCode
+              }
             />
 
             <Field
               label="Endereço"
               name="address"
-              value={owner.address}
+              value={
+                owner.address
+              }
             />
 
             <Field
               label="Complemento"
               name="complement"
-              value={owner.complement}
+              value={
+                owner.complement
+              }
             />
 
             <Field
               label="Bairro"
               name="neighborhood"
-              value={owner.neighborhood}
+              value={
+                owner.neighborhood
+              }
             />
 
             <Field
               label="Cidade"
               name="city"
-              value={owner.city}
+              value={
+                owner.city
+              }
             />
 
             <Field
               label="Estado"
               name="state"
-              value={owner.state}
+              value={
+                owner.state
+              }
               maxLength={2}
             />
           </div>
@@ -226,14 +300,16 @@ export default async function EditarProprietarioPage({
             <textarea
               name="notes"
               defaultValue={
-                owner.notes || ""
+                owner.notes ||
+                ""
               }
               rows={5}
               className="w-full border border-white/10 bg-[#0b0b0b] p-4 text-sm text-white outline-none focus:border-amber-500"
             />
           </label>
 
-          {owner.properties.length > 0 ? (
+          {owner.properties
+            .length > 0 ? (
             <section className="border border-white/10 bg-[#0b0b0b] p-6">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
                 Imóveis vinculados
@@ -241,14 +317,23 @@ export default async function EditarProprietarioPage({
 
               <div className="mt-4 space-y-3">
                 {owner.properties.map(
-                  (property) => (
+                  (
+                    property,
+                  ) => (
                     <Link
-                      key={property.code}
+                      key={
+                        property.code
+                      }
                       href={`/admin/imoveis/${property.code}`}
                       className="block border border-white/10 p-4 text-sm text-zinc-300 hover:border-amber-500/60"
                     >
-                      {property.code} —{" "}
-                      {property.title}
+                      {
+                        property.code
+                      }{" "}
+                      —{" "}
+                      {
+                        property.title
+                      }
                     </Link>
                   ),
                 )}
@@ -263,6 +348,30 @@ export default async function EditarProprietarioPage({
             Salvar alterações
           </button>
         </form>
+
+        <section className="mt-12 border-t border-white/10 pt-10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-red-400">
+            Zona de exclusão
+          </p>
+
+          <h2 className="mt-3 font-serif text-3xl font-normal">
+            Excluir proprietário
+          </h2>
+
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
+            Utilize esta opção quando
+            desejar remover o cadastro
+            deste proprietário.
+          </p>
+
+          <div className="mt-6">
+            <DeleteOwnerButton
+              action={
+                deleteAction
+              }
+            />
+          </div>
+        </section>
       </div>
     </main>
   );
@@ -292,10 +401,16 @@ function Field({
       <input
         name={name}
         type={type}
-        defaultValue={value || ""}
+        defaultValue={
+          value || ""
+        }
         required={required}
-        maxLength={maxLength}
-        className={fieldClass}
+        maxLength={
+          maxLength
+        }
+        className={
+          fieldClass
+        }
       />
     </label>
   );
