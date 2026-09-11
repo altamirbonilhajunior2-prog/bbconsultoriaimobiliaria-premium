@@ -283,7 +283,9 @@ export default function PropertyAddressFields({
       city.trim();
 
     const normalizedStreet =
-      address.trim();
+      normalizeStreetForSearch(
+        address,
+      );
 
     if (
       normalizedState.length !== 2
@@ -731,6 +733,18 @@ export default function PropertyAddressFields({
       ) : null}
     </>
   );
+}
+
+function normalizeStreetForSearch(
+  value: string,
+) {
+  return value
+    .trim()
+    .replace(
+      /\s+\d+[A-Za-z]?(?:\s*[-/]\s*\d+[A-Za-z]?)?\s*$/,
+      "",
+    )
+    .trim();
 }
 
 function formatCep(
