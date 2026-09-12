@@ -17,6 +17,7 @@ type Step =
   | "bedrooms"
   | "objective"
   | "details"
+  | "timeline"
   | "summary";
 
 type IrisAnswers = {
@@ -27,6 +28,7 @@ type IrisAnswers = {
   bedrooms: string;
   objective: string;
   details: string;
+  timeline: string;
 };
 
 type IrisSearchResult = {
@@ -62,6 +64,7 @@ const initialAnswers: IrisAnswers = {
   bedrooms: "",
   objective: "",
   details: "",
+  timeline: "",
 };
 
 const purchaseValueOptions = [
@@ -96,6 +99,15 @@ const objectiveOptions = [
   "Renda",
   "Valorização patrimonial",
   "Outro",
+];
+
+const timelineOptions = [
+  "Imediatamente",
+  "Em até 30 dias",
+  "De 1 a 3 meses",
+  "De 3 a 6 meses",
+  "Mais de 6 meses",
+  "Ainda não defini",
 ];
 
 function formatCurrency(
@@ -254,6 +266,17 @@ export default function IrisAssistant() {
           value:
             summaryValue(
               answers.details,
+            ),
+        },
+        {
+          label:
+            answers.purpose ===
+            "Locação"
+              ? "Prazo para mudança"
+              : "Prazo para compra",
+          value:
+            summaryValue(
+              answers.timeline,
             ),
         },
       ],
@@ -512,7 +535,7 @@ export default function IrisAssistant() {
     }
   }
 
-  async function handleDetailsSubmit(
+  function handleDetailsSubmit(
     event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
@@ -532,6 +555,23 @@ export default function IrisAssistant() {
     const nextAnswers: IrisAnswers = {
       ...answers,
       details,
+    };
+
+    setAnswers(
+      nextAnswers,
+    );
+
+    setStep(
+      "timeline",
+    );
+  }
+
+  async function chooseTimeline(
+    timeline: string,
+  ) {
+    const nextAnswers: IrisAnswers = {
+      ...answers,
+      timeline,
     };
 
     setAnswers(
@@ -585,6 +625,14 @@ export default function IrisAssistant() {
       )}`,
       `Objetivo: ${summaryValue(
         answers.objective,
+      )}`,
+      `${
+        answers.purpose ===
+        "Locação"
+          ? "Prazo para mudança"
+          : "Prazo para compra"
+      }: ${summaryValue(
+        answers.timeline,
       )}`,
       "",
       "Preferências adicionais:",
@@ -879,7 +927,7 @@ export default function IrisAssistant() {
 
           <p className="mt-2 text-xs leading-5 text-zinc-500">
             Exemplos: metragem, condomínio específico, piscina, escritório,
-            posição solar, prazo ou qualquer outra característica importante.
+            posição solar ou qualquer outra característica importante.
           </p>
 
           <form
@@ -902,9 +950,46 @@ export default function IrisAssistant() {
               type="submit"
               className="mt-3 min-h-12 w-full rounded-xl bg-[#d5a85a] px-5 text-xs font-bold uppercase tracking-[0.14em] text-black transition hover:bg-[#e8c47d]"
             >
-              Finalizar minha busca
+              Continuar
             </button>
           </form>
+        </>
+      );
+    }
+
+    if (
+      step === "timeline"
+    ) {
+      return (
+        <>
+          <UserAnswer>
+            {answers.details ||
+              "Nenhuma preferência adicional"}
+          </UserAnswer>
+
+          <IrisQuestion>
+            {answers.purpose ===
+            "Locação"
+              ? "Em quanto tempo pretende se mudar?"
+              : "Em quanto tempo pretende comprar?"}
+          </IrisQuestion>
+
+          <Options>
+            {timelineOptions.map(
+              (item) => (
+                <OptionButton
+                  key={item}
+                  onClick={() =>
+                    chooseTimeline(
+                      item,
+                    )
+                  }
+                >
+                  {item}
+                </OptionButton>
+              ),
+            )}
+          </Options>
         </>
       );
     }

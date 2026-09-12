@@ -46,7 +46,10 @@ function normalizePropertyType(
 function normalizePurpose(
   value?: string,
 ): PropertyPurpose[] | undefined {
-  if (value === "Compra") {
+  if (
+    value === "Compra" ||
+    value === "Investimento"
+  ) {
     return [
       PropertyPurpose.VENDA,
       PropertyPurpose.VENDA_E_LOCACAO,
@@ -330,7 +333,20 @@ export async function POST(
                       : {}),
                   },
                 }
-            : {}),
+            : body.purpose === "Locação"
+              ? {
+                  rentalPrice: {
+                    not: null,
+                  },
+                }
+              : body.purpose === "Compra" ||
+                  body.purpose === "Investimento"
+                ? {
+                    price: {
+                      not: null,
+                    },
+                  }
+                : {}),
         },
 
         include: {
@@ -362,6 +378,14 @@ export async function POST(
         take: 6,
       });
 
+    let matchType:
+      | "exact"
+      | "similar"
+      | "none" =
+      properties.length > 0
+        ? "exact"
+        : "none";
+
     if (properties.length === 0) {
       properties =
         await prisma.property.findMany({
@@ -372,6 +396,29 @@ export async function POST(
             ...(propertyType
               ? { propertyType }
               : {}),
+
+            ...(purposes
+              ? {
+                  purpose: {
+                    in: purposes,
+                  },
+                }
+              : {}),
+
+            ...(body.purpose === "Locação"
+              ? {
+                  rentalPrice: {
+                    not: null,
+                  },
+                }
+              : body.purpose === "Compra" ||
+                  body.purpose === "Investimento"
+                ? {
+                    price: {
+                      not: null,
+                    },
+                  }
+                : {}),
 
             ...(region
               ? {
@@ -424,6 +471,10 @@ export async function POST(
 
           take: 6,
         });
+
+      if (properties.length > 0) {
+        matchType = "similar";
+      }
     }
 
     const results =
@@ -483,6 +534,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       count: results.length,
+      matchType,
       results,
     });
 
