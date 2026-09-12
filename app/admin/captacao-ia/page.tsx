@@ -1,22 +1,34 @@
 import Link from "next/link";
+
 import { prisma } from "../../../lib/prisma";
+
+import DeleteOpportunityButton from "./DeleteOpportunityButton";
+import ExternalSearchPanel from "./ExternalSearchPanel";
 
 export const dynamic = "force-dynamic";
 
-const sourceLabels: Record<string, string> = {
+const sourceLabels: Record<
+  string,
+  string
+> = {
   OLX: "OLX",
   ZAP: "ZAP",
   VIVAREAL: "Viva Real",
   IMOVELWEB: "Imovelweb",
-  SITE_IMOBILIARIA: "Site imobiliária",
+  SITE_IMOBILIARIA:
+    "Site imobiliária",
   OUTRO: "Outro",
 };
 
-const statusLabels: Record<string, string> = {
+const statusLabels: Record<
+  string,
+  string
+> = {
   ENCONTRADO: "Encontrado",
   SELECIONADO: "Selecionado",
   CONTATADO: "Contatado",
-  AGUARDANDO_AUTORIZACAO: "Aguardando autorização",
+  AGUARDANDO_AUTORIZACAO:
+    "Aguardando autorização",
   AUTORIZADO: "Autorizado",
   PUBLICADO: "Publicado",
   DESCARTADO: "Descartado",
@@ -24,7 +36,9 @@ const statusLabels: Record<string, string> = {
 };
 
 function formatCurrency(
-  value: { toString(): string } | null,
+  value: {
+    toString(): string;
+  } | null,
 ) {
   if (value === null) {
     return "Não informado";
@@ -34,7 +48,11 @@ function formatCurrency(
     value.toString(),
   );
 
-  if (!Number.isFinite(numericValue)) {
+  if (
+    !Number.isFinite(
+      numericValue,
+    )
+  ) {
     return "Não informado";
   }
 
@@ -84,26 +102,28 @@ function getStatusClass(
 
 export default async function AdminCaptacaoIAPage() {
   const opportunities =
-    await prisma.acquisitionOpportunity.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
+    await prisma
+      .acquisitionOpportunity
+      .findMany({
+        orderBy: {
+          createdAt: "desc",
+        },
 
-      select: {
-        id: true,
-        source: true,
-        sourceUrl: true,
-        sourceTitle: true,
-        status: true,
-        city: true,
-        neighborhood: true,
-        development: true,
-        price: true,
-        rentalPrice: true,
-        score: true,
-        createdAt: true,
-      },
-    });
+        select: {
+          id: true,
+          source: true,
+          sourceUrl: true,
+          sourceTitle: true,
+          status: true,
+          city: true,
+          neighborhood: true,
+          development: true,
+          price: true,
+          rentalPrice: true,
+          score: true,
+          createdAt: true,
+        },
+      });
 
   const totalFound =
     opportunities.filter(
@@ -196,11 +216,12 @@ export default async function AdminCaptacaoIAPage() {
             </h1>
 
             <p className="mt-4 max-w-3xl text-sm leading-7 text-zinc-400">
-              Radar interno para localizar,
-              selecionar, acompanhar e
-              transformar oportunidades de
-              captação em imóveis autorizados
-              para o Portal B&amp;B.
+              Radar interno para
+              localizar, selecionar,
+              acompanhar e transformar
+              oportunidades de captação
+              em imóveis autorizados para
+              o Portal B&amp;B.
             </p>
           </div>
 
@@ -212,6 +233,8 @@ export default async function AdminCaptacaoIAPage() {
           </Link>
         </header>
 
+        <ExternalSearchPanel />
+
         <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           {stages.map(
             (stage) => (
@@ -220,15 +243,21 @@ export default async function AdminCaptacaoIAPage() {
                 className="border border-white/10 bg-[#0b0b0b] p-6"
               >
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
-                  {stage.label}
+                  {
+                    stage.label
+                  }
                 </p>
 
                 <strong className="mt-3 block font-serif text-4xl font-normal text-white">
-                  {stage.value}
+                  {
+                    stage.value
+                  }
                 </strong>
 
                 <p className="mt-3 text-xs leading-5 text-zinc-500">
-                  {stage.detail}
+                  {
+                    stage.detail
+                  }
                 </p>
               </article>
             ),
@@ -236,7 +265,7 @@ export default async function AdminCaptacaoIAPage() {
         </section>
 
         <section className="mt-10 overflow-hidden border border-white/10">
-          <div className="hidden grid-cols-[110px_1.7fr_1fr_1fr_160px_160px] gap-5 border-b border-white/10 bg-[#0b0b0b] px-6 py-4 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500 lg:grid">
+          <div className="hidden grid-cols-[110px_1.7fr_1fr_1fr_160px_260px] gap-5 border-b border-white/10 bg-[#0b0b0b] px-6 py-4 text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500 lg:grid">
             <span>
               Fonte
             </span>
@@ -270,20 +299,28 @@ export default async function AdminCaptacaoIAPage() {
                   opportunity,
                 ) => {
                   const location =
-                    opportunity.development ??
-                    opportunity.neighborhood ??
+                    opportunity
+                      .development ??
+                    opportunity
+                      .neighborhood ??
                     "Localização não informada";
 
                   const value =
                     opportunity.price ??
-                    opportunity.rentalPrice;
+                    opportunity
+                      .rentalPrice;
+
+                  const opportunityTitle =
+                    opportunity
+                      .sourceTitle ??
+                    `Captação #${opportunity.id}`;
 
                   return (
                     <article
                       key={
                         opportunity.id
                       }
-                      className="grid gap-5 border-b border-white/10 bg-[#080808] px-6 py-6 last:border-b-0 lg:grid-cols-[110px_1.7fr_1fr_1fr_160px_160px] lg:items-center"
+                      className="grid gap-5 border-b border-white/10 bg-[#080808] px-6 py-6 last:border-b-0 lg:grid-cols-[110px_1.7fr_1fr_1fr_160px_260px] lg:items-center"
                     >
                       <div>
                         <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-600 lg:hidden">
@@ -295,7 +332,8 @@ export default async function AdminCaptacaoIAPage() {
                             opportunity
                               .source
                           ] ??
-                            opportunity.source}
+                            opportunity
+                              .source}
                         </p>
                       </div>
 
@@ -305,17 +343,21 @@ export default async function AdminCaptacaoIAPage() {
                         </span>
 
                         <h2 className="mt-1 font-serif text-xl font-normal text-white lg:mt-0">
-                          {opportunity.sourceTitle ??
-                            `Captação #${opportunity.id}`}
+                          {
+                            opportunityTitle
+                          }
                         </h2>
 
-                        {opportunity.score !==
+                        {opportunity
+                          .score !==
                         null ? (
                           <p className="mt-2 text-xs text-zinc-500">
-                            Score B&amp;B:{" "}
+                            Score
+                            B&amp;B:{" "}
                             <span className="text-amber-400">
                               {
-                                opportunity.score
+                                opportunity
+                                  .score
                               }
                               /100
                             </span>
@@ -329,12 +371,15 @@ export default async function AdminCaptacaoIAPage() {
                         </span>
 
                         <p className="mt-1 text-sm text-zinc-300 lg:mt-0">
-                          {location}
+                          {
+                            location
+                          }
                         </p>
 
                         <p className="mt-1 text-xs text-zinc-500">
                           {
-                            opportunity.city
+                            opportunity
+                              .city
                           }
                         </p>
                       </div>
@@ -354,21 +399,24 @@ export default async function AdminCaptacaoIAPage() {
                       <div>
                         <span
                           className={`inline-flex border px-3 py-2 text-[9px] font-bold uppercase tracking-[0.14em] ${getStatusClass(
-                            opportunity.status,
+                            opportunity
+                              .status,
                           )}`}
                         >
                           {statusLabels[
                             opportunity
                               .status
                           ] ??
-                            opportunity.status}
+                            opportunity
+                              .status}
                         </span>
                       </div>
 
-                      <div className="flex gap-3 lg:justify-end">
+                      <div className="flex flex-wrap gap-3 lg:justify-end">
                         <a
                           href={
-                            opportunity.sourceUrl
+                            opportunity
+                              .sourceUrl
                           }
                           target="_blank"
                           rel="noreferrer"
@@ -383,6 +431,15 @@ export default async function AdminCaptacaoIAPage() {
                         >
                           Abrir
                         </Link>
+
+                        <DeleteOpportunityButton
+                          opportunityId={
+                            opportunity.id
+                          }
+                          opportunityTitle={
+                            opportunityTitle
+                          }
+                        />
                       </div>
                     </article>
                   );
