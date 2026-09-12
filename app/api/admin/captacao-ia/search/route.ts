@@ -376,6 +376,8 @@ export async function POST(
       await openai.responses.create({
         model: "gpt-4.1-mini",
 
+        max_output_tokens: 12_000,
+
         tools: [
           {
             type: "web_search",
@@ -446,6 +448,7 @@ export async function POST(
               "- Ordene da maior compatibilidade para a menor.",
               "- price deve ser numérico em reais quando for possível identificar.",
               "- Se um dado não estiver disponível, use null para números e string vazia para textos.",
+              "- Seja conciso: compatibilityReason e notes devem ter no máximo 180 caracteres cada.",
             ].join("\n"),
           },
 
@@ -646,6 +649,16 @@ export async function POST(
           },
         },
       });
+
+    if (response.status !== "completed") {
+      const reason =
+        response.incomplete_details
+          ?.reason || response.status;
+
+      throw new Error(
+        `A busca externa retornou uma resposta incompleta: ${reason}.`,
+      );
+    }
 
     const output =
       response.output_text;
