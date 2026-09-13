@@ -1027,6 +1027,21 @@ export default async function PropertyPage({
       rentalPricePerSquareMeter,
     );
 
+  const shouldMarkCalculatedPricePerSquareMeter =
+    currentProperty.code.toUpperCase() ===
+    "BBA002";
+
+  const displayedSalePricePerSquareMeter =
+    shouldMarkCalculatedPricePerSquareMeter &&
+    salePricePerSquareMeter !== null
+      ? `A partir de ${formattedSalePricePerSquareMeter}*`
+      : formattedSalePricePerSquareMeter;
+
+  const displayedRentalPricePerSquareMeter =
+    shouldMarkCalculatedPricePerSquareMeter &&
+    rentalPricePerSquareMeter !== null
+      ? `A partir de ${formattedRentalPricePerSquareMeter}*`
+      : formattedRentalPricePerSquareMeter;
   function formatMarketReferenceRange(
     reference:
       | {
@@ -1441,7 +1456,7 @@ export default async function PropertyPage({
 
                       <p className="mt-2 font-serif text-2xl text-white">
                         {
-                          formattedSalePricePerSquareMeter
+                          displayedSalePricePerSquareMeter
                         }
                       </p>
 
@@ -1483,7 +1498,7 @@ export default async function PropertyPage({
 
                       <p className="mt-2 font-serif text-2xl text-white">
                         {
-                          formattedRentalPricePerSquareMeter
+                          displayedRentalPricePerSquareMeter
                         }
                       </p>
 
@@ -1523,8 +1538,8 @@ export default async function PropertyPage({
                     <p className="mt-2 font-serif text-2xl text-white">
                       {currentProperty.purpose ===
                       "LOCACAO"
-                        ? formattedRentalPricePerSquareMeter
-                        : formattedSalePricePerSquareMeter}
+                        ? displayedRentalPricePerSquareMeter
+                        : displayedSalePricePerSquareMeter}
                     </p>
 
                     <p className="mt-3 text-xs leading-5 text-zinc-500">
