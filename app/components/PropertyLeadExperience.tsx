@@ -77,7 +77,7 @@ export default function PropertyLeadExperience({
   const showPrompt =
     useCallback(
       (imageIndex: number) => {
-        if (imageIndex !== 3) {
+        if (imageIndex !== 4) {
           return;
         }
 
