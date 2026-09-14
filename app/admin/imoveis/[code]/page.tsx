@@ -7,7 +7,9 @@ import EditPropertyForm from "./EditPropertyForm";
 import ImageManager from "./ImageManager";
 import PublicationControl from "./PublicationControl";
 import DeleteVisitButton from "./DeleteVisitButton";
+import DeleteProposalButton from "./DeleteProposalButton";
 import { deletePropertyVisit } from "./visit-actions";
+import { deletePropertyProposal } from "./proposal-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -777,6 +779,13 @@ export default async function EditarImovelPage({
             <div className="mt-6 space-y-4">
               {property.proposals.map(
                 (proposal) => {
+                  const deleteProposalAction =
+                    deletePropertyProposal.bind(
+                      null,
+                      property.code,
+                      proposal.id,
+                    );
+
                   const resourceLabels = [
                     proposal.usesOwnResources
                       ? "Recursos próprios"
@@ -1057,6 +1066,16 @@ export default async function EditarImovelPage({
                             </span>
                           </div>
                         </div>
+
+                        {access.isAdmin ? (
+                          <div className="flex shrink-0 flex-wrap gap-2 lg:flex-col">
+                            <DeleteProposalButton
+                              onDelete={
+                                deleteProposalAction
+                              }
+                            />
+                          </div>
+                        ) : null}
                       </div>
                     </article>
                   );
