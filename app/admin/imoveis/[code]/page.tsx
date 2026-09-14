@@ -59,6 +59,14 @@ const visitReturnLabels = {
   SEM_INTERESSE: "Sem interesse",
 } as const;
 
+const proposalStatusLabels = {
+  EM_ANALISE: "Em análise",
+  CONTRAPROPOSTA: "Contraproposta",
+  ACEITA: "Aceita",
+  RECUSADA: "Recusada",
+  CANCELADA: "Cancelada",
+} as const;
+
 function decimalToString(
   value: { toString(): string } | null,
 ) {
@@ -67,9 +75,51 @@ function decimalToString(
     : value.toString();
 }
 
+function formatCurrency(
+  value: { toString(): string } | null,
+) {
+  if (value === null) {
+    return "Não informado";
+  }
+
+  const numericValue = Number(
+    value.toString(),
+  );
+
+  if (!Number.isFinite(numericValue)) {
+    return "Não informado";
+  }
+
+  return new Intl.NumberFormat(
+    "pt-BR",
+    {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    },
+  ).format(numericValue);
+}
+
 function formatVisitDate(
   value: Date,
 ) {
+  return new Intl.DateTimeFormat(
+    "pt-BR",
+    {
+      dateStyle: "short",
+      timeZone: "America/Sao_Paulo",
+    },
+  ).format(value);
+}
+
+function formatOptionalDate(
+  value: Date | null,
+) {
+  if (!value) {
+    return "Não informada";
+  }
+
   return new Intl.DateTimeFormat(
     "pt-BR",
     {
@@ -169,6 +219,23 @@ export default async function EditarImovelPage({
                 "desc",
             },
           ],
+        },
+
+        proposals: {
+          orderBy: {
+            createdAt:
+              "desc",
+          },
+
+          include: {
+            agent: {
+              select: {
+                id: true,
+                name: true,
+                creci: true,
+              },
+            },
+          },
         },
       },
     });
@@ -404,6 +471,15 @@ export default async function EditarImovelPage({
               className="inline-flex min-h-11 items-center justify-center border border-amber-500/40 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-300 transition hover:border-amber-400 hover:text-amber-200"
             >
               Nova ficha de visita
+            </Link>
+
+            <Link
+              href={`/admin/imoveis/${property.code.toLowerCase()}/fichas/proposta`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-11 items-center justify-center bg-amber-500 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-black transition hover:bg-amber-400"
+            >
+              Nova proposta
             </Link>
 
             <Link
@@ -660,6 +736,338 @@ export default async function EditarImovelPage({
               <p className="text-sm text-zinc-500">
                 O histórico aparecerá aqui assim que a primeira
                 ficha de visita for salva.
+              </p>
+            </div>
+          )}
+        </section>
+
+        <section className="mt-10 border border-white/10 bg-white/[0.03] p-6 lg:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+                CRM
+              </p>
+
+              <h2 className="mt-2 font-serif text-3xl font-normal">
+                Histórico de propostas
+              </h2>
+
+              <p className="mt-2 text-sm text-zinc-400">
+                {property.proposals.length === 0
+                  ? "Nenhuma proposta registrada para este imóvel."
+                  : `${property.proposals.length} ${
+                      property.proposals.length === 1
+                        ? "proposta registrada"
+                        : "propostas registradas"
+                    }.`}
+              </p>
+            </div>
+
+            <Link
+              href={`/admin/imoveis/${property.code.toLowerCase()}/fichas/proposta`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-11 items-center justify-center bg-amber-500 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-black transition hover:bg-amber-400"
+            >
+              Registrar nova proposta
+            </Link>
+          </div>
+
+          {property.proposals.length > 0 ? (
+            <div className="mt-6 space-y-4">
+              {property.proposals.map(
+                (proposal) => {
+                  const resourceLabels = [
+                    proposal.usesOwnResources
+                      ? "Recursos próprios"
+                      : null,
+
+                    proposal.usesFinancing
+                      ? "Financiamento"
+                      : null,
+
+                    proposal.usesFgts
+                      ? "FGTS"
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" • ");
+
+                  return (
+                    <article
+                      key={proposal.id}
+                      className="border border-white/10 bg-black/30 p-5"
+                    >
+                      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h3 className="text-lg font-semibold text-white">
+                              {proposal.proposerName}
+                            </h3>
+
+                            <span
+                              className={`border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${
+                                proposal.status ===
+                                "ACEITA"
+                                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                                  : proposal.status ===
+                                      "RECUSADA" ||
+                                    proposal.status ===
+                                      "CANCELADA"
+                                    ? "border-red-500/30 bg-red-500/10 text-red-300"
+                                    : "border-amber-500/30 bg-amber-500/10 text-amber-300"
+                              }`}
+                            >
+                              {
+                                proposalStatusLabels[
+                                  proposal.status
+                                ]
+                              }
+                            </span>
+                          </div>
+
+                          <div className="mt-4 grid gap-4 text-sm text-zinc-300 sm:grid-cols-2 lg:grid-cols-4">
+                            <div>
+                              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                Valor oferecido
+                              </p>
+
+                              <p className="mt-1 font-semibold text-white">
+                                {formatCurrency(
+                                  proposal.offeredValue,
+                                )}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                Sinal / entrada
+                              </p>
+
+                              <p className="mt-1">
+                                {formatCurrency(
+                                  proposal.downPaymentValue,
+                                )}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                Validade
+                              </p>
+
+                              <p className="mt-1">
+                                {formatOptionalDate(
+                                  proposal.validUntil,
+                                )}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                Registro criado
+                              </p>
+
+                              <p className="mt-1">
+                                {formatCreatedAt(
+                                  proposal.createdAt,
+                                )}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-5 grid gap-4 border-t border-white/10 pt-4 text-sm text-zinc-400 sm:grid-cols-2">
+                            <div>
+                              <span className="font-semibold text-zinc-300">
+                                CPF:
+                              </span>{" "}
+                              {proposal.proposerDocument ??
+                                "Não informado"}
+                            </div>
+
+                            <div>
+                              <span className="font-semibold text-zinc-300">
+                                Telefone:
+                              </span>{" "}
+                              {proposal.proposerPhone ??
+                                "Não informado"}
+                            </div>
+
+                            <div>
+                              <span className="font-semibold text-zinc-300">
+                                E-mail:
+                              </span>{" "}
+                              {proposal.proposerEmail ??
+                                "Não informado"}
+                            </div>
+
+                            <div>
+                              <span className="font-semibold text-zinc-300">
+                                Corretor:
+                              </span>{" "}
+                              {proposal.agent ? (
+                                <>
+                                  {proposal.agent.name}
+
+                                  {proposal.agent.creci
+                                    ? ` • CRECI ${proposal.agent.creci}`
+                                    : ""}
+                                </>
+                              ) : (
+                                "Não informado"
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="mt-5 border-t border-white/10 pt-4">
+                            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                              Origem dos recursos
+                            </p>
+
+                            <p className="mt-2 text-sm text-zinc-300">
+                              {resourceLabels ||
+                                "Não informada"}
+                            </p>
+                          </div>
+
+                          {proposal.paymentTerms ? (
+                            <div className="mt-5 border-t border-white/10 pt-4">
+                              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                Condições de pagamento
+                              </p>
+
+                              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-300">
+                                {proposal.paymentTerms}
+                              </p>
+                            </div>
+                          ) : null}
+
+                          {proposal.deadline ? (
+                            <div className="mt-4">
+                              <span className="font-semibold text-zinc-300">
+                                Prazo:
+                              </span>{" "}
+                              <span className="text-sm text-zinc-400">
+                                {proposal.deadline}
+                              </span>
+                            </div>
+                          ) : null}
+
+                          {proposal.specialConditions ? (
+                            <div className="mt-5 border-t border-white/10 pt-4">
+                              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                Condições especiais
+                              </p>
+
+                              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-300">
+                                {
+                                  proposal.specialConditions
+                                }
+                              </p>
+                            </div>
+                          ) : null}
+
+                          {proposal.notes ? (
+                            <div className="mt-5 border-t border-white/10 pt-4">
+                              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                Observações
+                              </p>
+
+                              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-300">
+                                {proposal.notes}
+                              </p>
+                            </div>
+                          ) : null}
+
+                          {proposal.counterOfferValue ||
+                          proposal.counterOfferTerms ||
+                          proposal.counterOfferNotes ? (
+                            <div className="mt-5 border border-amber-500/20 bg-amber-500/5 p-4">
+                              <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-amber-300">
+                                Contraproposta do proprietário
+                              </p>
+
+                              {proposal.counterOfferValue ? (
+                                <p className="mt-3 text-sm text-zinc-300">
+                                  <span className="font-semibold">
+                                    Valor:
+                                  </span>{" "}
+                                  {formatCurrency(
+                                    proposal.counterOfferValue,
+                                  )}
+                                </p>
+                              ) : null}
+
+                              {proposal.counterOfferTerms ? (
+                                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-300">
+                                  {
+                                    proposal.counterOfferTerms
+                                  }
+                                </p>
+                              ) : null}
+
+                              {proposal.counterOfferNotes ? (
+                                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-400">
+                                  {
+                                    proposal.counterOfferNotes
+                                  }
+                                </p>
+                              ) : null}
+                            </div>
+                          ) : null}
+
+                          <div className="mt-5 flex flex-wrap gap-3 border-t border-white/10 pt-4">
+                            <span
+                              className={`border px-3 py-2 text-[9px] font-bold uppercase tracking-[0.1em] ${
+                                proposal.proposerSignature
+                                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                                  : "border-white/10 text-zinc-500"
+                              }`}
+                            >
+                              Proponente:{" "}
+                              {proposal.proposerSignature
+                                ? "assinado"
+                                : "sem assinatura"}
+                            </span>
+
+                            <span
+                              className={`border px-3 py-2 text-[9px] font-bold uppercase tracking-[0.1em] ${
+                                proposal.ownerSignature
+                                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                                  : "border-white/10 text-zinc-500"
+                              }`}
+                            >
+                              Proprietário:{" "}
+                              {proposal.ownerSignature
+                                ? "assinado"
+                                : "sem assinatura"}
+                            </span>
+
+                            <span
+                              className={`border px-3 py-2 text-[9px] font-bold uppercase tracking-[0.1em] ${
+                                proposal.agentSignature
+                                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                                  : "border-white/10 text-zinc-500"
+                              }`}
+                            >
+                              Corretor:{" "}
+                              {proposal.agentSignature
+                                ? "assinado"
+                                : "sem assinatura"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                },
+              )}
+            </div>
+          ) : (
+            <div className="mt-6 border border-dashed border-white/15 px-5 py-10 text-center">
+              <p className="text-sm text-zinc-500">
+                O histórico aparecerá aqui assim que a primeira
+                proposta for salva.
               </p>
             </div>
           )}

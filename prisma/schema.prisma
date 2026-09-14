@@ -139,6 +139,7 @@ model Property {
   images      PropertyImage[]
   portalLeads PortalLead[]
   visits      PropertyVisit[]
+  proposals   PropertyProposal[]
 
   @@index([ownerId])
   @@index([captorId])
@@ -156,6 +157,14 @@ enum ClientStatus {
   ATIVO
   INATIVO
   CONVERTIDO
+}
+
+enum PropertyProposalStatus {
+  EM_ANALISE
+  CONTRAPROPOSTA
+  ACEITA
+  RECUSADA
+  CANCELADA
 }
 
 model Client {
@@ -179,6 +188,7 @@ model Client {
 
   portalLeads PortalLead[]
   visits      PropertyVisit[]
+  proposals   PropertyProposal[]
 
   @@index([name])
   @@index([phone])
@@ -267,6 +277,57 @@ model PropertyVisit {
   @@index([visitorPhone])
 }
 
+model PropertyProposal {
+  id Int @id @default(autoincrement())
+
+  propertyId Int
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  clientId Int?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  agentId Int?
+  agent   Agent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
+  proposerName     String  @db.VarChar(180)
+  proposerDocument String? @db.VarChar(40)
+  proposerPhone    String? @db.VarChar(30)
+  proposerEmail    String? @db.VarChar(180)
+
+  offeredValue     Decimal? @db.Decimal(15, 2)
+  downPaymentValue Decimal? @db.Decimal(15, 2)
+
+  usesOwnResources Boolean @default(false)
+  usesFinancing    Boolean @default(false)
+  usesFgts         Boolean @default(false)
+
+  paymentTerms      String? @db.Text
+  deadline          String? @db.VarChar(180)
+  specialConditions String? @db.Text
+  validUntil         DateTime?
+  notes              String? @db.Text
+
+  counterOfferValue Decimal? @db.Decimal(15, 2)
+  counterOfferTerms String?  @db.Text
+  counterOfferNotes String?  @db.Text
+
+  status PropertyProposalStatus @default(EM_ANALISE)
+
+  proposerSignature String? @db.Text
+  ownerSignature    String? @db.Text
+  agentSignature    String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([propertyId])
+  @@index([clientId])
+  @@index([agentId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([proposerName])
+}
+
 model PropertyImage {
   id Int @id @default(autoincrement())
 
@@ -344,6 +405,8 @@ model Agent {
 
   capturedProperties   Property[] @relation("PropertyPrimaryCaptor")
   coCapturedProperties Property[] @relation("PropertyCoCaptor")
+
+  proposals PropertyProposal[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

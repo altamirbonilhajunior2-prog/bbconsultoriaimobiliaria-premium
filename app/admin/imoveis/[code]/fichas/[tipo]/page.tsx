@@ -6,6 +6,7 @@ import { getAccessContext } from "../../../../../../lib/admin/access";
 import { prisma } from "../../../../../../lib/prisma";
 import PrintControls from "./PrintControls";
 import SignaturePad from "./SignaturePad";
+import { savePropertyProposal } from "./proposal-actions";
 import { savePropertyVisit } from "./visit-actions";
 
 export const dynamic = "force-dynamic";
@@ -126,14 +127,19 @@ function EditableField({
   label: string;
   name: string;
   wide?: boolean;
-  type?: "text" | "email" | "tel" | "date" | "time";
+  type?:
+    | "text"
+    | "email"
+    | "tel"
+    | "date"
+    | "time";
   placeholder?: string;
   required?: boolean;
 }) {
   return (
     <label
       className={`block ${
-        wide ? "col-span-2" : ""
+        wide ? "sm:col-span-2" : ""
       }`}
     >
       <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-500">
@@ -147,7 +153,7 @@ function EditableField({
         placeholder={placeholder}
         autoComplete="off"
         required={required}
-        className="mt-1 h-9 w-full border-0 border-b border-zinc-400 bg-transparent px-1 text-[11px] text-zinc-950 outline-none transition focus:border-amber-500 focus:ring-0 print:text-zinc-950"
+        className="mt-1 h-10 w-full border-0 border-b border-zinc-400 bg-transparent px-1 text-[11px] text-zinc-950 outline-none transition focus:border-amber-500 focus:ring-0 print:text-zinc-950"
       />
     </label>
   );
@@ -169,7 +175,7 @@ function EditableTextArea({
   return (
     <label
       className={`block ${
-        wide ? "col-span-2" : ""
+        wide ? "sm:col-span-2" : ""
       }`}
     >
       <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-500">
@@ -180,7 +186,7 @@ function EditableTextArea({
         name={name}
         rows={rows}
         placeholder={placeholder}
-        className="mt-2 w-full resize-none border border-zinc-300 bg-transparent p-2 text-[10px] leading-5 text-zinc-950 outline-none transition focus:border-amber-500 focus:ring-0 print:text-zinc-950"
+        className="mt-2 w-full resize-none border border-zinc-300 bg-transparent p-3 text-[10px] leading-5 text-zinc-950 outline-none transition focus:border-amber-500 focus:ring-0 print:text-zinc-950"
       />
     </label>
   );
@@ -190,10 +196,12 @@ function ChoiceOption({
   name,
   value,
   label,
+  defaultChecked = false,
 }: {
   name: string;
   value: string;
   label: string;
+  defaultChecked?: boolean;
 }) {
   return (
     <label className="inline-flex cursor-pointer items-center gap-1.5">
@@ -201,7 +209,28 @@ function ChoiceOption({
         type="radio"
         name={name}
         value={value}
+        defaultChecked={defaultChecked}
         className="h-3.5 w-3.5 border-zinc-400 accent-amber-500"
+      />
+
+      <span>{label}</span>
+    </label>
+  );
+}
+
+function CheckboxOption({
+  name,
+  label,
+}: {
+  name: string;
+  label: string;
+}) {
+  return (
+    <label className="flex min-h-10 cursor-pointer items-center gap-3 border border-zinc-300 px-3 py-2 text-[10px] text-zinc-700 transition hover:border-amber-500">
+      <input
+        type="checkbox"
+        name={name}
+        className="h-4 w-4 accent-amber-500"
       />
 
       <span>{label}</span>
@@ -217,7 +246,7 @@ function SheetHeader({
   code: string;
 }) {
   return (
-    <header className="flex items-center justify-between gap-6 border-b-2 border-amber-500 pb-4">
+    <header className="flex flex-col gap-4 border-b-2 border-amber-500 pb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
       <div className="flex items-center gap-4">
         <Image
           src="/logo-bb.png"
@@ -233,13 +262,13 @@ function SheetHeader({
             B&amp;B Consultoria Imobiliária
           </p>
 
-          <h1 className="mt-1 font-serif text-2xl font-semibold text-zinc-950">
+          <h1 className="mt-1 font-serif text-xl font-semibold text-zinc-950 sm:text-2xl">
             {title}
           </h1>
         </div>
       </div>
 
-      <div className="border border-zinc-300 px-4 py-3 text-right">
+      <div className="w-fit border border-zinc-300 px-4 py-3 sm:text-right">
         <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-zinc-500">
           Código do imóvel
         </p>
@@ -273,12 +302,14 @@ export default async function PrintableSheetPage({
 
   if (
     tipo !== "visita" &&
-    tipo !== "imovel"
+    tipo !== "imovel" &&
+    tipo !== "proposta"
   ) {
     notFound();
   }
 
-  await getAccessContext();
+  const access =
+    await getAccessContext();
 
   const property =
     await prisma.property.findUnique({
@@ -310,6 +341,50 @@ export default async function PrintableSheetPage({
   if (!property) {
     notFound();
   }
+
+  const isVisitSheet =
+    tipo === "visita";
+
+  const isProposalSheet =
+    tipo === "proposta";
+
+  const isPropertySheet =
+    tipo === "imovel";
+
+  const activeAgents =
+    isProposalSheet &&
+    access.isAdmin
+      ? await prisma.agent.findMany({
+          where: {
+            active: true,
+          },
+
+          orderBy: {
+            name: "asc",
+          },
+
+          select: {
+            id: true,
+            name: true,
+            creci: true,
+          },
+        })
+      : [];
+
+  const currentAgent =
+    isProposalSheet &&
+    access.agentId
+      ? await prisma.agent.findUnique({
+          where: {
+            id: access.agentId,
+          },
+
+          select: {
+            name: true,
+            creci: true,
+          },
+        })
+      : null;
 
   const backHref =
     `/admin/imoveis/${property.code.toLowerCase()}`;
@@ -350,17 +425,27 @@ export default async function PrintableSheetPage({
       },
     ).format(new Date());
 
-  const isVisitSheet =
-    tipo === "visita";
-
   const saveVisitAction =
     savePropertyVisit.bind(
       null,
       property.code,
     );
 
+  const saveProposalAction =
+    savePropertyProposal.bind(
+      null,
+      property.code,
+    );
+
+  const printLabel =
+    isVisitSheet
+      ? "Imprimir ficha de visita"
+      : isProposalSheet
+        ? "Imprimir proposta"
+        : "Imprimir ficha do imóvel";
+
   return (
-    <main className="min-h-screen bg-zinc-200 px-4 py-7 text-zinc-950 print:bg-white print:p-0">
+    <main className="min-h-screen bg-zinc-200 px-3 py-5 text-zinc-950 sm:px-4 sm:py-7 print:bg-white print:p-0">
       <style>{`
         @media print {
           @page {
@@ -386,7 +471,8 @@ export default async function PrintableSheetPage({
           }
 
           input,
-          textarea {
+          textarea,
+          select {
             color: #09090b !important;
             -webkit-text-fill-color: #09090b !important;
           }
@@ -400,7 +486,8 @@ export default async function PrintableSheetPage({
             print-color-adjust: exact !important;
           }
 
-          .signature-box {
+          .signature-box,
+          .print-avoid-break {
             break-inside: avoid;
             page-break-inside: avoid;
           }
@@ -409,22 +496,26 @@ export default async function PrintableSheetPage({
 
       <PrintControls
         backHref={backHref}
-        printLabel={
-          isVisitSheet
-            ? "Imprimir ficha de visita"
-            : "Imprimir ficha do imóvel"
-        }
+        printLabel={printLabel}
       />
 
-      {isVisitSheet && salvo === "1" ? (
+      {isVisitSheet &&
+      salvo === "1" ? (
         <div className="mx-auto mb-4 w-full max-w-[210mm] border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 print:hidden">
           Visita salva com sucesso.
         </div>
       ) : null}
 
+      {isProposalSheet &&
+      salvo === "1" ? (
+        <div className="mx-auto mb-4 w-full max-w-[210mm] border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 print:hidden">
+          Proposta salva com sucesso.
+        </div>
+      ) : null}
+
       {isVisitSheet ? (
         <form action={saveVisitAction}>
-          <article className="print-sheet mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white p-[12mm] shadow-2xl print:p-0">
+          <article className="print-sheet mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white p-5 shadow-2xl sm:p-[12mm] print:p-0">
             <SheetHeader
               title="Ficha de visita"
               code={property.code}
@@ -435,7 +526,7 @@ export default async function PrintableSheetPage({
                 Identificação do imóvel
               </SectionTitle>
 
-              <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-4">
+              <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
                 <InfoItem
                   label="Imóvel"
                   wide
@@ -475,7 +566,7 @@ export default async function PrintableSheetPage({
                 Dados do visitante
               </SectionTitle>
 
-              <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-4">
+              <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
                 <EditableField
                   label="Nome completo"
                   name="visitorName"
@@ -544,7 +635,7 @@ export default async function PrintableSheetPage({
                 Impressões da visita
               </SectionTitle>
 
-              <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-5 text-[10px] text-zinc-700">
+              <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-5 text-[10px] text-zinc-700 sm:grid-cols-2">
                 <div>
                   <p className="mb-2 text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-500">
                     Interesse
@@ -632,7 +723,7 @@ export default async function PrintableSheetPage({
             <div className="mt-8 flex justify-end print:hidden">
               <button
                 type="submit"
-                className="inline-flex min-h-11 items-center justify-center bg-emerald-600 px-7 text-[10px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-emerald-500"
+                className="inline-flex min-h-11 w-full items-center justify-center bg-emerald-600 px-7 text-[10px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-emerald-500 sm:w-auto"
               >
                 Salvar visita
               </button>
@@ -642,7 +733,7 @@ export default async function PrintableSheetPage({
               Os dados preenchidos nesta ficha devem ser utilizados exclusivamente para o atendimento imobiliário e protegidos contra acesso indevido.
             </p>
 
-            <footer className="mt-6 flex items-center justify-between border-t border-zinc-200 pt-3 text-[7px] uppercase tracking-[0.1em] text-zinc-400">
+            <footer className="mt-6 flex flex-col gap-2 border-t border-zinc-200 pt-3 text-[7px] uppercase tracking-[0.1em] text-zinc-400 sm:flex-row sm:items-center sm:justify-between">
               <span>
                 Documento interno • B&amp;B Consultoria Imobiliária
               </span>
@@ -653,15 +744,368 @@ export default async function PrintableSheetPage({
             </footer>
           </article>
         </form>
-      ) : (
-        <article className="print-sheet mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white p-[12mm] shadow-2xl print:p-0">
+      ) : null}
+
+      {isProposalSheet ? (
+        <form action={saveProposalAction}>
+          <article className="print-sheet mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white p-5 shadow-2xl sm:p-[12mm] print:p-0">
+            <SheetHeader
+              title="Proposta de compra"
+              code={property.code}
+            />
+
+            <section className="mt-6">
+              <SectionTitle>
+                Identificação do imóvel
+              </SectionTitle>
+
+              <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+                <InfoItem
+                  label="Imóvel"
+                  wide
+                >
+                  {property.title}
+                </InfoItem>
+
+                <InfoItem
+                  label="Endereço"
+                  wide
+                >
+                  {address}
+                </InfoItem>
+
+                <InfoItem label="Finalidade">
+                  {purposeLabels[
+                    property.purpose
+                  ] ?? property.purpose}
+                </InfoItem>
+
+                <InfoItem label="Valor anunciado">
+                  {property.price
+                    ? formatCurrency(
+                        property.price,
+                      )
+                    : "Sob consulta"}
+                </InfoItem>
+              </div>
+            </section>
+
+            <section className="mt-7">
+              <SectionTitle>
+                Dados do proponente
+              </SectionTitle>
+
+              <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+                <EditableField
+                  label="Nome completo"
+                  name="proposerName"
+                  wide
+                  required
+                  placeholder="Nome completo do proponente"
+                />
+
+                <EditableField
+                  label="CPF"
+                  name="proposerDocument"
+                  placeholder="000.000.000-00"
+                />
+
+                <EditableField
+                  label="Telefone"
+                  name="proposerPhone"
+                  type="tel"
+                  placeholder="(00) 00000-0000"
+                />
+
+                <EditableField
+                  label="E-mail"
+                  name="proposerEmail"
+                  type="email"
+                  placeholder="nome@email.com"
+                />
+              </div>
+            </section>
+
+            <section className="mt-7">
+              <SectionTitle>
+                Condições financeiras
+              </SectionTitle>
+
+              <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+                <EditableField
+                  label="Valor oferecido"
+                  name="offeredValue"
+                  required
+                  placeholder="R$ 0,00"
+                />
+
+                <EditableField
+                  label="Sinal / entrada"
+                  name="downPaymentValue"
+                  placeholder="R$ 0,00"
+                />
+              </div>
+
+              <div className="mt-5">
+                <p className="mb-3 text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                  Origem dos recursos
+                </p>
+
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <CheckboxOption
+                    name="usesOwnResources"
+                    label="Recursos próprios"
+                  />
+
+                  <CheckboxOption
+                    name="usesFinancing"
+                    label="Financiamento bancário"
+                  />
+
+                  <CheckboxOption
+                    name="usesFgts"
+                    label="FGTS"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-5 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+                <EditableTextArea
+                  label="Condições de pagamento"
+                  name="paymentTerms"
+                  wide
+                  rows={4}
+                  placeholder="Descreva a composição do pagamento, parcelas, financiamento e demais condições..."
+                />
+
+                <EditableField
+                  label="Prazo para conclusão / pagamento"
+                  name="deadline"
+                  placeholder="Ex.: 30 dias após o aceite"
+                />
+
+                <EditableField
+                  label="Validade da proposta"
+                  name="validUntil"
+                  type="date"
+                />
+
+                <EditableTextArea
+                  label="Condições especiais"
+                  name="specialConditions"
+                  wide
+                  rows={4}
+                  placeholder="Informe condições especiais, bens incluídos, dependência de financiamento ou outras condições..."
+                />
+              </div>
+            </section>
+
+            <section className="mt-7">
+              <SectionTitle>
+                Observações
+              </SectionTitle>
+
+              <div className="mt-4">
+                <EditableTextArea
+                  label="Observações adicionais da proposta"
+                  name="proposalNotes"
+                  wide
+                  rows={4}
+                  placeholder="Registre aqui informações complementares relevantes..."
+                />
+              </div>
+            </section>
+
+            <section className="mt-7 border border-amber-200 bg-amber-50/40 p-4">
+              <SectionTitle>
+                Contraproposta do proprietário
+              </SectionTitle>
+
+              <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+                <EditableField
+                  label="Valor da contraproposta"
+                  name="counterOfferValue"
+                  placeholder="R$ 0,00"
+                />
+
+                <EditableTextArea
+                  label="Condições da contraproposta"
+                  name="counterOfferTerms"
+                  wide
+                  rows={3}
+                  placeholder="Condições apresentadas pelo proprietário..."
+                />
+
+                <EditableTextArea
+                  label="Observações da contraproposta"
+                  name="counterOfferNotes"
+                  wide
+                  rows={3}
+                  placeholder="Observações adicionais..."
+                />
+              </div>
+            </section>
+
+            <section className="mt-7">
+              <SectionTitle>
+                Situação da proposta
+              </SectionTitle>
+
+              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3 text-[10px] text-zinc-700">
+                <ChoiceOption
+                  name="proposalStatus"
+                  value="EM_ANALISE"
+                  label="Em análise"
+                  defaultChecked
+                />
+
+                <ChoiceOption
+                  name="proposalStatus"
+                  value="CONTRAPROPOSTA"
+                  label="Contraproposta"
+                />
+
+                <ChoiceOption
+                  name="proposalStatus"
+                  value="ACEITA"
+                  label="Aceita"
+                />
+
+                <ChoiceOption
+                  name="proposalStatus"
+                  value="RECUSADA"
+                  label="Recusada"
+                />
+
+                <ChoiceOption
+                  name="proposalStatus"
+                  value="CANCELADA"
+                  label="Cancelada"
+                />
+              </div>
+            </section>
+
+            <section className="mt-7">
+              <SectionTitle>
+                Corretor responsável
+              </SectionTitle>
+
+              <div className="mt-4">
+                {access.isAdmin ? (
+                  <label className="block">
+                    <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                      Selecione o corretor
+                    </span>
+
+                    <select
+                      name="agentId"
+                      defaultValue=""
+                      className="mt-2 h-11 w-full border border-zinc-300 bg-white px-3 text-[11px] text-zinc-950 outline-none focus:border-amber-500"
+                    >
+                      <option value="">
+                        Selecione
+                      </option>
+
+                      {activeAgents.map(
+                        (agent) => (
+                          <option
+                            key={agent.id}
+                            value={agent.id}
+                          >
+                            {agent.name}
+                            {agent.creci
+                              ? ` • CRECI ${agent.creci}`
+                              : ""}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                  </label>
+                ) : (
+                  <InfoItem label="Responsável">
+                    <span className="font-semibold">
+                      {currentAgent?.name ??
+                        "Corretor logado"}
+                    </span>
+
+                    {currentAgent?.creci ? (
+                      <span className="block text-[9px] text-zinc-600">
+                        CRECI {currentAgent.creci}
+                      </span>
+                    ) : null}
+                  </InfoItem>
+                )}
+              </div>
+            </section>
+
+            <section className="mt-8 print-avoid-break">
+              <SectionTitle>
+                Assinaturas
+              </SectionTitle>
+
+              <p className="mt-2 text-[8px] leading-4 text-zinc-500 print:hidden">
+                As assinaturas podem ser feitas com dedo, caneta touch ou mouse.
+              </p>
+
+              <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-3 print:grid-cols-3">
+                <SignaturePad
+                  label="Proponente"
+                  name="proposerSignature"
+                />
+
+                <SignaturePad
+                  label="Proprietário"
+                  name="ownerSignature"
+                />
+
+                <SignaturePad
+                  label="Corretor responsável"
+                  name="agentSignature"
+                />
+              </div>
+            </section>
+
+            <div className="mt-8 flex justify-end print:hidden">
+              <button
+                type="submit"
+                className="inline-flex min-h-11 w-full items-center justify-center bg-emerald-600 px-7 text-[10px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-emerald-500 sm:w-auto"
+              >
+                Salvar proposta
+              </button>
+            </div>
+
+            <div className="mt-7 border-t border-zinc-200 pt-4 text-[8px] leading-4 text-zinc-500">
+              <p>
+                Esta ficha registra as condições apresentadas pelas partes durante a negociação imobiliária. O aceite de uma proposta não substitui os instrumentos jurídicos e contratuais necessários à formalização definitiva do negócio.
+              </p>
+
+              <p className="mt-2">
+                Os dados pessoais constantes neste documento devem ser utilizados exclusivamente para a finalidade do atendimento e da negociação imobiliária, observadas as medidas adequadas de proteção e confidencialidade.
+              </p>
+            </div>
+
+            <footer className="mt-6 flex flex-col gap-2 border-t border-zinc-200 pt-3 text-[7px] uppercase tracking-[0.1em] text-zinc-400 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                B&amp;B Consultoria Imobiliária • Proposta de compra
+              </span>
+
+              <span>
+                Gerado em {generatedAt}
+              </span>
+            </footer>
+          </article>
+        </form>
+      ) : null}
+
+      {isPropertySheet ? (
+        <article className="print-sheet mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white p-5 shadow-2xl sm:p-[12mm] print:p-0">
           <SheetHeader
             title="Ficha do imóvel"
             code={property.code}
           />
 
           <section className="mt-6">
-            <div className="flex items-start justify-between gap-6 border-b border-zinc-200 pb-4">
+            <div className="flex flex-col gap-4 border-b border-zinc-200 pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
               <div>
                 <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-amber-700">
                   {propertyTypeLabels[
@@ -678,7 +1122,7 @@ export default async function PrintableSheetPage({
                 </p>
               </div>
 
-              <span className="shrink-0 border border-zinc-300 px-3 py-2 text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-700">
+              <span className="w-fit shrink-0 border border-zinc-300 px-3 py-2 text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-700">
                 {statusLabels[
                   property.status
                 ] ?? property.status}
@@ -691,7 +1135,7 @@ export default async function PrintableSheetPage({
               Informações comerciais
             </SectionTitle>
 
-            <div className="mt-4 grid grid-cols-2 gap-x-8 gap-y-4">
+            <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
               <InfoItem label="Finalidade">
                 {purposeLabels[
                   property.purpose
@@ -733,30 +1177,61 @@ export default async function PrintableSheetPage({
               Características
             </SectionTitle>
 
-            <div className="mt-4 grid grid-cols-4 gap-3">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {[
-                ["Área útil", formatArea(property.area)],
-                ["Área do terreno", formatArea(property.landArea)],
-                ["Dormitórios", property.bedrooms],
-                ["Suítes", property.suites],
-                ["Banheiros", property.bathrooms],
-                ["Vagas", property.parking],
-                ["Bairro", property.neighborhood],
-                ["Empreendimento", property.development ?? "Não informado"],
-              ].map(([label, value]) => (
-                <div
-                  key={String(label)}
-                  className="border border-zinc-300 p-3"
-                >
-                  <p className="text-[7px] font-bold uppercase tracking-[0.1em] text-zinc-500">
-                    {label}
-                  </p>
+                [
+                  "Área útil",
+                  formatArea(
+                    property.area,
+                  ),
+                ],
+                [
+                  "Área do terreno",
+                  formatArea(
+                    property.landArea,
+                  ),
+                ],
+                [
+                  "Dormitórios",
+                  property.bedrooms,
+                ],
+                [
+                  "Suítes",
+                  property.suites,
+                ],
+                [
+                  "Banheiros",
+                  property.bathrooms,
+                ],
+                [
+                  "Vagas",
+                  property.parking,
+                ],
+                [
+                  "Bairro",
+                  property.neighborhood,
+                ],
+                [
+                  "Empreendimento",
+                  property.development ??
+                    "Não informado",
+                ],
+              ].map(
+                ([label, value]) => (
+                  <div
+                    key={String(label)}
+                    className="border border-zinc-300 p-3"
+                  >
+                    <p className="text-[7px] font-bold uppercase tracking-[0.1em] text-zinc-500">
+                      {label}
+                    </p>
 
-                  <p className="mt-1 text-[10px] font-semibold leading-4 text-zinc-950">
-                    {value}
-                  </p>
-                </div>
-              ))}
+                    <p className="mt-1 text-[10px] font-semibold leading-4 text-zinc-950">
+                      {value}
+                    </p>
+                  </div>
+                ),
+              )}
             </div>
           </section>
 
@@ -776,8 +1251,9 @@ export default async function PrintableSheetPage({
               Diferenciais e comodidades
             </SectionTitle>
 
-            {property.features.length > 0 ? (
-              <ul className="mt-3 grid grid-cols-2 gap-x-8 gap-y-2 text-[10px] leading-4 text-zinc-700">
+            {property.features.length >
+            0 ? (
+              <ul className="mt-3 grid grid-cols-1 gap-x-8 gap-y-2 text-[10px] leading-4 text-zinc-700 sm:grid-cols-2">
                 {property.features.map(
                   (feature, index) => (
                     <li
@@ -785,7 +1261,10 @@ export default async function PrintableSheetPage({
                       className="flex items-start gap-2"
                     >
                       <span className="mt-1 h-1.5 w-1.5 shrink-0 bg-amber-500" />
-                      <span>{feature}</span>
+
+                      <span>
+                        {feature}
+                      </span>
                     </li>
                   ),
                 )}
@@ -798,7 +1277,7 @@ export default async function PrintableSheetPage({
           </section>
 
           <section className="mt-6 border-t border-zinc-300 pt-4">
-            <div className="grid grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
               <InfoItem label="Captador responsável">
                 <span className="font-semibold">
                   {captorName}
@@ -837,7 +1316,7 @@ export default async function PrintableSheetPage({
             </div>
           </section>
 
-          <footer className="mt-6 flex items-center justify-between border-t border-zinc-200 pt-3 text-[7px] uppercase tracking-[0.1em] text-zinc-400">
+          <footer className="mt-6 flex flex-col gap-2 border-t border-zinc-200 pt-3 text-[7px] uppercase tracking-[0.1em] text-zinc-400 sm:flex-row sm:items-center sm:justify-between">
             <span>
               Documento interno • B&amp;B Consultoria Imobiliária
             </span>
@@ -847,7 +1326,7 @@ export default async function PrintableSheetPage({
             </span>
           </footer>
         </article>
-      )}
+      ) : null}
     </main>
   );
 }
