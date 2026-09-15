@@ -20,6 +20,7 @@ type PrintableSheetPageProps = {
 
   searchParams: Promise<{
     salvo?: string;
+    visitId?: string;
   }>;
 };
 
@@ -91,6 +92,18 @@ function formatArea(
   }).format(numericValue)} m²`;
 }
 
+function formatInputDate(
+  value: Date | null | undefined,
+) {
+  if (!value) {
+    return "";
+  }
+
+  return value
+    .toISOString()
+    .slice(0, 10);
+}
+
 function InfoItem({
   label,
   children,
@@ -124,6 +137,7 @@ function EditableField({
   type = "text",
   placeholder = "",
   required = false,
+  defaultValue = "",
 }: {
   label: string;
   name: string;
@@ -136,6 +150,7 @@ function EditableField({
     | "time";
   placeholder?: string;
   required?: boolean;
+  defaultValue?: string;
 }) {
   return (
     <label
@@ -154,6 +169,7 @@ function EditableField({
         placeholder={placeholder}
         autoComplete="off"
         required={required}
+        defaultValue={defaultValue}
         className="mt-1 h-10 w-full border-0 border-b border-zinc-400 bg-transparent px-1 text-[11px] text-zinc-950 outline-none transition focus:border-amber-500 focus:ring-0 print:text-zinc-950"
       />
     </label>
@@ -166,12 +182,14 @@ function EditableTextArea({
   wide = false,
   rows = 4,
   placeholder = "",
+  defaultValue = "",
 }: {
   label: string;
   name: string;
   wide?: boolean;
   rows?: number;
   placeholder?: string;
+  defaultValue?: string;
 }) {
   return (
     <label
@@ -187,6 +205,7 @@ function EditableTextArea({
         name={name}
         rows={rows}
         placeholder={placeholder}
+        defaultValue={defaultValue}
         className="mt-2 w-full resize-none border border-zinc-300 bg-transparent p-3 text-[10px] leading-5 text-zinc-950 outline-none transition focus:border-amber-500 focus:ring-0 print:text-zinc-950"
       />
     </label>
@@ -252,9 +271,9 @@ function SheetHeader({
         <Image
           src="/logo-bb.png"
           alt="B&B Consultoria Imobiliária"
-          width={72}
-          height={72}
-          className="h-16 w-16 object-cover"
+          width={120}
+          height={120}
+          className="h-24 w-24 shrink-0 object-contain"
           priority
         />
 
@@ -299,7 +318,11 @@ export default async function PrintableSheetPage({
   searchParams,
 }: PrintableSheetPageProps) {
   const { code, tipo } = await params;
-  const { salvo } = await searchParams;
+
+  const {
+    salvo,
+    visitId,
+  } = await searchParams;
 
   if (
     tipo !== "visita" &&
@@ -365,6 +388,73 @@ export default async function PrintableSheetPage({
   const isPropertySheet =
     tipo === "imovel";
 
+  let numericVisitId:
+    | number
+    | null = null;
+
+  if (
+    isVisitSheet &&
+    visitId
+  ) {
+    const parsedVisitId =
+      Number(visitId);
+
+    if (
+      !Number.isInteger(
+        parsedVisitId,
+      ) ||
+      parsedVisitId <= 0
+    ) {
+      notFound();
+    }
+
+    numericVisitId =
+      parsedVisitId;
+  }
+
+  const scheduledVisit =
+    isVisitSheet &&
+    numericVisitId
+      ? await prisma.propertyVisit.findFirst({
+          where: {
+            id:
+              numericVisitId,
+
+            propertyId:
+              property.id,
+
+            status:
+              "AGENDADA",
+          },
+
+          select: {
+            id: true,
+            clientId: true,
+            status: true,
+
+            visitorName: true,
+            visitorDocument: true,
+            visitorPhone: true,
+            visitorEmail: true,
+            visitorBirthDate: true,
+            visitorAddress: true,
+
+            visitDate: true,
+            visitTime: true,
+            companions: true,
+            notes: true,
+          },
+        })
+      : null;
+
+  if (
+    isVisitSheet &&
+    numericVisitId &&
+    !scheduledVisit
+  ) {
+    notFound();
+  }
+
   const activeAgents =
     (isProposalSheet ||
       isRentalProposalSheet) &&
@@ -403,7 +493,9 @@ export default async function PrintableSheetPage({
       : null;
 
   const backHref =
-    `/admin/imoveis/${property.code.toLowerCase()}`;
+    scheduledVisit?.clientId
+      ? `/admin/clientes/${scheduledVisit.clientId}`
+      : `/admin/imoveis/${property.code.toLowerCase()}`;
 
   const address = [
     property.address,
@@ -466,7 +558,7 @@ export default async function PrintableSheetPage({
         ? "Imprimir proposta"
         : isRentalProposalSheet
           ? "Imprimir proposta de locação"
-        : "Imprimir ficha do imóvel";
+          : "Imprimir ficha do imóvel";
 
   return (
     <main className="min-h-screen bg-zinc-200 px-3 py-5 text-zinc-950 sm:px-4 sm:py-7 print:bg-white print:p-0">
@@ -524,6 +616,18 @@ export default async function PrintableSheetPage({
       />
 
       {isVisitSheet &&
+      scheduledVisit ? (
+        <div className="mx-auto mb-4 w-full max-w-[210mm] border border-sky-300 bg-sky-50 px-4 py-3 text-sm text-sky-900 print:hidden">
+          <span className="font-semibold">
+            Visita agendada carregada.
+          </span>{" "}
+          Complete a ficha após a visita e
+          clique em Salvar visita. O mesmo
+          registro será marcado como realizado.
+        </div>
+      ) : null}
+
+      {isVisitSheet &&
       salvo === "1" ? (
         <div className="mx-auto mb-4 w-full max-w-[210mm] border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 print:hidden">
           Visita salva com sucesso.
@@ -546,6 +650,16 @@ export default async function PrintableSheetPage({
 
       {isVisitSheet ? (
         <form action={saveVisitAction}>
+          {scheduledVisit ? (
+            <input
+              type="hidden"
+              name="visitId"
+              value={
+                scheduledVisit.id
+              }
+            />
+          ) : null}
+
           <article className="print-sheet mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white p-5 shadow-2xl sm:p-[12mm] print:p-0">
             <SheetHeader
               title="Ficha de visita"
@@ -604,12 +718,22 @@ export default async function PrintableSheetPage({
                   wide
                   required
                   placeholder="Digite o nome completo"
+                  defaultValue={
+                    scheduledVisit
+                      ?.visitorName ??
+                    ""
+                  }
                 />
 
                 <EditableField
                   label="CPF ou RG"
                   name="visitorDocument"
                   placeholder="CPF ou RG"
+                  defaultValue={
+                    scheduledVisit
+                      ?.visitorDocument ??
+                    ""
+                  }
                 />
 
                 <EditableField
@@ -617,6 +741,11 @@ export default async function PrintableSheetPage({
                   name="visitorPhone"
                   type="tel"
                   placeholder="(00) 00000-0000"
+                  defaultValue={
+                    scheduledVisit
+                      ?.visitorPhone ??
+                    ""
+                  }
                 />
 
                 <EditableField
@@ -624,12 +753,23 @@ export default async function PrintableSheetPage({
                   name="visitorEmail"
                   type="email"
                   placeholder="nome@email.com"
+                  defaultValue={
+                    scheduledVisit
+                      ?.visitorEmail ??
+                    ""
+                  }
                 />
 
                 <EditableField
                   label="Data de nascimento"
                   name="visitorBirthDate"
                   type="date"
+                  defaultValue={
+                    formatInputDate(
+                      scheduledVisit
+                        ?.visitorBirthDate,
+                    )
+                  }
                 />
 
                 <EditableField
@@ -637,6 +777,11 @@ export default async function PrintableSheetPage({
                   name="visitorAddress"
                   wide
                   placeholder="Rua, número, bairro, cidade"
+                  defaultValue={
+                    scheduledVisit
+                      ?.visitorAddress ??
+                    ""
+                  }
                 />
 
                 <EditableField
@@ -644,12 +789,23 @@ export default async function PrintableSheetPage({
                   name="visitDate"
                   type="date"
                   required
+                  defaultValue={
+                    formatInputDate(
+                      scheduledVisit
+                        ?.visitDate,
+                    )
+                  }
                 />
 
                 <EditableField
                   label="Horário"
                   name="visitTime"
                   type="time"
+                  defaultValue={
+                    scheduledVisit
+                      ?.visitTime ??
+                    ""
+                  }
                 />
 
                 <EditableField
@@ -657,6 +813,11 @@ export default async function PrintableSheetPage({
                   name="companions"
                   wide
                   placeholder="Informe os acompanhantes, se houver"
+                  defaultValue={
+                    scheduledVisit
+                      ?.companions ??
+                    ""
+                  }
                 />
               </div>
             </section>
@@ -725,6 +886,11 @@ export default async function PrintableSheetPage({
                   wide
                   rows={4}
                   placeholder="Digite aqui as observações da visita..."
+                  defaultValue={
+                    scheduledVisit
+                      ?.notes ??
+                    ""
+                  }
                 />
               </div>
             </section>
@@ -1142,22 +1308,31 @@ export default async function PrintableSheetPage({
               </SectionTitle>
 
               <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-                <InfoItem label="Imóvel" wide>
+                <InfoItem
+                  label="Imóvel"
+                  wide
+                >
                   {property.title}
                 </InfoItem>
 
-                <InfoItem label="Endereço" wide>
+                <InfoItem
+                  label="Endereço"
+                  wide
+                >
                   {address}
                 </InfoItem>
 
                 <InfoItem label="Finalidade">
-                  {purposeLabels[property.purpose] ??
-                    property.purpose}
+                  {purposeLabels[
+                    property.purpose
+                  ] ?? property.purpose}
                 </InfoItem>
 
                 <InfoItem label="Aluguel anunciado">
                   {property.rentalPrice
-                    ? formatCurrency(property.rentalPrice)
+                    ? formatCurrency(
+                        property.rentalPrice,
+                      )
                     : "Sob consulta"}
                 </InfoItem>
               </div>
@@ -1260,14 +1435,24 @@ export default async function PrintableSheetPage({
                     defaultValue=""
                     className="mt-1 h-10 w-full border-0 border-b border-zinc-400 bg-transparent px-1 text-[11px] text-zinc-950 outline-none transition focus:border-amber-500 focus:ring-0"
                   >
-                    <option value="">A definir</option>
-                    <option value="CAUCAO">Caução</option>
-                    <option value="FIADOR">Fiador</option>
-                    <option value="SEGURO_FIANCA">Seguro-fiança</option>
+                    <option value="">
+                      A definir
+                    </option>
+                    <option value="CAUCAO">
+                      Caução
+                    </option>
+                    <option value="FIADOR">
+                      Fiador
+                    </option>
+                    <option value="SEGURO_FIANCA">
+                      Seguro-fiança
+                    </option>
                     <option value="TITULO_CAPITALIZACAO">
                       Título de capitalização
                     </option>
-                    <option value="OUTRA">Outra</option>
+                    <option value="OUTRA">
+                      Outra
+                    </option>
                   </select>
                 </label>
 
@@ -1296,7 +1481,9 @@ export default async function PrintableSheetPage({
             </section>
 
             <section className="mt-7">
-              <SectionTitle>Observações</SectionTitle>
+              <SectionTitle>
+                Observações
+              </SectionTitle>
 
               <div className="mt-4">
                 <EditableTextArea
@@ -1351,21 +1538,25 @@ export default async function PrintableSheetPage({
                   label="Em análise"
                   defaultChecked
                 />
+
                 <ChoiceOption
                   name="proposalStatus"
                   value="CONTRAPROPOSTA"
                   label="Contraproposta"
                 />
+
                 <ChoiceOption
                   name="proposalStatus"
                   value="ACEITA"
                   label="Aceita"
                 />
+
                 <ChoiceOption
                   name="proposalStatus"
                   value="RECUSADA"
                   label="Recusada"
                 />
+
                 <ChoiceOption
                   name="proposalStatus"
                   value="CANCELADA"
@@ -1385,27 +1576,38 @@ export default async function PrintableSheetPage({
                     <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-500">
                       Selecione o corretor
                     </span>
+
                     <select
                       name="agentId"
                       defaultValue=""
                       className="mt-2 h-11 w-full border border-zinc-300 bg-white px-3 text-[11px] text-zinc-950 outline-none focus:border-amber-500"
                     >
-                      <option value="">Selecione</option>
-                      {activeAgents.map((agent) => (
-                        <option key={agent.id} value={agent.id}>
-                          {agent.name}
-                          {agent.creci
-                            ? ` • CRECI ${agent.creci}`
-                            : ""}
-                        </option>
-                      ))}
+                      <option value="">
+                        Selecione
+                      </option>
+
+                      {activeAgents.map(
+                        (agent) => (
+                          <option
+                            key={agent.id}
+                            value={agent.id}
+                          >
+                            {agent.name}
+                            {agent.creci
+                              ? ` • CRECI ${agent.creci}`
+                              : ""}
+                          </option>
+                        ),
+                      )}
                     </select>
                   </label>
                 ) : (
                   <InfoItem label="Responsável">
                     <span className="font-semibold">
-                      {currentAgent?.name ?? "Corretor logado"}
+                      {currentAgent?.name ??
+                        "Corretor logado"}
                     </span>
+
                     {currentAgent?.creci ? (
                       <span className="block text-[9px] text-zinc-600">
                         CRECI {currentAgent.creci}
@@ -1417,7 +1619,9 @@ export default async function PrintableSheetPage({
             </section>
 
             <section className="mt-8 print-avoid-break">
-              <SectionTitle>Assinaturas</SectionTitle>
+              <SectionTitle>
+                Assinaturas
+              </SectionTitle>
 
               <p className="mt-2 text-[8px] leading-4 text-zinc-500 print:hidden">
                 As assinaturas podem ser feitas com dedo, caneta touch ou mouse.
@@ -1428,10 +1632,12 @@ export default async function PrintableSheetPage({
                   label="Pretendente à locação"
                   name="tenantSignature"
                 />
+
                 <SignaturePad
                   label="Proprietário"
                   name="ownerSignature"
                 />
+
                 <SignaturePad
                   label="Corretor responsável"
                   name="agentSignature"
@@ -1452,6 +1658,7 @@ export default async function PrintableSheetPage({
               <p>
                 Esta ficha registra condições preliminares de locação. O aceite não substitui a análise cadastral, a aprovação da garantia e o contrato definitivo.
               </p>
+
               <p className="mt-2">
                 Os dados pessoais devem ser utilizados exclusivamente para o atendimento e a negociação imobiliária, com proteção e confidencialidade adequadas.
               </p>
@@ -1461,7 +1668,10 @@ export default async function PrintableSheetPage({
               <span>
                 B&amp;B Consultoria Imobiliária • Proposta de locação
               </span>
-              <span>Gerado em {generatedAt}</span>
+
+              <span>
+                Gerado em {generatedAt}
+              </span>
             </footer>
           </article>
         </form>

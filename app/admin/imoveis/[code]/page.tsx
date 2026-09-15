@@ -12,6 +12,8 @@ import { deletePropertyVisit } from "./visit-actions";
 import {
   deletePropertyProposal,
   deletePropertyRentalProposal,
+  finalizePropertySale,
+  updatePropertyProposalCommercialStage,
 } from "./proposal-actions";
 
 export const dynamic = "force-dynamic";
@@ -759,12 +761,18 @@ export default async function EditarImovelPage({
 
                         <div className="flex shrink-0 flex-wrap gap-2 lg:flex-col">
                           <Link
-                            href={`/admin/imoveis/${property.code.toLowerCase()}/visitas/${visit.id}`}
+                            href={
+                              visit.status === "AGENDADA"
+                                ? `/admin/imoveis/${property.code.toLowerCase()}/fichas/visita?visitId=${visit.id}`
+                                : `/admin/imoveis/${property.code.toLowerCase()}/visitas/${visit.id}`
+                            }
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex min-h-9 items-center justify-center border border-amber-500/40 px-3 text-[9px] font-bold uppercase tracking-[0.12em] text-amber-300 transition hover:border-amber-400 hover:text-amber-200"
                           >
-                            Abrir visita
+                            {visit.status === "AGENDADA"
+                              ? "Realizar visita"
+                              : "Abrir visita"}
                           </Link>
 
                           {access.isAdmin ? (
@@ -836,6 +844,25 @@ export default async function EditarImovelPage({
                       property.code,
                       proposal.id,
                     );
+
+                  const updateCommercialStageAction =
+                    updatePropertyProposalCommercialStage.bind(
+                      null,
+                      property.code,
+                      proposal.id,
+                    );
+
+                  const finalizeSaleAction =
+                    finalizePropertySale.bind(
+                      null,
+                      property.code,
+                      proposal.id,
+                    );
+
+                  const canManageProposal =
+                    access.isAdmin ||
+                    proposal.agentId ===
+                      access.agentId;
 
                   const resourceLabels = [
                     proposal.usesOwnResources
@@ -1074,6 +1101,185 @@ export default async function EditarImovelPage({
                                 </p>
                               ) : null}
                             </div>
+                          ) : null}
+
+                          {canManageProposal ? (
+                            <form
+                              action={
+                                updateCommercialStageAction
+                              }
+                              className="mt-5 border border-amber-500/20 bg-amber-500/[0.04] p-4"
+                            >
+                              <div className="flex flex-col gap-2">
+                                <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-amber-300">
+                                  Andamento da negociação
+                                </p>
+
+                                <p className="text-xs leading-5 text-zinc-500">
+                                  Atualize esta mesma proposta sem criar um novo registro.
+                                  Cada etapa será registrada automaticamente na linha do
+                                  tempo comercial do cliente vinculado.
+                                </p>
+                              </div>
+
+                              <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                                <label className="block">
+                                  <span className="mb-2 block text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                    Nova etapa
+                                  </span>
+
+                                  <select
+                                    name="commercialStage"
+                                    required
+                                    defaultValue=""
+                                    className="min-h-11 w-full border border-white/15 bg-[#111] px-3 text-sm text-white outline-none focus:border-amber-500"
+                                  >
+                                    <option value="" disabled>
+                                      Selecione a etapa
+                                    </option>
+                                    <option value="CONTRAPROPOSTA">
+                                      Contraproposta
+                                    </option>
+                                    <option value="NEGOCIACAO">
+                                      Negociação em andamento
+                                    </option>
+                                    <option value="ACEITA">
+                                      Proposta aceita
+                                    </option>
+                                    <option value="DOCUMENTACAO">
+                                      Documentação
+                                    </option>
+                                    <option value="CONCLUIDO">
+                                      Negócio concluído
+                                    </option>
+                                    <option value="PERDIDO">
+                                      Perdido / encerrado
+                                    </option>
+                                  </select>
+                                </label>
+
+                                <label className="block">
+                                  <span className="mb-2 block text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                    Valor da contraproposta
+                                  </span>
+
+                                  <input
+                                    name="counterOfferValue"
+                                    inputMode="decimal"
+                                    placeholder="Ex.: 3.100.000,00"
+                                    defaultValue={
+                                      proposal.counterOfferValue
+                                        ? proposal.counterOfferValue.toString()
+                                        : ""
+                                    }
+                                    className="min-h-11 w-full border border-white/15 bg-[#111] px-3 text-sm text-white outline-none placeholder:text-zinc-700 focus:border-amber-500"
+                                  />
+                                </label>
+                              </div>
+
+                              <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                                <label className="block">
+                                  <span className="mb-2 block text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                    Condições da contraproposta
+                                  </span>
+
+                                  <textarea
+                                    name="counterOfferTerms"
+                                    rows={3}
+                                    defaultValue={
+                                      proposal.counterOfferTerms ??
+                                      ""
+                                    }
+                                    placeholder="Condições definidas pelo proprietário."
+                                    className="w-full resize-y border border-white/15 bg-[#111] px-3 py-3 text-sm leading-6 text-white outline-none placeholder:text-zinc-700 focus:border-amber-500"
+                                  />
+                                </label>
+
+                                <label className="block">
+                                  <span className="mb-2 block text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                    Observações da contraproposta
+                                  </span>
+
+                                  <textarea
+                                    name="counterOfferNotes"
+                                    rows={3}
+                                    defaultValue={
+                                      proposal.counterOfferNotes ??
+                                      ""
+                                    }
+                                    placeholder="Observações complementares."
+                                    className="w-full resize-y border border-white/15 bg-[#111] px-3 py-3 text-sm leading-6 text-white outline-none placeholder:text-zinc-700 focus:border-amber-500"
+                                  />
+                                </label>
+                              </div>
+
+                              <label className="mt-4 block">
+                                <span className="mb-2 block text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                  Observação da etapa
+                                </span>
+
+                                <textarea
+                                  name="negotiationNotes"
+                                  rows={3}
+                                  placeholder="Ex.: Cliente analisando documentos, aguardando retorno do proprietário, motivo do encerramento etc."
+                                  className="w-full resize-y border border-white/15 bg-[#111] px-3 py-3 text-sm leading-6 text-white outline-none placeholder:text-zinc-700 focus:border-amber-500"
+                                />
+                              </label>
+
+                              <div className="mt-4 border border-white/10 bg-black/20 px-4 py-3">
+                                <p className="text-xs leading-5 text-zinc-500">
+                                  Atenção: “Proposta aceita” não conclui o negócio.
+                                  “Negócio concluído” registra o fechamento na linha do tempo
+                                  comercial, mas não altera automaticamente a situação do
+                                  imóvel nem o status do cliente.
+                                </p>
+                              </div>
+
+                              <button
+                                type="submit"
+                                className="mt-4 inline-flex min-h-11 items-center justify-center bg-amber-500 px-5 text-[9px] font-bold uppercase tracking-[0.14em] text-black transition hover:bg-amber-400"
+                              >
+                                Registrar etapa comercial
+                              </button>
+                            </form>
+                          ) : null}
+
+                          {access.isAdmin &&
+                          proposal.status === "ACEITA" ? (
+                            property.status === "VENDIDO" ? (
+                              <div className="mt-5 border border-emerald-500/25 bg-emerald-500/[0.06] p-4">
+                                <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-300">
+                                  Venda finalizada
+                                </p>
+
+                                <p className="mt-2 text-xs leading-5 text-zinc-400">
+                                  O imóvel está marcado como vendido. O cliente vinculado
+                                  foi convertido no fechamento administrativo.
+                                </p>
+                              </div>
+                            ) : (
+                              <form
+                                action={finalizeSaleAction}
+                                className="mt-5 border border-emerald-500/25 bg-emerald-500/[0.05] p-4"
+                              >
+                                <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-300">
+                                  Fechamento administrativo
+                                </p>
+
+                                <p className="mt-2 text-xs leading-5 text-zinc-400">
+                                  Use somente depois de registrar “Negócio concluído”.
+                                  Esta ação marca o imóvel como vendido e o cliente como
+                                  convertido.
+                                </p>
+
+                                <button
+                                  type="submit"
+                                  className="mt-4 inline-flex min-h-11 items-center justify-center bg-emerald-600 px-5 text-[9px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-emerald-500"
+                                >
+                                  Finalizar venda
+                                </button>
+                              </form>
+                            )
                           ) : null}
 
                           <div className="mt-5 flex flex-wrap gap-3 border-t border-white/10 pt-4">

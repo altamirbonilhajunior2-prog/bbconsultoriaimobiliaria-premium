@@ -17,6 +17,7 @@ export const dynamic = "force-dynamic";
 const statusLabels = {
   NOVO: "Novo",
   CONTATADO: "Contatado",
+  QUALIFICADO: "Cliente qualificado",
   VISITA_AGENDADA: "Visita agendada",
   PROPOSTA: "Proposta",
   EM_NEGOCIACAO: "Em negociação",
@@ -24,12 +25,17 @@ const statusLabels = {
   ENCERRADO: "Encerrado",
 } as const;
 
-const statusOptions =
-  Object.entries(statusLabels);
+const clientStatusLabels = {
+  ATIVO: "Ativo",
+  INATIVO: "Inativo",
+  CONVERTIDO: "Convertido",
+} as const;
 
-function formatPhone(
-  phone: string,
-) {
+const statusOptions = Object.entries(
+  statusLabels,
+);
+
+function formatPhone(phone: string) {
   const digits =
     phone.replace(/\D/g, "");
 
@@ -51,9 +57,7 @@ function formatPhone(
   )}-${local.slice(7)}`;
 }
 
-function formatDate(
-  value: Date,
-) {
+function formatDate(value: Date) {
   return new Intl.DateTimeFormat(
     "pt-BR",
     {
@@ -89,6 +93,7 @@ export default async function ClientesPage() {
 
   const [
     leads,
+    clientRecords,
     total,
     newLeads,
     visits,
@@ -101,6 +106,34 @@ export default async function ClientesPage() {
       },
 
       take: 250,
+    }),
+
+    prisma.client.findMany({
+      orderBy: {
+        updatedAt: "desc",
+      },
+
+      take: 250,
+
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        email: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+
+        _count: {
+          select: {
+            portalLeads: true,
+            visits: true,
+            proposals: true,
+            rentalProposals: true,
+            commercialEvents: true,
+          },
+        },
+      },
     }),
 
     prisma.portalLead.count(),
@@ -212,6 +245,149 @@ export default async function ClientesPage() {
         </section>
 
         <section className="mt-10">
+          <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
+                Carteira comercial
+              </p>
+
+              <h2 className="mt-2 font-serif text-3xl">
+                Clientes cadastrados
+              </h2>
+            </div>
+
+            <p className="text-xs text-zinc-500">
+              {clientRecords.length} cliente
+              {clientRecords.length === 1
+                ? ""
+                : "s"}
+            </p>
+          </div>
+
+          {clientRecords.length === 0 ? (
+            <div className="border border-white/10 bg-[#0a0a0a] p-10 text-center text-zinc-400">
+              Nenhum cliente cadastrado
+              até o momento.
+            </div>
+          ) : (
+            <div className="grid gap-4 xl:grid-cols-2">
+              {clientRecords.map(
+                (client) => {
+                  const proposalCount =
+                    client._count.proposals +
+                    client._count
+                      .rentalProposals;
+
+                  return (
+                    <article
+                      key={client.id}
+                      className="border border-white/10 bg-[#0a0a0a] p-6"
+                    >
+                      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-300">
+                              {
+                                clientStatusLabels[
+                                  client.status
+                                ]
+                              }
+                            </span>
+
+                            <span className="text-xs text-zinc-600">
+                              Cliente #
+                              {client.id}
+                            </span>
+                          </div>
+
+                          <h3 className="mt-4 font-serif text-3xl">
+                            {client.name}
+                          </h3>
+
+                          <p className="mt-3 text-sm text-zinc-400">
+                            {formatPhone(
+                              client.phone,
+                            )}
+                          </p>
+
+                          {client.email ? (
+                            <p className="mt-1 text-xs text-zinc-600">
+                              {client.email}
+                            </p>
+                          ) : null}
+                        </div>
+
+                        <Link
+                          href={`/admin/clientes/${client.id}`}
+                          className="inline-flex min-h-11 shrink-0 items-center justify-center border border-amber-500 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-400 transition hover:bg-amber-500 hover:text-black"
+                        >
+                          Abrir ficha
+                        </Link>
+                      </div>
+
+                      <div className="mt-6 grid grid-cols-2 gap-3 border-t border-white/10 pt-5 sm:grid-cols-5">
+                        <ClientMetric
+                          label="Leads"
+                          value={
+                            client._count
+                              .portalLeads
+                          }
+                        />
+
+                        <ClientMetric
+                          label="Visitas"
+                          value={
+                            client._count
+                              .visits
+                          }
+                        />
+
+                        <ClientMetric
+                          label="Propostas"
+                          value={
+                            proposalCount
+                          }
+                        />
+
+                        <ClientMetric
+                          label="Eventos"
+                          value={
+                            client._count
+                              .commercialEvents
+                          }
+                        />
+
+                        <div className="col-span-2 border border-white/[0.06] bg-white/[0.02] p-3 sm:col-span-1">
+                          <p className="text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-600">
+                            Atualizado
+                          </p>
+
+                          <p className="mt-2 text-[11px] text-zinc-400">
+                            {formatDate(
+                              client.updatedAt,
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                },
+              )}
+            </div>
+          )}
+        </section>
+
+        <section className="mt-12 border-t border-white/10 pt-10">
+          <div className="mb-5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
+              Entrada de contatos
+            </p>
+
+            <h2 className="mt-2 font-serif text-3xl">
+              Leads recebidos
+            </h2>
+          </div>
+
           {leads.length === 0 ? (
             <div className="border border-white/10 bg-[#0a0a0a] p-10 text-center text-zinc-400">
               Nenhum lead recebido
@@ -431,6 +607,15 @@ export default async function ClientesPage() {
                               }
                             />
 
+                            {lead.clientId ? (
+                              <Link
+                                href={`/admin/clientes/${lead.clientId}`}
+                                className="inline-flex min-h-11 items-center justify-center border border-emerald-500/40 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-300 transition hover:bg-emerald-500 hover:text-black"
+                              >
+                                Abrir ficha
+                              </Link>
+                            ) : null}
+
                             {access.isAdmin ? (
                               <DeleteLeadButton
                                 onDelete={
@@ -450,5 +635,25 @@ export default async function ClientesPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+function ClientMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) {
+  return (
+    <div className="border border-white/[0.06] bg-white/[0.02] p-3">
+      <p className="text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-600">
+        {label}
+      </p>
+
+      <p className="mt-2 text-lg font-semibold text-white">
+        {value}
+      </p>
+    </div>
   );
 }

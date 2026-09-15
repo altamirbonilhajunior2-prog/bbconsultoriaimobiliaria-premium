@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 
 import { getAccessContext } from "../../../../../../lib/admin/access";
@@ -253,22 +254,33 @@ export default async function VisitPage({
       ) : null}
 
       <article className="print-sheet mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white p-[12mm] shadow-2xl print:p-0">
-        <header className="flex items-start justify-between gap-6 border-b-2 border-amber-500 pb-4">
-          <div>
-            <p className="text-[8px] font-bold uppercase tracking-[0.2em] text-amber-700">
-              B&amp;B Consultoria Imobiliária
-            </p>
+        <header className="flex flex-col gap-4 border-b-2 border-amber-500 pb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+          <div className="flex items-center gap-5">
+            <Image
+              src="/logo-bb.png"
+              alt="B&B Consultoria Imobiliária"
+              width={112}
+              height={112}
+              className="h-24 w-24 shrink-0 object-contain sm:h-28 sm:w-28"
+              priority
+            />
 
-            <h1 className="mt-1 font-serif text-2xl font-semibold text-zinc-950">
-              Ficha de visita
-            </h1>
+            <div>
+              <p className="text-[8px] font-bold uppercase tracking-[0.2em] text-amber-700">
+                B&amp;B Consultoria Imobiliária
+              </p>
 
-            <p className="mt-1 text-[9px] text-zinc-500">
-              Registro de visita nº {visit.id}
-            </p>
+              <h1 className="mt-1 font-serif text-2xl font-semibold text-zinc-950">
+                Ficha de visita
+              </h1>
+
+              <p className="mt-1 text-[9px] text-zinc-500">
+                Registro de visita nº {visit.id}
+              </p>
+            </div>
           </div>
 
-          <div className="border border-zinc-300 px-4 py-3 text-right">
+          <div className="w-fit border border-zinc-300 px-4 py-3 sm:text-right">
             <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-zinc-500">
               Código do imóvel
             </p>

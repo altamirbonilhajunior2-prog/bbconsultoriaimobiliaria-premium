@@ -40,6 +40,7 @@ enum PropertyStatus {
 enum PortalLeadStatus {
   NOVO
   CONTATADO
+  QUALIFICADO
   VISITA_AGENDADA
   PROPOSTA
   EM_NEGOCIACAO
@@ -57,6 +58,12 @@ enum VisitReturnType {
   PROPOSTA
   NOVA_VISITA
   SEM_INTERESSE
+}
+
+enum PropertyVisitStatus {
+  AGENDADA
+  REALIZADA
+  CANCELADA
 }
 
 model Property {
@@ -136,11 +143,12 @@ model Property {
   coCaptorId Int?
   coCaptor   Agent? @relation("PropertyCoCaptor", fields: [coCaptorId], references: [id], onDelete: SetNull)
 
-  images          PropertyImage[]
-  portalLeads     PortalLead[]
-  visits          PropertyVisit[]
-  proposals       PropertyProposal[]
-  rentalProposals PropertyRentalProposal[]
+  images                    PropertyImage[]
+  portalLeads               PortalLead[]
+  visits                    PropertyVisit[]
+  proposals                 PropertyProposal[]
+  rentalProposals           PropertyRentalProposal[]
+  commercialEventProperties CommercialEventProperty[]
 
   @@index([ownerId])
   @@index([captorId])
@@ -176,6 +184,23 @@ enum RentalGuaranteeType {
   OUTRA
 }
 
+enum CommercialEventType {
+  NOVO_CONTATO
+  CONTATO_REALIZADO
+  CLIENTE_QUALIFICADO
+  IMOVEIS_APRESENTADOS
+  VISITA_AGENDADA
+  VISITA_REALIZADA
+  POS_VISITA
+  PROPOSTA_APRESENTADA
+  CONTRAPROPOSTA
+  NEGOCIACAO
+  PROPOSTA_ACEITA
+  DOCUMENTACAO
+  NEGOCIO_CONCLUIDO
+  PERDIDO_ENCERRADO
+}
+
 model Client {
   id Int @id @default(autoincrement())
 
@@ -195,10 +220,11 @@ model Client {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  portalLeads     PortalLead[]
-  visits          PropertyVisit[]
-  proposals       PropertyProposal[]
-  rentalProposals PropertyRentalProposal[]
+  portalLeads      PortalLead[]
+  visits           PropertyVisit[]
+  proposals        PropertyProposal[]
+  rentalProposals  PropertyRentalProposal[]
+  commercialEvents CommercialEvent[]
 
   @@index([name])
   @@index([phone])
@@ -240,6 +266,8 @@ model PortalLead {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  commercialEvents CommercialEvent[]
+
   @@index([propertyId])
   @@index([propertyCode])
   @@index([phone])
@@ -256,6 +284,8 @@ model PropertyVisit {
 
   clientId Int?
   client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  status PropertyVisitStatus @default(REALIZADA)
 
   visitorName      String    @db.VarChar(180)
   visitorDocument  String?   @db.VarChar(40)
@@ -282,6 +312,7 @@ model PropertyVisit {
 
   @@index([propertyId])
   @@index([clientId])
+  @@index([status])
   @@index([visitDate])
   @@index([visitorName])
   @@index([visitorPhone])
@@ -390,6 +421,53 @@ model PropertyRentalProposal {
   @@index([tenantName])
 }
 
+model CommercialEvent {
+  id Int @id @default(autoincrement())
+
+  clientId Int
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  agentId Int?
+  agent   Agent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
+  leadId Int?
+  lead   PortalLead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  type CommercialEventType
+
+  description String?  @db.Text
+  amount      Decimal? @db.Decimal(15, 2)
+
+  eventAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  properties CommercialEventProperty[]
+
+  @@index([clientId])
+  @@index([agentId])
+  @@index([leadId])
+  @@index([type])
+  @@index([eventAt])
+}
+
+model CommercialEventProperty {
+  id Int @id @default(autoincrement())
+
+  commercialEventId Int
+  commercialEvent   CommercialEvent @relation(fields: [commercialEventId], references: [id], onDelete: Cascade)
+
+  propertyId Int
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([commercialEventId, propertyId])
+  @@index([commercialEventId])
+  @@index([propertyId])
+}
+
 model PropertyImage {
   id Int @id @default(autoincrement())
 
@@ -468,8 +546,9 @@ model Agent {
   capturedProperties   Property[] @relation("PropertyPrimaryCaptor")
   coCapturedProperties Property[] @relation("PropertyCoCaptor")
 
-  proposals       PropertyProposal[]
-  rentalProposals PropertyRentalProposal[]
+  proposals        PropertyProposal[]
+  rentalProposals  PropertyRentalProposal[]
+  commercialEvents CommercialEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

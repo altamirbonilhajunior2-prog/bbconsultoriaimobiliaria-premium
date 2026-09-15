@@ -173,6 +173,24 @@ function parseProposalStatus(
   return "EM_ANALISE";
 }
 
+function formatCurrencyForDescription(
+  value: number | null,
+) {
+  if (value === null) {
+    return null;
+  }
+
+  return new Intl.NumberFormat(
+    "pt-BR",
+    {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    },
+  ).format(value);
+}
+
 export async function savePropertyProposal(
   propertyCode: string,
   formData: FormData,
@@ -194,6 +212,7 @@ export async function savePropertyProposal(
       select: {
         id: true,
         code: true,
+        title: true,
         purpose: true,
       },
     });
@@ -406,51 +425,190 @@ export async function savePropertyProposal(
     }
   }
 
-  await prisma.propertyProposal.create({
-    data: {
-      propertyId:
-        property.id,
+  const proposal =
+    await prisma.$transaction(
+      async (tx) => {
+        const createdProposal =
+          await tx.propertyProposal.create({
+            data: {
+              propertyId:
+                property.id,
 
-      clientId:
-        existingClient?.id ??
-        null,
+              clientId:
+                existingClient?.id ??
+                null,
 
-      agentId:
-        responsibleAgentId,
+              agentId:
+                responsibleAgentId,
 
-      proposerName,
-      proposerDocument,
+              proposerName,
+              proposerDocument,
 
-      proposerPhone:
-        normalizedProposerPhone ??
-        proposerPhone,
+              proposerPhone:
+                normalizedProposerPhone ??
+                proposerPhone,
 
-      proposerEmail,
+              proposerEmail,
 
-      offeredValue,
-      downPaymentValue,
+              offeredValue,
+              downPaymentValue,
 
-      usesOwnResources,
-      usesFinancing,
-      usesFgts,
+              usesOwnResources,
+              usesFinancing,
+              usesFgts,
 
-      paymentTerms,
-      deadline,
-      specialConditions,
-      validUntil,
-      notes,
+              paymentTerms,
+              deadline,
+              specialConditions,
+              validUntil,
+              notes,
 
-      counterOfferValue,
-      counterOfferTerms,
-      counterOfferNotes,
+              counterOfferValue,
+              counterOfferTerms,
+              counterOfferNotes,
 
-      status,
+              status,
 
-      proposerSignature,
-      ownerSignature,
-      agentSignature,
-    },
-  });
+              proposerSignature,
+              ownerSignature,
+              agentSignature,
+            },
+
+            select: {
+              id: true,
+              clientId: true,
+            },
+          });
+
+        if (createdProposal.clientId) {
+          const offeredValueLabel =
+            formatCurrencyForDescription(
+              offeredValue,
+            );
+
+          await tx.commercialEvent.create({
+            data: {
+              clientId:
+                createdProposal.clientId,
+
+              agentId:
+                responsibleAgentId,
+
+              type:
+                "PROPOSTA_APRESENTADA",
+
+              amount:
+                offeredValue,
+
+              description:
+                offeredValueLabel
+                  ? `Proposta apresentada para o imóvel ${property.code} — ${property.title}. Valor oferecido: ${offeredValueLabel}.`
+                  : `Proposta apresentada para o imóvel ${property.code} — ${property.title}.`,
+
+              eventAt:
+                new Date(),
+
+              properties: {
+                create: {
+                  propertyId:
+                    property.id,
+                },
+              },
+            },
+          });
+
+          if (
+            status ===
+            "CONTRAPROPOSTA"
+          ) {
+            const counterOfferValueLabel =
+              formatCurrencyForDescription(
+                counterOfferValue,
+              );
+
+            const counterOfferDescription =
+              [
+                counterOfferValueLabel
+                  ? `Contraproposta do proprietário para o imóvel ${property.code}: ${counterOfferValueLabel}.`
+                  : `Contraproposta do proprietário para o imóvel ${property.code}.`,
+                counterOfferTerms
+                  ? `Condições: ${counterOfferTerms}`
+                  : null,
+                counterOfferNotes
+                  ? `Observações: ${counterOfferNotes}`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join("\n");
+
+            await tx.commercialEvent.create({
+              data: {
+                clientId:
+                  createdProposal.clientId,
+
+                agentId:
+                  responsibleAgentId,
+
+                type:
+                  "CONTRAPROPOSTA",
+
+                amount:
+                  counterOfferValue,
+
+                description:
+                  counterOfferDescription,
+
+                eventAt:
+                  new Date(),
+
+                properties: {
+                  create: {
+                    propertyId:
+                      property.id,
+                  },
+                },
+              },
+            });
+          }
+
+          if (
+            status ===
+            "ACEITA"
+          ) {
+            await tx.commercialEvent.create({
+              data: {
+                clientId:
+                  createdProposal.clientId,
+
+                agentId:
+                  responsibleAgentId,
+
+                type:
+                  "PROPOSTA_ACEITA",
+
+                amount:
+                  offeredValue,
+
+                description:
+                  `Proposta aceita para o imóvel ${property.code} — ${property.title}.`,
+
+                eventAt:
+                  new Date(),
+
+                properties: {
+                  create: {
+                    propertyId:
+                      property.id,
+                  },
+                },
+              },
+            });
+          }
+        }
+
+        return createdProposal;
+      },
+    );
 
   const propertyPath =
     `/admin/imoveis/${property.code.toLowerCase()}`;
@@ -469,6 +627,12 @@ export async function savePropertyProposal(
   revalidatePath(
     "/admin/clientes",
   );
+
+  if (proposal.clientId) {
+    revalidatePath(
+      `/admin/clientes/${proposal.clientId}`,
+    );
+  }
 
   redirect(
     `${proposalPath}?salvo=1`,
