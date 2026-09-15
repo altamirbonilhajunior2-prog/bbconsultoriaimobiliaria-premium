@@ -9,7 +9,10 @@ import PublicationControl from "./PublicationControl";
 import DeleteVisitButton from "./DeleteVisitButton";
 import DeleteProposalButton from "./DeleteProposalButton";
 import { deletePropertyVisit } from "./visit-actions";
-import { deletePropertyProposal } from "./proposal-actions";
+import {
+  deletePropertyProposal,
+  deletePropertyRentalProposal,
+} from "./proposal-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +70,14 @@ const proposalStatusLabels = {
   ACEITA: "Aceita",
   RECUSADA: "Recusada",
   CANCELADA: "Cancelada",
+} as const;
+
+const rentalGuaranteeLabels = {
+  CAUCAO: "Caução",
+  FIADOR: "Fiador",
+  SEGURO_FIANCA: "Seguro-fiança",
+  TITULO_CAPITALIZACAO: "Título de capitalização",
+  OUTRA: "Outra",
 } as const;
 
 function decimalToString(
@@ -239,12 +250,36 @@ export default async function EditarImovelPage({
             },
           },
         },
+
+        rentalProposals: {
+          orderBy: {
+            createdAt: "desc",
+          },
+
+          include: {
+            agent: {
+              select: {
+                id: true,
+                name: true,
+                creci: true,
+              },
+            },
+          },
+        },
       },
     });
 
   if (!property) {
     notFound();
   }
+
+  const allowsSale =
+    property.purpose === "VENDA" ||
+    property.purpose === "VENDA_E_LOCACAO";
+
+  const allowsRental =
+    property.purpose === "LOCACAO" ||
+    property.purpose === "VENDA_E_LOCACAO";
 
   const images =
     property.images.map(
@@ -475,14 +510,27 @@ export default async function EditarImovelPage({
               Nova ficha de visita
             </Link>
 
-            <Link
-              href={`/admin/imoveis/${property.code.toLowerCase()}/fichas/proposta`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-11 items-center justify-center bg-amber-500 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-black transition hover:bg-amber-400"
-            >
-              Nova proposta
-            </Link>
+            {allowsSale ? (
+              <Link
+                href={`/admin/imoveis/${property.code.toLowerCase()}/fichas/proposta`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-11 items-center justify-center bg-amber-500 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-black transition hover:bg-amber-400"
+              >
+                Nova proposta de compra
+              </Link>
+            ) : null}
+
+            {allowsRental ? (
+              <Link
+                href={`/admin/imoveis/${property.code.toLowerCase()}/fichas/proposta-locacao`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-11 items-center justify-center bg-emerald-600 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-emerald-500"
+              >
+                Nova proposta de locação
+              </Link>
+            ) : null}
 
             <Link
               href={`/admin/imoveis/${property.code.toLowerCase()}/fichas/imovel`}
@@ -743,6 +791,7 @@ export default async function EditarImovelPage({
           )}
         </section>
 
+        {allowsSale || property.proposals.length > 0 ? (
         <section className="mt-10 border border-white/10 bg-white/[0.03] p-6 lg:p-8">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -751,7 +800,7 @@ export default async function EditarImovelPage({
               </p>
 
               <h2 className="mt-2 font-serif text-3xl font-normal">
-                Histórico de propostas
+                Histórico de propostas de compra
               </h2>
 
               <p className="mt-2 text-sm text-zinc-400">
@@ -765,14 +814,16 @@ export default async function EditarImovelPage({
               </p>
             </div>
 
-            <Link
-              href={`/admin/imoveis/${property.code.toLowerCase()}/fichas/proposta`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-11 items-center justify-center bg-amber-500 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-black transition hover:bg-amber-400"
-            >
-              Registrar nova proposta
-            </Link>
+            {allowsSale ? (
+              <Link
+                href={`/admin/imoveis/${property.code.toLowerCase()}/fichas/proposta`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-11 items-center justify-center bg-amber-500 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-black transition hover:bg-amber-400"
+              >
+                Registrar proposta de compra
+              </Link>
+            ) : null}
           </div>
 
           {property.proposals.length > 0 ? (
@@ -1091,6 +1142,294 @@ export default async function EditarImovelPage({
             </div>
           )}
         </section>
+        ) : null}
+
+        {allowsRental || property.rentalProposals.length > 0 ? (
+        <section className="mt-10 border border-emerald-500/20 bg-emerald-500/[0.04] p-6 lg:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400">
+                CRM
+              </p>
+
+              <h2 className="mt-2 font-serif text-3xl font-normal">
+                Histórico de propostas de locação
+              </h2>
+
+              <p className="mt-2 text-sm text-zinc-400">
+                {property.rentalProposals.length === 0
+                  ? "Nenhuma proposta de locação registrada para este imóvel."
+                  : `${property.rentalProposals.length} ${
+                      property.rentalProposals.length === 1
+                        ? "proposta de locação registrada"
+                        : "propostas de locação registradas"
+                    }.`}
+              </p>
+            </div>
+
+            {allowsRental ? (
+              <Link
+                href={`/admin/imoveis/${property.code.toLowerCase()}/fichas/proposta-locacao`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-11 items-center justify-center bg-emerald-600 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-emerald-500"
+              >
+                Registrar proposta de locação
+              </Link>
+            ) : null}
+          </div>
+
+          {property.rentalProposals.length > 0 ? (
+            <div className="mt-6 space-y-4">
+              {property.rentalProposals.map((proposal) => {
+                const deleteRentalProposalAction =
+                  deletePropertyRentalProposal.bind(
+                    null,
+                    property.code,
+                    proposal.id,
+                  );
+
+                return (
+                  <article
+                    key={proposal.id}
+                    className="border border-emerald-500/15 bg-black/30 p-5"
+                  >
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <h3 className="text-lg font-semibold text-white">
+                            {proposal.tenantName}
+                          </h3>
+
+                          <span
+                            className={`border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${
+                              proposal.status === "ACEITA"
+                                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                                : proposal.status === "RECUSADA" ||
+                                    proposal.status === "CANCELADA"
+                                  ? "border-red-500/30 bg-red-500/10 text-red-300"
+                                  : "border-amber-500/30 bg-amber-500/10 text-amber-300"
+                            }`}
+                          >
+                            {proposalStatusLabels[proposal.status]}
+                          </span>
+                        </div>
+
+                        <div className="mt-4 grid gap-4 text-sm text-zinc-300 sm:grid-cols-2 lg:grid-cols-4">
+                          <div>
+                            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                              Aluguel proposto
+                            </p>
+                            <p className="mt-1 font-semibold text-white">
+                              {formatCurrency(proposal.offeredRentValue)}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                              Garantia
+                            </p>
+                            <p className="mt-1">
+                              {proposal.guaranteeType
+                                ? rentalGuaranteeLabels[
+                                    proposal.guaranteeType
+                                  ]
+                                : "A definir"}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                              Início pretendido
+                            </p>
+                            <p className="mt-1">
+                              {formatOptionalDate(
+                                proposal.desiredStartDate,
+                              )}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                              Registro criado
+                            </p>
+                            <p className="mt-1">
+                              {formatCreatedAt(proposal.createdAt)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-5 grid gap-4 border-t border-white/10 pt-4 text-sm text-zinc-400 sm:grid-cols-2">
+                          <div>
+                            <span className="font-semibold text-zinc-300">
+                              CPF/CNPJ:
+                            </span>{" "}
+                            {proposal.tenantDocument ?? "Não informado"}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-zinc-300">
+                              Telefone:
+                            </span>{" "}
+                            {proposal.tenantPhone ?? "Não informado"}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-zinc-300">
+                              E-mail:
+                            </span>{" "}
+                            {proposal.tenantEmail ?? "Não informado"}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-zinc-300">
+                              Corretor:
+                            </span>{" "}
+                            {proposal.agent ? (
+                              <>
+                                {proposal.agent.name}
+                                {proposal.agent.creci
+                                  ? ` • CRECI ${proposal.agent.creci}`
+                                  : ""}
+                              </>
+                            ) : (
+                              "Não informado"
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-5 grid gap-4 border-t border-white/10 pt-4 text-sm text-zinc-400 sm:grid-cols-2 lg:grid-cols-4">
+                          <div>
+                            <span className="font-semibold text-zinc-300">
+                              Condomínio:
+                            </span>{" "}
+                            {formatCurrency(proposal.condominiumValue)}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-zinc-300">
+                              IPTU:
+                            </span>{" "}
+                            {formatCurrency(proposal.iptuValue)}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-zinc-300">
+                              Caução/garantia:
+                            </span>{" "}
+                            {formatCurrency(
+                              proposal.securityDepositValue,
+                            )}
+                          </div>
+                          <div>
+                            <span className="font-semibold text-zinc-300">
+                              Prazo:
+                            </span>{" "}
+                            {proposal.leaseTermMonths
+                              ? `${proposal.leaseTermMonths} meses`
+                              : "Não informado"}
+                          </div>
+                        </div>
+
+                        {proposal.guaranteeDetails ? (
+                          <div className="mt-5 border-t border-white/10 pt-4">
+                            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                              Detalhes da garantia
+                            </p>
+                            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-300">
+                              {proposal.guaranteeDetails}
+                            </p>
+                          </div>
+                        ) : null}
+
+                        {proposal.specialConditions ? (
+                          <div className="mt-5 border-t border-white/10 pt-4">
+                            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                              Condições especiais
+                            </p>
+                            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-300">
+                              {proposal.specialConditions}
+                            </p>
+                          </div>
+                        ) : null}
+
+                        {proposal.notes ? (
+                          <div className="mt-5 border-t border-white/10 pt-4">
+                            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                              Observações
+                            </p>
+                            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-300">
+                              {proposal.notes}
+                            </p>
+                          </div>
+                        ) : null}
+
+                        {proposal.counterOfferRent ||
+                        proposal.counterOfferTerms ||
+                        proposal.counterOfferNotes ? (
+                          <div className="mt-5 border border-amber-500/20 bg-amber-500/5 p-4">
+                            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-amber-300">
+                              Contraproposta do proprietário
+                            </p>
+                            {proposal.counterOfferRent ? (
+                              <p className="mt-3 text-sm text-zinc-300">
+                                <span className="font-semibold">
+                                  Aluguel:
+                                </span>{" "}
+                                {formatCurrency(
+                                  proposal.counterOfferRent,
+                                )}
+                              </p>
+                            ) : null}
+                            {proposal.counterOfferTerms ? (
+                              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-300">
+                                {proposal.counterOfferTerms}
+                              </p>
+                            ) : null}
+                            {proposal.counterOfferNotes ? (
+                              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-400">
+                                {proposal.counterOfferNotes}
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : null}
+
+                        <div className="mt-5 flex flex-wrap gap-3 border-t border-white/10 pt-4">
+                          {[
+                            ["Pretendente", proposal.tenantSignature],
+                            ["Proprietário", proposal.ownerSignature],
+                            ["Corretor", proposal.agentSignature],
+                          ].map(([label, signature]) => (
+                            <span
+                              key={label}
+                              className={`border px-3 py-2 text-[9px] font-bold uppercase tracking-[0.1em] ${
+                                signature
+                                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                                  : "border-white/10 text-zinc-500"
+                              }`}
+                            >
+                              {label}: {signature ? "assinado" : "sem assinatura"}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {access.isAdmin ? (
+                        <div className="flex shrink-0 flex-wrap gap-2 lg:flex-col">
+                          <DeleteProposalButton
+                            onDelete={deleteRentalProposalAction}
+                          />
+                        </div>
+                      ) : null}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="mt-6 border border-dashed border-white/15 px-5 py-10 text-center">
+              <p className="text-sm text-zinc-500">
+                O histórico aparecerá aqui assim que a primeira proposta de locação for salva.
+              </p>
+            </div>
+          )}
+        </section>
+        ) : null}
 
         <div className="mt-10">
           <EditPropertyForm

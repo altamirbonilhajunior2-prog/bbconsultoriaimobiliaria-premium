@@ -7,6 +7,7 @@ import { prisma } from "../../../../../../lib/prisma";
 import PrintControls from "./PrintControls";
 import SignaturePad from "./SignaturePad";
 import { savePropertyProposal } from "./proposal-actions";
+import { savePropertyRentalProposal } from "./rental-proposal-actions";
 import { savePropertyVisit } from "./visit-actions";
 
 export const dynamic = "force-dynamic";
@@ -303,7 +304,8 @@ export default async function PrintableSheetPage({
   if (
     tipo !== "visita" &&
     tipo !== "imovel" &&
-    tipo !== "proposta"
+    tipo !== "proposta" &&
+    tipo !== "proposta-locacao"
   ) {
     notFound();
   }
@@ -342,17 +344,30 @@ export default async function PrintableSheetPage({
     notFound();
   }
 
+  if (
+    (tipo === "proposta" &&
+      property.purpose === "LOCACAO") ||
+    (tipo === "proposta-locacao" &&
+      property.purpose === "VENDA")
+  ) {
+    notFound();
+  }
+
   const isVisitSheet =
     tipo === "visita";
 
   const isProposalSheet =
     tipo === "proposta";
 
+  const isRentalProposalSheet =
+    tipo === "proposta-locacao";
+
   const isPropertySheet =
     tipo === "imovel";
 
   const activeAgents =
-    isProposalSheet &&
+    (isProposalSheet ||
+      isRentalProposalSheet) &&
     access.isAdmin
       ? await prisma.agent.findMany({
           where: {
@@ -372,7 +387,8 @@ export default async function PrintableSheetPage({
       : [];
 
   const currentAgent =
-    isProposalSheet &&
+    (isProposalSheet ||
+      isRentalProposalSheet) &&
     access.agentId
       ? await prisma.agent.findUnique({
           where: {
@@ -437,11 +453,19 @@ export default async function PrintableSheetPage({
       property.code,
     );
 
+  const saveRentalProposalAction =
+    savePropertyRentalProposal.bind(
+      null,
+      property.code,
+    );
+
   const printLabel =
     isVisitSheet
       ? "Imprimir ficha de visita"
       : isProposalSheet
         ? "Imprimir proposta"
+        : isRentalProposalSheet
+          ? "Imprimir proposta de locação"
         : "Imprimir ficha do imóvel";
 
   return (
@@ -510,6 +534,13 @@ export default async function PrintableSheetPage({
       salvo === "1" ? (
         <div className="mx-auto mb-4 w-full max-w-[210mm] border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 print:hidden">
           Proposta salva com sucesso.
+        </div>
+      ) : null}
+
+      {isRentalProposalSheet &&
+      salvo === "1" ? (
+        <div className="mx-auto mb-4 w-full max-w-[210mm] border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800 print:hidden">
+          Proposta de locação salva com sucesso.
         </div>
       ) : null}
 
@@ -1092,6 +1123,345 @@ export default async function PrintableSheetPage({
               <span>
                 Gerado em {generatedAt}
               </span>
+            </footer>
+          </article>
+        </form>
+      ) : null}
+
+      {isRentalProposalSheet ? (
+        <form action={saveRentalProposalAction}>
+          <article className="print-sheet mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white p-5 shadow-2xl sm:p-[12mm] print:p-0">
+            <SheetHeader
+              title="Proposta de locação"
+              code={property.code}
+            />
+
+            <section className="mt-6">
+              <SectionTitle>
+                Identificação do imóvel
+              </SectionTitle>
+
+              <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+                <InfoItem label="Imóvel" wide>
+                  {property.title}
+                </InfoItem>
+
+                <InfoItem label="Endereço" wide>
+                  {address}
+                </InfoItem>
+
+                <InfoItem label="Finalidade">
+                  {purposeLabels[property.purpose] ??
+                    property.purpose}
+                </InfoItem>
+
+                <InfoItem label="Aluguel anunciado">
+                  {property.rentalPrice
+                    ? formatCurrency(property.rentalPrice)
+                    : "Sob consulta"}
+                </InfoItem>
+              </div>
+            </section>
+
+            <section className="mt-7">
+              <SectionTitle>
+                Dados do pretendente à locação
+              </SectionTitle>
+
+              <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+                <EditableField
+                  label="Nome completo"
+                  name="tenantName"
+                  wide
+                  required
+                  placeholder="Nome completo do pretendente"
+                />
+
+                <EditableField
+                  label="CPF ou CNPJ"
+                  name="tenantDocument"
+                  placeholder="Documento do pretendente"
+                />
+
+                <EditableField
+                  label="Telefone"
+                  name="tenantPhone"
+                  type="tel"
+                  placeholder="(00) 00000-0000"
+                />
+
+                <EditableField
+                  label="E-mail"
+                  name="tenantEmail"
+                  type="email"
+                  placeholder="nome@email.com"
+                />
+              </div>
+            </section>
+
+            <section className="mt-7">
+              <SectionTitle>
+                Condições da locação
+              </SectionTitle>
+
+              <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+                <EditableField
+                  label="Valor mensal proposto"
+                  name="offeredRentValue"
+                  required
+                  placeholder="R$ 0,00"
+                />
+
+                <EditableField
+                  label="Condomínio considerado"
+                  name="condominiumValue"
+                  placeholder="R$ 0,00"
+                />
+
+                <EditableField
+                  label="IPTU considerado"
+                  name="iptuValue"
+                  placeholder="R$ 0,00"
+                />
+
+                <EditableField
+                  label="Início pretendido"
+                  name="desiredStartDate"
+                  type="date"
+                />
+
+                <EditableField
+                  label="Prazo da locação em meses"
+                  name="leaseTermMonths"
+                  placeholder="Ex.: 30"
+                />
+
+                <EditableField
+                  label="Validade da proposta"
+                  name="validUntil"
+                  type="date"
+                />
+              </div>
+            </section>
+
+            <section className="mt-7">
+              <SectionTitle>
+                Garantia locatícia
+              </SectionTitle>
+
+              <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                    Modalidade de garantia
+                  </span>
+
+                  <select
+                    name="guaranteeType"
+                    defaultValue=""
+                    className="mt-1 h-10 w-full border-0 border-b border-zinc-400 bg-transparent px-1 text-[11px] text-zinc-950 outline-none transition focus:border-amber-500 focus:ring-0"
+                  >
+                    <option value="">A definir</option>
+                    <option value="CAUCAO">Caução</option>
+                    <option value="FIADOR">Fiador</option>
+                    <option value="SEGURO_FIANCA">Seguro-fiança</option>
+                    <option value="TITULO_CAPITALIZACAO">
+                      Título de capitalização
+                    </option>
+                    <option value="OUTRA">Outra</option>
+                  </select>
+                </label>
+
+                <EditableField
+                  label="Valor da caução / garantia"
+                  name="securityDepositValue"
+                  placeholder="R$ 0,00"
+                />
+
+                <EditableTextArea
+                  label="Detalhes da garantia"
+                  name="guaranteeDetails"
+                  wide
+                  rows={3}
+                  placeholder="Informe fiador, seguradora, quantidade de depósitos ou outros detalhes..."
+                />
+
+                <EditableTextArea
+                  label="Condições especiais"
+                  name="specialConditions"
+                  wide
+                  rows={4}
+                  placeholder="Descreva condições, benfeitorias, móveis, carência ou outros pontos negociados..."
+                />
+              </div>
+            </section>
+
+            <section className="mt-7">
+              <SectionTitle>Observações</SectionTitle>
+
+              <div className="mt-4">
+                <EditableTextArea
+                  label="Observações adicionais da proposta"
+                  name="proposalNotes"
+                  wide
+                  rows={4}
+                  placeholder="Registre informações complementares relevantes..."
+                />
+              </div>
+            </section>
+
+            <section className="mt-7 border border-amber-200 bg-amber-50/40 p-4">
+              <SectionTitle>
+                Contraproposta do proprietário
+              </SectionTitle>
+
+              <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+                <EditableField
+                  label="Aluguel da contraproposta"
+                  name="counterOfferRent"
+                  placeholder="R$ 0,00"
+                />
+
+                <EditableTextArea
+                  label="Condições da contraproposta"
+                  name="counterOfferTerms"
+                  wide
+                  rows={3}
+                  placeholder="Condições apresentadas pelo proprietário..."
+                />
+
+                <EditableTextArea
+                  label="Observações da contraproposta"
+                  name="counterOfferNotes"
+                  wide
+                  rows={3}
+                  placeholder="Observações adicionais..."
+                />
+              </div>
+            </section>
+
+            <section className="mt-7">
+              <SectionTitle>
+                Situação da proposta
+              </SectionTitle>
+
+              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-3 text-[10px] text-zinc-700">
+                <ChoiceOption
+                  name="proposalStatus"
+                  value="EM_ANALISE"
+                  label="Em análise"
+                  defaultChecked
+                />
+                <ChoiceOption
+                  name="proposalStatus"
+                  value="CONTRAPROPOSTA"
+                  label="Contraproposta"
+                />
+                <ChoiceOption
+                  name="proposalStatus"
+                  value="ACEITA"
+                  label="Aceita"
+                />
+                <ChoiceOption
+                  name="proposalStatus"
+                  value="RECUSADA"
+                  label="Recusada"
+                />
+                <ChoiceOption
+                  name="proposalStatus"
+                  value="CANCELADA"
+                  label="Cancelada"
+                />
+              </div>
+            </section>
+
+            <section className="mt-7">
+              <SectionTitle>
+                Corretor responsável
+              </SectionTitle>
+
+              <div className="mt-4">
+                {access.isAdmin ? (
+                  <label className="block">
+                    <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                      Selecione o corretor
+                    </span>
+                    <select
+                      name="agentId"
+                      defaultValue=""
+                      className="mt-2 h-11 w-full border border-zinc-300 bg-white px-3 text-[11px] text-zinc-950 outline-none focus:border-amber-500"
+                    >
+                      <option value="">Selecione</option>
+                      {activeAgents.map((agent) => (
+                        <option key={agent.id} value={agent.id}>
+                          {agent.name}
+                          {agent.creci
+                            ? ` • CRECI ${agent.creci}`
+                            : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                ) : (
+                  <InfoItem label="Responsável">
+                    <span className="font-semibold">
+                      {currentAgent?.name ?? "Corretor logado"}
+                    </span>
+                    {currentAgent?.creci ? (
+                      <span className="block text-[9px] text-zinc-600">
+                        CRECI {currentAgent.creci}
+                      </span>
+                    ) : null}
+                  </InfoItem>
+                )}
+              </div>
+            </section>
+
+            <section className="mt-8 print-avoid-break">
+              <SectionTitle>Assinaturas</SectionTitle>
+
+              <p className="mt-2 text-[8px] leading-4 text-zinc-500 print:hidden">
+                As assinaturas podem ser feitas com dedo, caneta touch ou mouse.
+              </p>
+
+              <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-3 print:grid-cols-3">
+                <SignaturePad
+                  label="Pretendente à locação"
+                  name="tenantSignature"
+                />
+                <SignaturePad
+                  label="Proprietário"
+                  name="ownerSignature"
+                />
+                <SignaturePad
+                  label="Corretor responsável"
+                  name="agentSignature"
+                />
+              </div>
+            </section>
+
+            <div className="mt-8 flex justify-end print:hidden">
+              <button
+                type="submit"
+                className="inline-flex min-h-11 w-full items-center justify-center bg-emerald-600 px-7 text-[10px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-emerald-500 sm:w-auto"
+              >
+                Salvar proposta de locação
+              </button>
+            </div>
+
+            <div className="mt-7 border-t border-zinc-200 pt-4 text-[8px] leading-4 text-zinc-500">
+              <p>
+                Esta ficha registra condições preliminares de locação. O aceite não substitui a análise cadastral, a aprovação da garantia e o contrato definitivo.
+              </p>
+              <p className="mt-2">
+                Os dados pessoais devem ser utilizados exclusivamente para o atendimento e a negociação imobiliária, com proteção e confidencialidade adequadas.
+              </p>
+            </div>
+
+            <footer className="mt-6 flex flex-col gap-2 border-t border-zinc-200 pt-3 text-[7px] uppercase tracking-[0.1em] text-zinc-400 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                B&amp;B Consultoria Imobiliária • Proposta de locação
+              </span>
+              <span>Gerado em {generatedAt}</span>
             </footer>
           </article>
         </form>

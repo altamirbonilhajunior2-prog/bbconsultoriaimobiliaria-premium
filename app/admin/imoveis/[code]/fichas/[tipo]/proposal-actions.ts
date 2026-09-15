@@ -194,12 +194,22 @@ export async function savePropertyProposal(
       select: {
         id: true,
         code: true,
+        purpose: true,
       },
     });
 
   if (!property) {
     throw new Error(
       "Imóvel não encontrado.",
+    );
+  }
+
+  if (
+    property.purpose !== "VENDA" &&
+    property.purpose !== "VENDA_E_LOCACAO"
+  ) {
+    throw new Error(
+      "Este imóvel não está disponível para venda.",
     );
   }
 
