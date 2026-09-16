@@ -99,6 +99,7 @@ export default async function ClientesPage() {
     visits,
     converted,
     clients,
+    whatsAppLeadIntents,
   ] = await Promise.all([
     prisma.portalLead.findMany({
       orderBy: {
@@ -158,6 +159,25 @@ export default async function ClientesPage() {
     }),
 
     prisma.client.count(),
+
+    prisma.whatsAppLeadIntent.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 100,
+      select: {
+        id: true,
+        propertyCode: true,
+        sourcePage: true,
+        referrer: true,
+        utmSource: true,
+        utmMedium: true,
+        utmCampaign: true,
+        utmTerm: true,
+        utmContent: true,
+        gclid: true,
+        createdAt: true,
+        property: { select: { title: true } },
+      },
+    }),
   ]);
 
   const indicators = [
@@ -170,6 +190,11 @@ export default async function ClientesPage() {
       label:
         "Novos",
       value: newLeads,
+    },
+    {
+      label:
+        "Contatos via WhatsApp",
+      value: whatsAppLeadIntents.length,
     },
     {
       label:
@@ -219,7 +244,7 @@ export default async function ClientesPage() {
           </p>
         </header>
 
-        <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
           {indicators.map(
             (indicator) => (
               <article
@@ -373,6 +398,116 @@ export default async function ClientesPage() {
                   );
                 },
               )}
+            </div>
+          )}
+        </section>
+
+        <section className="mt-12 border-t border-white/10 pt-10">
+          <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-400">
+                Intenção de contato
+              </p>
+              <h2 className="mt-2 font-serif text-3xl">
+                Contatos iniciados pelo WhatsApp
+              </h2>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-500">
+                Registros de cliques nos botões de WhatsApp do portal. O clique indica intenção de contato, mas não confirma que a mensagem foi enviada.
+              </p>
+            </div>
+            <p className="text-xs text-zinc-500">
+              {whatsAppLeadIntents.length} registro
+              {whatsAppLeadIntents.length === 1 ? "" : "s"}
+            </p>
+          </div>
+
+          {whatsAppLeadIntents.length === 0 ? (
+            <div className="border border-white/10 bg-[#0a0a0a] p-10 text-center text-zinc-400">
+              Nenhum contato iniciado pelo WhatsApp foi registrado até o momento.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {whatsAppLeadIntents.map((intent) => {
+                const hasCampaignData = Boolean(
+                  intent.utmSource ||
+                    intent.utmMedium ||
+                    intent.utmCampaign ||
+                    intent.utmTerm ||
+                    intent.utmContent ||
+                    intent.gclid,
+                );
+
+                return (
+                  <article
+                    key={intent.id}
+                    className="border border-emerald-500/20 bg-[#0a0a0a] p-6 lg:p-7"
+                  >
+                    <div className="grid gap-6 lg:grid-cols-[1fr_1fr_1.2fr]">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className="border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-emerald-300">
+                            Clique no WhatsApp
+                          </span>
+                          <span className="text-xs text-zinc-500">
+                            {formatDate(intent.createdAt)}
+                          </span>
+                        </div>
+                        <h3 className="mt-4 font-serif text-2xl">
+                          {intent.propertyCode
+                            ? `Imóvel ${intent.propertyCode}`
+                            : "Atendimento geral"}
+                        </h3>
+                        {intent.propertyCode ? (
+                          <Link
+                            href={`/imovel/${intent.propertyCode.toLowerCase()}`}
+                            target="_blank"
+                            className="mt-3 inline-flex text-sm font-medium text-amber-400 hover:text-amber-300"
+                          >
+                            {intent.property?.title ?? "Abrir imóvel"}
+                          </Link>
+                        ) : null}
+                      </div>
+
+                      <div className="text-sm leading-7 text-zinc-400">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                          Origem
+                        </p>
+                        <p className="mt-2 font-medium text-white">
+                          {getSourceLabel(intent.utmSource, intent.utmCampaign)}
+                        </p>
+                        <p className="mt-3 break-all text-xs text-zinc-500">
+                          Página: {intent.sourcePage}
+                        </p>
+                        {intent.referrer ? (
+                          <p className="mt-1 break-all text-xs text-zinc-600">
+                            Referência: {intent.referrer}
+                          </p>
+                        ) : null}
+                      </div>
+
+                      <div className="text-xs leading-6 text-zinc-500">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                          Campanha / rastreamento
+                        </p>
+                        {hasCampaignData ? (
+                          <div className="mt-2 space-y-1">
+                            {intent.utmSource ? <p>utm_source: <span className="text-zinc-300">{intent.utmSource}</span></p> : null}
+                            {intent.utmMedium ? <p>utm_medium: <span className="text-zinc-300">{intent.utmMedium}</span></p> : null}
+                            {intent.utmCampaign ? <p>utm_campaign: <span className="text-zinc-300">{intent.utmCampaign}</span></p> : null}
+                            {intent.utmTerm ? <p>utm_term: <span className="text-zinc-300">{intent.utmTerm}</span></p> : null}
+                            {intent.utmContent ? <p>utm_content: <span className="text-zinc-300">{intent.utmContent}</span></p> : null}
+                            {intent.gclid ? <p className="break-all">gclid: <span className="text-zinc-300">{intent.gclid}</span></p> : null}
+                          </div>
+                        ) : (
+                          <p className="mt-2 text-zinc-600">
+                            Sem parâmetros de campanha registrados.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>

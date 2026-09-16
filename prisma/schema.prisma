@@ -145,6 +145,7 @@ model Property {
 
   images                    PropertyImage[]
   portalLeads               PortalLead[]
+  whatsAppLeadIntents       WhatsAppLeadIntent[]
   visits                    PropertyVisit[]
   proposals                 PropertyProposal[]
   rentalProposals           PropertyRentalProposal[]
@@ -274,6 +275,35 @@ model PortalLead {
   @@index([status])
   @@index([createdAt])
   @@index([clientId])
+}
+
+model WhatsAppLeadIntent {
+  id Int @id @default(autoincrement())
+
+  propertyId Int?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  propertyCode String? @db.VarChar(30)
+
+  sourcePage String  @db.VarChar(1000)
+  referrer   String? @db.VarChar(1000)
+
+  utmSource   String? @db.VarChar(180)
+  utmMedium   String? @db.VarChar(180)
+  utmCampaign String? @db.VarChar(250)
+  utmTerm     String? @db.VarChar(250)
+  utmContent  String? @db.VarChar(250)
+
+  gclid String? @db.VarChar(255)
+
+  createdAt DateTime @default(now())
+
+  @@index([propertyId])
+  @@index([propertyCode])
+  @@index([utmSource])
+  @@index([utmCampaign])
+  @@index([gclid])
+  @@index([createdAt])
 }
 
 model PropertyVisit {
