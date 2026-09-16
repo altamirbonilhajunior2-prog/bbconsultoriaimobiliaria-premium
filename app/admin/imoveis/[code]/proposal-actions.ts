@@ -599,6 +599,521 @@ export async function finalizePropertySale(
   );
 }
 
+export async function updatePropertyRentalProposalCommercialStage(
+  propertyCode: string,
+  proposalId: number,
+  formData: FormData,
+) {
+  const access =
+    await getAccessContext();
+
+  const normalizedCode =
+    propertyCode
+      .trim()
+      .toUpperCase();
+
+  const property =
+    await prisma.property.findUnique({
+      where: {
+        code:
+          normalizedCode,
+      },
+
+      select: {
+        id: true,
+        code: true,
+        title: true,
+        status: true,
+      },
+    });
+
+  if (!property) {
+    throw new Error(
+      "Imóvel não encontrado.",
+    );
+  }
+
+  const proposal =
+    await prisma.propertyRentalProposal.findFirst({
+      where: {
+        id:
+          proposalId,
+
+        propertyId:
+          property.id,
+      },
+
+      select: {
+        id: true,
+        clientId: true,
+        agentId: true,
+        tenantName: true,
+        offeredRentValue: true,
+        counterOfferRent: true,
+        counterOfferTerms: true,
+        counterOfferNotes: true,
+        status: true,
+      },
+    });
+
+  if (!proposal) {
+    throw new Error(
+      "Proposta de locação não encontrada.",
+    );
+  }
+
+  if (
+    !access.isAdmin &&
+    proposal.agentId !==
+      access.agentId
+  ) {
+    throw new Error(
+      "Você não tem permissão para atualizar esta proposta de locação.",
+    );
+  }
+
+  const stage =
+    parseCommercialStage(
+      getOptionalText(
+        formData,
+        "commercialStage",
+      ),
+    );
+
+  const counterOfferRent =
+    parseCurrency(
+      getOptionalText(
+        formData,
+        "counterOfferRent",
+      ),
+    );
+
+  const counterOfferTerms =
+    getOptionalText(
+      formData,
+      "counterOfferTerms",
+    );
+
+  const counterOfferNotes =
+    getOptionalText(
+      formData,
+      "counterOfferNotes",
+    );
+
+  const negotiationNotes =
+    getOptionalText(
+      formData,
+      "negotiationNotes",
+    );
+
+  const offeredRentValue =
+    proposal.offeredRentValue
+      ? Number(
+          proposal.offeredRentValue.toString(),
+        )
+      : null;
+
+  const previousCounterOfferRent =
+    proposal.counterOfferRent
+      ? Number(
+          proposal.counterOfferRent.toString(),
+        )
+      : null;
+
+  await prisma.$transaction(
+    async (tx) => {
+      if (
+        stage ===
+        "CONTRAPROPOSTA"
+      ) {
+        await tx.propertyRentalProposal.update({
+          where: {
+            id:
+              proposal.id,
+          },
+
+          data: {
+            status:
+              "CONTRAPROPOSTA",
+
+            counterOfferRent:
+              counterOfferRent ??
+              proposal.counterOfferRent,
+
+            counterOfferTerms:
+              counterOfferTerms ??
+              proposal.counterOfferTerms,
+
+            counterOfferNotes:
+              counterOfferNotes ??
+              proposal.counterOfferNotes,
+          },
+        });
+      }
+
+      if (
+        stage ===
+        "ACEITA"
+      ) {
+        await tx.propertyRentalProposal.update({
+          where: {
+            id:
+              proposal.id,
+          },
+
+          data: {
+            status:
+              "ACEITA",
+          },
+        });
+      }
+
+      if (
+        stage ===
+        "PERDIDO"
+      ) {
+        await tx.propertyRentalProposal.update({
+          where: {
+            id:
+              proposal.id,
+          },
+
+          data: {
+            status:
+              "RECUSADA",
+          },
+        });
+      }
+
+      if (
+        proposal.clientId
+      ) {
+        let eventType:
+          | "CONTRAPROPOSTA"
+          | "NEGOCIACAO"
+          | "PROPOSTA_ACEITA"
+          | "DOCUMENTACAO"
+          | "NEGOCIO_CONCLUIDO"
+          | "PERDIDO_ENCERRADO";
+
+        let amount:
+          | number
+          | null =
+          null;
+
+        let description =
+          "";
+
+        if (
+          stage ===
+          "CONTRAPROPOSTA"
+        ) {
+          eventType =
+            "CONTRAPROPOSTA";
+
+          amount =
+            counterOfferRent ??
+            previousCounterOfferRent;
+
+          const amountLabel =
+            formatCurrency(
+              amount,
+            );
+
+          description = [
+            `Contraproposta de locação registrada para o imóvel ${property.code} — ${property.title}.`,
+
+            amountLabel
+              ? `Valor do aluguel na contraproposta: ${amountLabel}.`
+              : null,
+
+            counterOfferTerms
+              ? `Condições: ${counterOfferTerms}`
+              : null,
+
+            counterOfferNotes
+              ? `Observações: ${counterOfferNotes}`
+              : null,
+          ]
+            .filter(Boolean)
+            .join("\n");
+        } else if (
+          stage ===
+          "NEGOCIACAO"
+        ) {
+          eventType =
+            "NEGOCIACAO";
+
+          amount =
+            previousCounterOfferRent ??
+            offeredRentValue;
+
+          description =
+            negotiationNotes
+              ? `Negociação de locação em andamento para o imóvel ${property.code} — ${property.title}.\n${negotiationNotes}`
+              : `Negociação de locação em andamento para o imóvel ${property.code} — ${property.title}.`;
+        } else if (
+          stage ===
+          "ACEITA"
+        ) {
+          eventType =
+            "PROPOSTA_ACEITA";
+
+          amount =
+            previousCounterOfferRent ??
+            offeredRentValue;
+
+          description =
+            `Proposta de locação aceita para o imóvel ${property.code} — ${property.title}.`;
+        } else if (
+          stage ===
+          "DOCUMENTACAO"
+        ) {
+          eventType =
+            "DOCUMENTACAO";
+
+          amount =
+            previousCounterOfferRent ??
+            offeredRentValue;
+
+          description =
+            negotiationNotes
+              ? `Documentação da locação iniciada para o imóvel ${property.code} — ${property.title}.\n${negotiationNotes}`
+              : `Documentação da locação iniciada para o imóvel ${property.code} — ${property.title}.`;
+        } else if (
+          stage ===
+          "CONCLUIDO"
+        ) {
+          eventType =
+            "NEGOCIO_CONCLUIDO";
+
+          amount =
+            previousCounterOfferRent ??
+            offeredRentValue;
+
+          description =
+            negotiationNotes
+              ? `Locação concluída para o imóvel ${property.code} — ${property.title}.\n${negotiationNotes}`
+              : `Locação concluída para o imóvel ${property.code} — ${property.title}.`;
+        } else {
+          eventType =
+            "PERDIDO_ENCERRADO";
+
+          amount =
+            previousCounterOfferRent ??
+            offeredRentValue;
+
+          description =
+            negotiationNotes
+              ? `Negociação de locação encerrada para o imóvel ${property.code} — ${property.title}.\n${negotiationNotes}`
+              : `Negociação de locação encerrada para o imóvel ${property.code} — ${property.title}.`;
+        }
+
+        await tx.commercialEvent.create({
+          data: {
+            clientId:
+              proposal.clientId,
+
+            agentId:
+              access.agentId ??
+              proposal.agentId,
+
+            type:
+              eventType,
+
+            amount,
+
+            description,
+
+            eventAt:
+              new Date(),
+
+            properties: {
+              create: {
+                propertyId:
+                  property.id,
+              },
+            },
+          },
+        });
+      }
+    },
+  );
+
+  revalidatePath(
+    `/admin/imoveis/${property.code.toLowerCase()}`,
+  );
+
+  revalidatePath(
+    "/admin/clientes",
+  );
+
+  if (proposal.clientId) {
+    revalidatePath(
+      `/admin/clientes/${proposal.clientId}`,
+    );
+  }
+}
+
+export async function finalizePropertyRental(
+  propertyCode: string,
+  proposalId: number,
+) {
+  const access =
+    await getAccessContext();
+
+  if (!access.isAdmin) {
+    throw new Error(
+      "Apenas administradores podem finalizar uma locação.",
+    );
+  }
+
+  const normalizedCode =
+    propertyCode
+      .trim()
+      .toUpperCase();
+
+  const property =
+    await prisma.property.findUnique({
+      where: {
+        code:
+          normalizedCode,
+      },
+
+      select: {
+        id: true,
+        code: true,
+        title: true,
+        status: true,
+      },
+    });
+
+  if (!property) {
+    throw new Error(
+      "Imóvel não encontrado.",
+    );
+  }
+
+  const proposal =
+    await prisma.propertyRentalProposal.findFirst({
+      where: {
+        id:
+          proposalId,
+
+        propertyId:
+          property.id,
+      },
+
+      select: {
+        id: true,
+        clientId: true,
+        status: true,
+      },
+    });
+
+  if (!proposal) {
+    throw new Error(
+      "Proposta de locação não encontrada.",
+    );
+  }
+
+  if (!proposal.clientId) {
+    throw new Error(
+      "A proposta de locação precisa estar vinculada a um cliente para finalizar a locação.",
+    );
+  }
+
+  if (
+    proposal.status !==
+    "ACEITA"
+  ) {
+    throw new Error(
+      "Somente uma proposta de locação aceita pode finalizar a locação.",
+    );
+  }
+
+  const completedEvent =
+    await prisma.commercialEvent.findFirst({
+      where: {
+        clientId:
+          proposal.clientId,
+
+        type:
+          "NEGOCIO_CONCLUIDO",
+
+        description: {
+          startsWith:
+            `Locação concluída para o imóvel ${property.code} —`,
+        },
+
+        properties: {
+          some: {
+            propertyId:
+              property.id,
+          },
+        },
+      },
+
+      select: {
+        id: true,
+      },
+    });
+
+  if (!completedEvent) {
+    throw new Error(
+      "Registre primeiro a etapa “Locação concluída” antes de finalizar a locação.",
+    );
+  }
+
+  await prisma.$transaction(
+    async (tx) => {
+      await tx.property.update({
+        where: {
+          id:
+            property.id,
+        },
+
+        data: {
+          status:
+            "ALUGADO",
+        },
+      });
+
+      await tx.client.update({
+        where: {
+          id:
+            proposal.clientId!,
+        },
+
+        data: {
+          status:
+            "CONVERTIDO",
+        },
+      });
+    },
+  );
+
+  revalidatePath(
+    `/admin/imoveis/${property.code.toLowerCase()}`,
+  );
+
+  revalidatePath(
+    "/admin/imoveis",
+  );
+
+  revalidatePath(
+    `/imovel/${property.code.toLowerCase()}`,
+  );
+
+  revalidatePath(
+    "/admin/clientes",
+  );
+
+  revalidatePath(
+    `/admin/clientes/${proposal.clientId}`,
+  );
+}
+
 export async function deletePropertyProposal(
   propertyCode: string,
   proposalId: number,

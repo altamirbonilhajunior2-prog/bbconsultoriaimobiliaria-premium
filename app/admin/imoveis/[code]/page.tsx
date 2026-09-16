@@ -12,8 +12,10 @@ import { deletePropertyVisit } from "./visit-actions";
 import {
   deletePropertyProposal,
   deletePropertyRentalProposal,
+  finalizePropertyRental,
   finalizePropertySale,
   updatePropertyProposalCommercialStage,
+  updatePropertyRentalProposalCommercialStage,
 } from "./proposal-actions";
 
 export const dynamic = "force-dynamic";
@@ -1395,6 +1397,25 @@ export default async function EditarImovelPage({
                     proposal.id,
                   );
 
+                const updateRentalCommercialStageAction =
+                  updatePropertyRentalProposalCommercialStage.bind(
+                    null,
+                    property.code,
+                    proposal.id,
+                  );
+
+                const finalizeRentalAction =
+                  finalizePropertyRental.bind(
+                    null,
+                    property.code,
+                    proposal.id,
+                  );
+
+                const canManageRentalProposal =
+                  access.isAdmin ||
+                  proposal.agentId ===
+                    access.agentId;
+
                 return (
                   <article
                     key={proposal.id}
@@ -1593,6 +1614,183 @@ export default async function EditarImovelPage({
                               </p>
                             ) : null}
                           </div>
+                        ) : null}
+
+                        {canManageRentalProposal ? (
+                          <form
+                            action={updateRentalCommercialStageAction}
+                            className="mt-5 border border-emerald-500/20 bg-emerald-500/[0.04] p-4"
+                          >
+                            <div className="flex flex-col gap-2">
+                              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-300">
+                                Andamento da locação
+                              </p>
+
+                              <p className="text-xs leading-5 text-zinc-500">
+                                Atualize esta mesma proposta sem criar um novo registro.
+                                Cada etapa será registrada automaticamente na linha do
+                                tempo comercial do cliente vinculado.
+                              </p>
+                            </div>
+
+                            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                              <label className="block">
+                                <span className="mb-2 block text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                  Nova etapa
+                                </span>
+
+                                <select
+                                  name="commercialStage"
+                                  required
+                                  defaultValue=""
+                                  className="min-h-11 w-full border border-white/15 bg-[#111] px-3 text-sm text-white outline-none focus:border-emerald-500"
+                                >
+                                  <option value="" disabled>
+                                    Selecione a etapa
+                                  </option>
+                                  <option value="CONTRAPROPOSTA">
+                                    Contraproposta
+                                  </option>
+                                  <option value="NEGOCIACAO">
+                                    Negociação em andamento
+                                  </option>
+                                  <option value="ACEITA">
+                                    Proposta aceita
+                                  </option>
+                                  <option value="DOCUMENTACAO">
+                                    Documentação
+                                  </option>
+                                  <option value="CONCLUIDO">
+                                    Locação concluída
+                                  </option>
+                                  <option value="PERDIDO">
+                                    Perdido / encerrado
+                                  </option>
+                                </select>
+                              </label>
+
+                              <label className="block">
+                                <span className="mb-2 block text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                  Aluguel da contraproposta
+                                </span>
+
+                                <input
+                                  name="counterOfferRent"
+                                  inputMode="decimal"
+                                  placeholder="Ex.: 8.500,00"
+                                  defaultValue={
+                                    proposal.counterOfferRent
+                                      ? proposal.counterOfferRent.toString()
+                                      : ""
+                                  }
+                                  className="min-h-11 w-full border border-white/15 bg-[#111] px-3 text-sm text-white outline-none placeholder:text-zinc-700 focus:border-emerald-500"
+                                />
+                              </label>
+                            </div>
+
+                            <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                              <label className="block">
+                                <span className="mb-2 block text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                  Condições da contraproposta
+                                </span>
+
+                                <textarea
+                                  name="counterOfferTerms"
+                                  rows={3}
+                                  defaultValue={
+                                    proposal.counterOfferTerms ??
+                                    ""
+                                  }
+                                  placeholder="Condições definidas pelo proprietário."
+                                  className="w-full resize-y border border-white/15 bg-[#111] px-3 py-3 text-sm leading-6 text-white outline-none placeholder:text-zinc-700 focus:border-emerald-500"
+                                />
+                              </label>
+
+                              <label className="block">
+                                <span className="mb-2 block text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                  Observações da contraproposta
+                                </span>
+
+                                <textarea
+                                  name="counterOfferNotes"
+                                  rows={3}
+                                  defaultValue={
+                                    proposal.counterOfferNotes ??
+                                    ""
+                                  }
+                                  placeholder="Observações complementares."
+                                  className="w-full resize-y border border-white/15 bg-[#111] px-3 py-3 text-sm leading-6 text-white outline-none placeholder:text-zinc-700 focus:border-emerald-500"
+                                />
+                              </label>
+                            </div>
+
+                            <label className="mt-4 block">
+                              <span className="mb-2 block text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">
+                                Observação da etapa
+                              </span>
+
+                              <textarea
+                                name="negotiationNotes"
+                                rows={3}
+                                placeholder="Ex.: Análise cadastral, garantia em aprovação, contrato em elaboração, motivo do encerramento etc."
+                                className="w-full resize-y border border-white/15 bg-[#111] px-3 py-3 text-sm leading-6 text-white outline-none placeholder:text-zinc-700 focus:border-emerald-500"
+                              />
+                            </label>
+
+                            <div className="mt-4 border border-white/10 bg-black/20 px-4 py-3">
+                              <p className="text-xs leading-5 text-zinc-500">
+                                Atenção: “Proposta aceita” não conclui a locação.
+                                “Locação concluída” registra o fechamento na linha do tempo
+                                comercial, mas não altera automaticamente a situação do
+                                imóvel nem o status do cliente.
+                              </p>
+                            </div>
+
+                            <button
+                              type="submit"
+                              className="mt-4 inline-flex min-h-11 items-center justify-center bg-emerald-600 px-5 text-[9px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-emerald-500"
+                            >
+                              Registrar etapa da locação
+                            </button>
+                          </form>
+                        ) : null}
+
+                        {access.isAdmin &&
+                        proposal.status === "ACEITA" ? (
+                          property.status === "ALUGADO" ? (
+                            <div className="mt-5 border border-emerald-500/25 bg-emerald-500/[0.06] p-4">
+                              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-300">
+                                Locação finalizada
+                              </p>
+
+                              <p className="mt-2 text-xs leading-5 text-zinc-400">
+                                O imóvel está marcado como alugado. O cliente vinculado
+                                foi convertido no fechamento administrativo.
+                              </p>
+                            </div>
+                          ) : (
+                            <form
+                              action={finalizeRentalAction}
+                              className="mt-5 border border-emerald-500/25 bg-emerald-500/[0.05] p-4"
+                            >
+                              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-300">
+                                Fechamento administrativo da locação
+                              </p>
+
+                              <p className="mt-2 text-xs leading-5 text-zinc-400">
+                                Use somente depois de registrar “Locação concluída”.
+                                Esta ação marca o imóvel como alugado e o cliente como
+                                convertido.
+                              </p>
+
+                              <button
+                                type="submit"
+                                className="mt-4 inline-flex min-h-11 items-center justify-center bg-emerald-600 px-5 text-[9px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-emerald-500"
+                              >
+                                Finalizar locação
+                              </button>
+                            </form>
+                          )
                         ) : null}
 
                         <div className="mt-5 flex flex-wrap gap-3 border-t border-white/10 pt-4">
