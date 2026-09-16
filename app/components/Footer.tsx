@@ -32,18 +32,18 @@ export default function Footer() {
           <Link
             href="/"
             aria-label="Ir para a página inicial da B&B Consultoria Imobiliária"
-            className="relative block h-[190px] w-[340px] max-w-full overflow-hidden"
+            className="relative block h-[190px] w-[320px] max-w-full overflow-hidden"
           >
             <Image
               src="/logo-bb.png"
               alt="B&B Consultoria Imobiliária"
               fill
-              sizes="340px"
-              className="scale-[1.28] object-contain object-center"
+              sizes="320px"
+              className="object-contain object-left"
             />
           </Link>
 
-          <p className="mt-5 max-w-sm text-sm leading-7 text-zinc-400">
+          <p className="mt-4 max-w-sm text-sm leading-7 text-zinc-400">
             Nós atuamos com análise, curadoria e orientação estratégica para
             decisões imobiliárias mais seguras em São José dos Campos.
           </p>

@@ -1,8 +1,6 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import TrackedWhatsAppLink from "./TrackedWhatsAppLink";
 
 const navigation = [
   { label: "Comprar", href: "/comprar" },
@@ -14,108 +12,124 @@ const navigation = [
   { label: "Contato", href: "/contato" },
 ];
 
-export default function Header() {
-  const [menuOpen, setMenuOpen] = useState(false);
+const neighborhoods = [
+  "Urbanova",
+  "Jardim Aquarius",
+  "Colinas do Parahyba",
+  "Altos do Esplanada",
+  "Condomínios fechados",
+];
 
-  function closeMenu() {
-    setMenuOpen(false);
-  }
+const whatsappMessage = encodeURIComponent(
+  "Olá, gostaria de falar com a B&B Consultoria Imobiliária.",
+);
 
+export default function Footer() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/95 backdrop-blur-xl">
-      <div className="mx-auto flex h-[84px] w-full max-w-[1800px] items-center gap-2 px-3 sm:gap-3 sm:px-5 lg:h-[112px] lg:px-8 xl:px-10">
-        <div className="flex w-[105px] shrink-0 items-center justify-start sm:w-[145px] lg:w-[215px] xl:w-[235px] 2xl:w-[260px]">
+    <footer className="border-t border-[#D5A85A]/30 bg-black text-white">
+      <div className="mx-auto grid max-w-[1720px] gap-12 px-6 py-16 md:grid-cols-2 lg:px-10 xl:grid-cols-[1.25fr_0.7fr_0.9fr_1fr] xl:px-12">
+        <div>
           <Link
             href="/"
-            aria-label="B&B Consultoria Imobiliária"
-            onClick={closeMenu}
-            className="relative block h-[66px] w-[105px] overflow-hidden sm:h-[74px] sm:w-[145px] lg:h-[96px] lg:w-[190px] xl:w-[205px]"
+            aria-label="Ir para a página inicial da B&B Consultoria Imobiliária"
+            className="relative block h-[230px] w-[380px] max-w-full overflow-hidden"
           >
             <Image
               src="/logo-bb.png"
               alt="B&B Consultoria Imobiliária"
               fill
-              priority
-              sizes="(max-width: 640px) 105px, (max-width: 1024px) 145px, 205px"
-              className="object-contain object-center transition-transform duration-300 hover:scale-[1.03]"
+              sizes="380px"
+              className="object-contain object-left"
             />
           </Link>
+
+          <p className="mt-5 max-w-sm text-sm leading-7 text-zinc-400">
+            Nós atuamos com análise, curadoria e orientação estratégica para
+            decisões imobiliárias mais seguras em São José dos Campos.
+          </p>
+
+          <p className="mt-5 max-w-md font-serif text-xl leading-8 text-[#D5A85A]">
+            Mais que imóveis. Estratégia para grandes decisões.
+          </p>
         </div>
 
-        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-4 lg:flex xl:gap-5 2xl:gap-6">
-          {navigation.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="relative whitespace-nowrap py-3 text-[10px] font-medium uppercase tracking-[0.07em] text-zinc-200 transition after:absolute after:bottom-1 after:left-0 after:h-px after:w-0 after:bg-[#D5A85A] after:transition-all hover:text-[#D5A85A] hover:after:w-full xl:text-[11px] xl:tracking-[0.08em] 2xl:text-[12px]"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-[#D5A85A]">
+            Navegação
+          </h2>
 
-        <div className="ml-auto hidden shrink-0 items-center justify-end gap-3 lg:flex">
-          <Link
-            href="/agendar-visita"
-            className="inline-flex h-14 shrink-0 items-center justify-center whitespace-nowrap border border-[#D5A85A] px-5 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D5A85A] transition-all duration-300 hover:bg-[#D5A85A] hover:text-black xl:px-6 xl:text-[11px] 2xl:px-7"
+          <nav
+            aria-label="Navegação do rodapé"
+            className="mt-6 flex flex-col gap-3 text-sm text-zinc-400"
           >
-            Agendar visita
-          </Link>
+            {navigation.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="w-fit transition-colors duration-300 hover:text-white"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </div>
 
-        <div className="ml-auto flex min-w-0 items-center justify-end gap-2 lg:hidden">
-          <Link
-            href="/agendar-visita"
-            onClick={closeMenu}
-            className="inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap border border-[#D5A85A] px-2.5 text-[8px] font-semibold uppercase tracking-[0.08em] text-[#D5A85A] transition hover:bg-[#D5A85A] hover:text-black sm:h-11 sm:px-4 sm:text-[9px] sm:tracking-[0.10em]"
-          >
-            Agendar visita
-          </Link>
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-[#D5A85A]">
+            Regiões de atuação
+          </h2>
 
-          <div className="relative shrink-0">
-            <button
-              type="button"
-              aria-label={
-                menuOpen
-                  ? "Fechar menu"
-                  : "Abrir menu"
-              }
-              aria-expanded={menuOpen}
-              onClick={() =>
-                setMenuOpen(
-                  (current) => !current,
-                )
-              }
-              className="flex h-10 w-10 cursor-pointer items-center justify-center border border-white/15 text-white transition hover:border-[#D5A85A] hover:text-[#D5A85A] sm:h-11 sm:w-11"
-            >
-              <span className="flex w-5 flex-col gap-[5px]">
-                <span className="block h-px w-full bg-current" />
-                <span className="block h-px w-full bg-current" />
-                <span className="block h-px w-full bg-current" />
-              </span>
-            </button>
-
-            {menuOpen ? (
-              <div className="absolute right-0 top-[50px] z-[70] w-[280px] border border-white/10 bg-[#080808] p-3 shadow-2xl">
-                <nav className="flex flex-col">
-                  {navigation.map(
-                    (item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={closeMenu}
-                        className="border-b border-white/10 px-4 py-4 text-[11px] font-medium uppercase tracking-[0.12em] text-zinc-200 transition hover:bg-white/5 hover:text-[#D5A85A]"
-                      >
-                        {item.label}
-                      </Link>
-                    ),
-                  )}
-                </nav>
-              </div>
-            ) : null}
+          <div className="mt-6 space-y-3 text-sm text-zinc-400">
+            {neighborhoods.map((neighborhood) => (
+              <p key={neighborhood}>{neighborhood}</p>
+            ))}
           </div>
         </div>
+
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-[#D5A85A]">
+            Atendimento
+          </h2>
+
+          <div className="mt-6 space-y-3 text-sm leading-6 text-zinc-400">
+            <p>São José dos Campos — SP</p>
+
+            <a
+              href="tel:+5512978140636"
+              className="block w-fit transition-colors duration-300 hover:text-white"
+            >
+              (12) 97814-0636
+            </a>
+
+            <p>CRECI-SP 311872-F</p>
+
+            <p>Atendimento consultivo e personalizado.</p>
+          </div>
+
+          <TrackedWhatsAppLink
+            href={`https://wa.me/5512978140636?text=${whatsappMessage}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Falar com a B&B Consultoria Imobiliária pelo WhatsApp"
+            className="mt-7 inline-flex min-h-13 w-full items-center justify-center bg-[#D5A85A] px-6 text-center text-xs font-bold uppercase tracking-[0.16em] text-black transition-colors duration-300 hover:bg-[#E5BC6B]"
+          >
+            Falar pelo WhatsApp
+          </TrackedWhatsAppLink>
+        </div>
       </div>
-    </header>
+
+      <div className="border-t border-white/10">
+        <div className="mx-auto flex max-w-[1720px] flex-col gap-3 px-6 py-5 text-xs text-zinc-600 md:flex-row md:items-center md:justify-between lg:px-10 xl:px-12">
+          <p>
+            © {new Date().getFullYear()} B&amp;B Consultoria Imobiliária. Todos
+            os direitos reservados.
+          </p>
+
+          <p>
+            Inteligência imobiliária para decisões que constroem patrimônio.
+          </p>
+        </div>
+      </div>
+    </footer>
   );
 }
