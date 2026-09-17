@@ -28,20 +28,20 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-black/95 backdrop-blur-xl">
       <div className="mx-auto flex h-[96px] w-full max-w-[1800px] items-center gap-2 px-3 sm:h-[108px] sm:gap-3 sm:px-5 lg:h-[132px] lg:px-8 xl:h-[136px] xl:px-10">
-        <div className="flex w-[135px] shrink-0 items-center justify-start sm:w-[180px] lg:w-[265px] xl:w-[285px] 2xl:w-[305px]">
+        <div className="flex w-[150px] shrink-0 items-center justify-start sm:w-[190px] lg:w-[250px] xl:w-[270px] 2xl:w-[290px]">
           <Link
             href="/"
             aria-label="B&B Consultoria Imobiliária"
             onClick={closeMenu}
-            className="relative block h-[84px] w-[135px] overflow-hidden sm:h-[94px] sm:w-[180px] lg:h-[118px] lg:w-[250px] xl:h-[122px] xl:w-[270px] 2xl:w-[285px]"
+            className="relative block h-[88px] w-[150px] sm:h-[100px] sm:w-[190px] lg:h-[118px] lg:w-[250px] xl:h-[122px] xl:w-[270px] 2xl:w-[290px]"
           >
             <Image
-              src="/logo-bb.png"
+              src="/logo-bb-header.png"
               alt="B&B Consultoria Imobiliária"
               fill
               priority
-              sizes="(max-width: 640px) 135px, (max-width: 1024px) 180px, (max-width: 1280px) 250px, (max-width: 1536px) 270px, 285px"
-              className="object-contain object-left transition-transform duration-300 hover:scale-[1.025]"
+              sizes="(max-width: 640px) 150px, (max-width: 1024px) 190px, (max-width: 1280px) 250px, (max-width: 1536px) 270px, 290px"
+              className="object-contain object-left transition-opacity duration-300 hover:opacity-90"
             />
           </Link>
         </div>
