@@ -154,8 +154,7 @@ export default function PropertySearch({
   );
 
   const [city, setCity] = useState(
-    searchParams.get("cidade") ||
-      "São José dos Campos",
+    searchParams.get("cidade") || "",
   );
 
   const [
@@ -242,15 +241,14 @@ export default function PropertySearch({
 
   useEffect(() => {
     if (
+      city === "" ||
       cities.length === 0 ||
       cities.includes(city)
     ) {
       return;
     }
 
-    setCity(
-      cities[0] ?? "",
-    );
+    setCity("");
 
     setNeighborhood(
       allNeighborhoodsLabel,
@@ -266,11 +264,14 @@ export default function PropertySearch({
 
   const neighborhoods =
     useMemo(
-      () => [
-        ...getNeighborhoods(
-          city,
-        ),
-      ],
+      () =>
+        city
+          ? [
+              ...getNeighborhoods(
+                city,
+              ),
+            ]
+          : [],
       [city],
     );
 
@@ -559,16 +560,11 @@ export default function PropertySearch({
         ),
       );
 
-    const nextCity =
-      nextCities[0] || "";
-
     setState(
       selectedState,
     );
 
-    setCity(
-      nextCity,
-    );
+    setCity("");
 
     setNeighborhood(
       allNeighborhoodsLabel,
@@ -974,6 +970,10 @@ export default function PropertySearch({
                 }
                 className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
               >
+                <option value="">
+                  Todas as cidades
+                </option>
+
                 {cities.map(
                   (item) => (
                     <option
