@@ -3,8 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import TrackedWhatsAppLink from "./TrackedWhatsAppLink";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getCities } from "../data/location/cities";
 import type {
   HomeSearchState,
 } from "./HomeSearchExperience";
@@ -16,9 +17,11 @@ type HeroProps = {
   ) => void;
 };
 
+type DynamicCitiesByState = Record<string, string[]>;
+
 const initialSearchState: HomeSearchState = {
   propertyType: "Todos os tipos",
-  location: "São José dos Campos",
+  location: "",
   priceRange: "Qualquer valor",
 };
 
@@ -133,6 +136,11 @@ export default function Hero({
     initialSearchState,
   );
 
+  const [
+    dynamicCitiesByState,
+    setDynamicCitiesByState,
+  ] = useState<DynamicCitiesByState>({});
+
   const activeSearchState =
     searchState ?? localSearchState;
 
@@ -141,6 +149,62 @@ export default function Hero({
     location,
     priceRange,
   } = activeSearchState;
+
+  const cities = useMemo(() => {
+    const baseCities = [
+      ...getCities("SP"),
+    ];
+
+    const dynamicCities =
+      dynamicCitiesByState.SP ?? [];
+
+    return Array.from(
+      new Set([
+        ...baseCities,
+        ...dynamicCities,
+      ]),
+    ).sort((a, b) =>
+      a.localeCompare(
+        b,
+        "pt-BR",
+      ),
+    );
+  }, [dynamicCitiesByState]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDynamicCities() {
+      try {
+        const response = await fetch(
+          "/api/search-cities",
+          {
+            cache: "no-store",
+          },
+        );
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data =
+          (await response.json()) as
+            DynamicCitiesByState;
+
+        if (!cancelled) {
+          setDynamicCitiesByState(data);
+        }
+      } catch {
+        // Mantém cities.ts como fallback.
+      }
+    }
+
+    loadDynamicCities();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function updateSearchState(
     partialState: Partial<HomeSearchState>,
@@ -176,10 +240,12 @@ export default function Hero({
       "SP",
     );
 
-    params.set(
-      "cidade",
-      "São José dos Campos",
-    );
+    if (location) {
+      params.set(
+        "cidade",
+        location,
+      );
+    }
 
     if (
       propertyType ===
@@ -216,16 +282,6 @@ export default function Hero({
       params.set(
         "tipo",
         propertyType,
-      );
-    }
-
-    if (
-      location !==
-      "São José dos Campos"
-    ) {
-      params.set(
-        "bairro",
-        location,
       );
     }
 
@@ -432,19 +488,31 @@ export default function Hero({
                       Comercial
                     </option>
 
-                    <option value="Chácara" className="bg-zinc-950">
+                    <option
+                      value="Chácara"
+                      className="bg-zinc-950"
+                    >
                       Chácara
                     </option>
 
-                    <option value="Fazenda" className="bg-zinc-950">
+                    <option
+                      value="Fazenda"
+                      className="bg-zinc-950"
+                    >
                       Fazenda
                     </option>
 
-                    <option value="Sítio" className="bg-zinc-950">
+                    <option
+                      value="Sítio"
+                      className="bg-zinc-950"
+                    >
                       Sítio
                     </option>
 
-                    <option value="Área Rural" className="bg-zinc-950">
+                    <option
+                      value="Área Rural"
+                      className="bg-zinc-950"
+                    >
                       Área Rural
                     </option>
                   </select>
@@ -452,7 +520,7 @@ export default function Hero({
 
                 <label className="border border-white/10 bg-white/[0.035] px-3.5 py-2">
                   <span className="block text-[8px] uppercase tracking-[0.12em] text-zinc-500">
-                    Cidade ou bairro
+                    Cidade
                   </span>
 
                   <select
@@ -460,46 +528,27 @@ export default function Hero({
                     onChange={(event) =>
                       updateSearchState({
                         location:
-                          event.target
-                            .value as HomeSearchState["location"],
+                          event.target.value,
                       })
                     }
                     className="mt-0.5 h-6 w-full bg-transparent text-[13px] text-zinc-300 outline-none"
                   >
                     <option
-                      value="São José dos Campos"
+                      value=""
                       className="bg-zinc-950"
                     >
-                      São José dos Campos
+                      Todas as cidades
                     </option>
 
-                    <option
-                      value="Urbanova"
-                      className="bg-zinc-950"
-                    >
-                      Urbanova
-                    </option>
-
-                    <option
-                      value="Jardim Aquarius"
-                      className="bg-zinc-950"
-                    >
-                      Jardim Aquarius
-                    </option>
-
-                    <option
-                      value="Colinas"
-                      className="bg-zinc-950"
-                    >
-                      Colinas
-                    </option>
-
-                    <option
-                      value="Altos do Esplanada"
-                      className="bg-zinc-950"
-                    >
-                      Altos do Esplanada
-                    </option>
+                    {cities.map((city) => (
+                      <option
+                        key={city}
+                        value={city}
+                        className="bg-zinc-950"
+                      >
+                        {city}
+                      </option>
+                    ))}
                   </select>
                 </label>
 

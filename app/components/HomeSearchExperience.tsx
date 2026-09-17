@@ -16,12 +16,7 @@ export type HomePropertyType =
   | "Sítio"
   | "Área Rural";
 
-export type HomeLocation =
-  | "São José dos Campos"
-  | "Urbanova"
-  | "Jardim Aquarius"
-  | "Colinas"
-  | "Altos do Esplanada";
+export type HomeLocation = string;
 
 export type HomePriceRange =
   | "Qualquer valor"
@@ -42,7 +37,7 @@ export default function HomeSearchExperience() {
     setSearchState,
   ] = useState<HomeSearchState>({
     propertyType: "Todos os tipos",
-    location: "São José dos Campos",
+    location: "",
     priceRange: "Qualquer valor",
   });
 
