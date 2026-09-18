@@ -4,23 +4,19 @@ import {
   redirect,
 } from "next/navigation";
 import { revalidatePath } from "next/cache";
-
 import { getAccessContext } from "../../../../lib/admin/access";
 import { prisma } from "../../../../lib/prisma";
-
 export const dynamic = "force-dynamic";
-
 type PageProps = {
   params: Promise<{
     id: string;
   }>;
-
   searchParams: Promise<{
     erro?: string;
     ok?: string;
+    editar?: string;
   }>;
 };
-
 const commercialEventLabels = {
   NOVO_CONTATO: "Novo contato",
   CONTATO_REALIZADO: "Contato realizado",
@@ -42,19 +38,16 @@ const commercialEventLabels = {
   PERDIDO_ENCERRADO:
     "Perdido / encerrado",
 } as const;
-
 const clientStatusLabels = {
   ATIVO: "Ativo",
   INATIVO: "Inativo",
   CONVERTIDO: "Convertido",
 } as const;
-
 const visitStatusLabels = {
   AGENDADA: "Agendada",
   REALIZADA: "Realizada",
   CANCELADA: "Cancelada",
 } as const;
-
 function formatDate(value: Date) {
   return new Intl.DateTimeFormat(
     "pt-BR",
@@ -66,7 +59,6 @@ function formatDate(value: Date) {
     },
   ).format(value);
 }
-
 function formatDateOnly(value: Date) {
   return new Intl.DateTimeFormat(
     "pt-BR",
@@ -77,20 +69,16 @@ function formatDateOnly(value: Date) {
     },
   ).format(value);
 }
-
 function formatPhone(phone: string) {
   const digits =
     phone.replace(/\D/g, "");
-
   const local =
     digits.startsWith("55")
       ? digits.slice(2)
       : digits;
-
   if (local.length !== 11) {
     return phone;
   }
-
   return `(${local.slice(
     0,
     2,
@@ -99,7 +87,6 @@ function formatPhone(phone: string) {
     7,
   )}-${local.slice(7)}`;
 }
-
 function formatCurrency(
   value: {
     toString(): string;
@@ -108,14 +95,11 @@ function formatCurrency(
   if (!value) {
     return null;
   }
-
   const number =
     Number(value.toString());
-
   if (!Number.isFinite(number)) {
     return null;
   }
-
   return new Intl.NumberFormat(
     "pt-BR",
     {
@@ -125,7 +109,6 @@ function formatCurrency(
     },
   ).format(number);
 }
-
 function normalizePropertyCodes(
   value: string,
 ) {
@@ -141,19 +124,16 @@ function normalizePropertyCodes(
     ),
   );
 }
-
 function parseVisitDate(
   value: string,
 ) {
   if (!value) {
     return null;
   }
-
   const parsed =
     new Date(
       `${value}T12:00:00-03:00`,
     );
-
   if (
     Number.isNaN(
       parsed.getTime(),
@@ -161,19 +141,149 @@ function parseVisitDate(
   ) {
     return null;
   }
-
   return parsed;
 }
-
+function formatDateInput(value: Date) {
+  return new Intl.DateTimeFormat(
+    "en-CA",
+    {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      timeZone: "America/Sao_Paulo",
+    },
+  ).format(value);
+}
+async function updateClientAction(
+  clientId: number,
+  formData: FormData,
+) {
+  "use server";
+  await getAccessContext();
+  if (
+    !Number.isInteger(clientId) ||
+    clientId <= 0
+  ) {
+    redirect("/admin/clientes");
+  }
+  const name = String(
+    formData.get("name") ?? "",
+  )
+    .trim()
+    .slice(0, 180);
+  const phone = String(
+    formData.get("phone") ?? "",
+  )
+    .trim()
+    .slice(0, 30);
+  const email = String(
+    formData.get("email") ?? "",
+  )
+    .trim()
+    .slice(0, 180);
+  const document = String(
+    formData.get("document") ?? "",
+  )
+    .trim()
+    .slice(0, 40);
+  const rawBirthDate = String(
+    formData.get("birthDate") ?? "",
+  ).trim();
+  const address = String(
+    formData.get("address") ?? "",
+  )
+    .trim()
+    .slice(0, 300);
+  const notes = String(
+    formData.get("notes") ?? "",
+  )
+    .trim()
+    .slice(0, 5000);
+  const rawStatus = String(
+    formData.get("status") ?? "",
+  )
+    .trim()
+    .toUpperCase();
+  if (!name || !phone) {
+    redirect(
+      `/admin/clientes/${clientId}?erro=dados-cliente&editar=1`,
+    );
+  }
+  const allowedStatuses = [
+    "ATIVO",
+    "INATIVO",
+    "CONVERTIDO",
+  ] as const;
+  if (
+    !allowedStatuses.includes(
+      rawStatus as
+        (typeof allowedStatuses)[number],
+    )
+  ) {
+    redirect(
+      `/admin/clientes/${clientId}?erro=dados-cliente&editar=1`,
+    );
+  }
+  let birthDate: Date | null = null;
+  if (rawBirthDate) {
+    birthDate = new Date(
+      `${rawBirthDate}T12:00:00-03:00`,
+    );
+    if (
+      Number.isNaN(
+        birthDate.getTime(),
+      )
+    ) {
+      redirect(
+        `/admin/clientes/${clientId}?erro=dados-cliente&editar=1`,
+      );
+    }
+  }
+  const existingClient =
+    await prisma.client.findUnique({
+      where: {
+        id: clientId,
+      },
+      select: {
+        id: true,
+      },
+    });
+  if (!existingClient) {
+    notFound();
+  }
+  await prisma.client.update({
+    where: {
+      id: clientId,
+    },
+    data: {
+      name,
+      phone,
+      email: email || null,
+      document: document || null,
+      birthDate,
+      address: address || null,
+      notes: notes || null,
+      status:
+        rawStatus as
+          (typeof allowedStatuses)[number],
+    },
+  });
+  revalidatePath("/admin");
+  revalidatePath("/admin/clientes");
+  revalidatePath(
+    `/admin/clientes/${clientId}`,
+  );
+  redirect(
+    `/admin/clientes/${clientId}?ok=dados-cliente`,
+  );
+}
 async function addPresentedPropertiesAction(
   clientId: number,
   formData: FormData,
 ) {
   "use server";
-
   const access =
     await getAccessContext();
-
   if (
     !Number.isInteger(clientId) ||
     clientId <= 0
@@ -182,13 +292,11 @@ async function addPresentedPropertiesAction(
       "/admin/clientes",
     );
   }
-
   const rawCodes = String(
     formData.get(
       "propertyCodes",
     ) ?? "",
   );
-
   const description = String(
     formData.get(
       "description",
@@ -196,33 +304,27 @@ async function addPresentedPropertiesAction(
   )
     .trim()
     .slice(0, 5000);
-
   const codes =
     normalizePropertyCodes(
       rawCodes,
     );
-
   if (codes.length === 0) {
     redirect(
       `/admin/clientes/${clientId}?erro=imoveis`,
     );
   }
-
   const client =
     await prisma.client.findUnique({
       where: {
         id: clientId,
       },
-
       select: {
         id: true,
       },
     });
-
   if (!client) {
     notFound();
   }
-
   const properties =
     await prisma.property.findMany({
       where: {
@@ -230,13 +332,11 @@ async function addPresentedPropertiesAction(
           in: codes,
         },
       },
-
       select: {
         id: true,
         code: true,
       },
     });
-
   const foundCodes =
     new Set(
       properties.map(
@@ -244,13 +344,11 @@ async function addPresentedPropertiesAction(
           property.code.toUpperCase(),
       ),
     );
-
   const missingCodes =
     codes.filter(
       (code) =>
         !foundCodes.has(code),
     );
-
   if (
     properties.length === 0 ||
     missingCodes.length > 0
@@ -259,20 +357,15 @@ async function addPresentedPropertiesAction(
       `/admin/clientes/${clientId}?erro=imoveis`,
     );
   }
-
   await prisma.commercialEvent.create({
     data: {
       clientId,
-
       agentId:
         access.agentId,
-
       type:
         "IMOVEIS_APRESENTADOS",
-
       description:
         description || null,
-
       properties: {
         create:
           properties.map(
@@ -284,35 +377,28 @@ async function addPresentedPropertiesAction(
       },
     },
   });
-
   revalidatePath(
     `/admin/clientes/${clientId}`,
   );
-
   revalidatePath(
     "/admin/clientes",
   );
-
   for (const property of properties) {
     revalidatePath(
       `/admin/imoveis/${property.code.toLowerCase()}`,
     );
   }
-
   redirect(
     `/admin/clientes/${clientId}?ok=imoveis`,
   );
 }
-
 async function scheduleVisitAction(
   clientId: number,
   formData: FormData,
 ) {
   "use server";
-
   const access =
     await getAccessContext();
-
   if (
     !Number.isInteger(clientId) ||
     clientId <= 0
@@ -321,7 +407,6 @@ async function scheduleVisitAction(
       "/admin/clientes",
     );
   }
-
   const propertyCode =
     String(
       formData.get(
@@ -330,14 +415,12 @@ async function scheduleVisitAction(
     )
       .trim()
       .toUpperCase();
-
   const rawVisitDate =
     String(
       formData.get(
         "visitDate",
       ) ?? "",
     ).trim();
-
   const visitTime =
     String(
       formData.get(
@@ -346,7 +429,6 @@ async function scheduleVisitAction(
     )
       .trim()
       .slice(0, 10);
-
   const notes =
     String(
       formData.get(
@@ -355,12 +437,10 @@ async function scheduleVisitAction(
     )
       .trim()
       .slice(0, 5000);
-
   const visitDate =
     parseVisitDate(
       rawVisitDate,
     );
-
   if (
     !propertyCode ||
     !visitDate
@@ -369,7 +449,6 @@ async function scheduleVisitAction(
       `/admin/clientes/${clientId}?erro=visita`,
     );
   }
-
   const [
     client,
     property,
@@ -378,7 +457,6 @@ async function scheduleVisitAction(
       where: {
         id: clientId,
       },
-
       select: {
         id: true,
         name: true,
@@ -389,12 +467,10 @@ async function scheduleVisitAction(
         address: true,
       },
     }),
-
     prisma.property.findUnique({
       where: {
         code: propertyCode,
       },
-
       select: {
         id: true,
         code: true,
@@ -402,58 +478,43 @@ async function scheduleVisitAction(
       },
     }),
   ]);
-
   if (!client) {
     notFound();
   }
-
   if (!property) {
     redirect(
       `/admin/clientes/${clientId}?erro=visita`,
     );
   }
-
   await prisma.$transaction(
     async (tx) => {
       await tx.propertyVisit.create({
         data: {
           propertyId:
             property.id,
-
           clientId:
             client.id,
-
           status:
             "AGENDADA",
-
           visitorName:
             client.name,
-
           visitorDocument:
             client.document,
-
           visitorPhone:
             client.phone,
-
           visitorEmail:
             client.email,
-
           visitorBirthDate:
             client.birthDate,
-
           visitorAddress:
             client.address,
-
           visitDate,
-
           visitTime:
             visitTime || null,
-
           notes:
             notes || null,
         },
       });
-
       const scheduleText = [
         `Visita agendada para o imóvel ${property.code} — ${property.title}.`,
         `Data: ${formatDateOnly(visitDate)}${visitTime ? ` às ${visitTime}` : ""}.`,
@@ -463,24 +524,18 @@ async function scheduleVisitAction(
       ]
         .filter(Boolean)
         .join("\n");
-
       await tx.commercialEvent.create({
         data: {
           clientId:
             client.id,
-
           agentId:
             access.agentId,
-
           type:
             "VISITA_AGENDADA",
-
           description:
             scheduleText,
-
           eventAt:
             new Date(),
-
           properties: {
             create: {
               propertyId:
@@ -491,39 +546,31 @@ async function scheduleVisitAction(
       });
     },
   );
-
   revalidatePath(
     `/admin/clientes/${clientId}`,
   );
-
   revalidatePath(
     "/admin/clientes",
   );
-
   revalidatePath(
     `/admin/imoveis/${property.code.toLowerCase()}`,
   );
-
   redirect(
     `/admin/clientes/${clientId}?ok=visita`,
   );
 }
-
 async function deleteClientAction(
   clientId: number,
   formData: FormData,
 ) {
   "use server";
-
   const access =
     await getAccessContext();
-
   if (!access.isAdmin) {
     redirect(
       `/admin/clientes/${clientId}?erro=excluir-permissao`,
     );
   }
-
   if (
     !Number.isInteger(clientId) ||
     clientId <= 0
@@ -532,7 +579,6 @@ async function deleteClientAction(
       "/admin/clientes",
     );
   }
-
   const confirmation = String(
     formData.get(
       "deleteConfirmation",
@@ -540,19 +586,16 @@ async function deleteClientAction(
   )
     .trim()
     .toUpperCase();
-
   if (confirmation !== "EXCLUIR") {
     redirect(
       `/admin/clientes/${clientId}?erro=excluir-confirmacao`,
     );
   }
-
   const client =
     await prisma.client.findUnique({
       where: {
         id: clientId,
       },
-
       select: {
         id: true,
         _count: {
@@ -566,11 +609,9 @@ async function deleteClientAction(
         },
       },
     });
-
   if (!client) {
     notFound();
   }
-
   await prisma.$transaction(
     async (tx) => {
       await tx.portalLead.updateMany({
@@ -581,7 +622,6 @@ async function deleteClientAction(
           clientId: null,
         },
       });
-
       await tx.propertyVisit.updateMany({
         where: {
           clientId,
@@ -590,7 +630,6 @@ async function deleteClientAction(
           clientId: null,
         },
       });
-
       await tx.propertyProposal.updateMany({
         where: {
           clientId,
@@ -599,7 +638,6 @@ async function deleteClientAction(
           clientId: null,
         },
       });
-
       await tx.propertyRentalProposal.updateMany({
         where: {
           clientId,
@@ -608,7 +646,6 @@ async function deleteClientAction(
           clientId: null,
         },
       });
-
       await tx.client.delete({
         where: {
           id: clientId,
@@ -616,51 +653,41 @@ async function deleteClientAction(
       });
     },
   );
-
   revalidatePath(
     "/admin/clientes",
   );
-
   redirect(
     "/admin/clientes?ok=cliente-excluido",
   );
 }
-
 export default async function ClientePage({
   params,
   searchParams,
 }: PageProps) {
   const access =
     await getAccessContext();
-
   const { id } =
     await params;
-
-  const { erro, ok } =
+  const { erro, ok, editar } =
     await searchParams;
-
   const clientId =
     Number(id);
-
   if (
     !Number.isInteger(clientId) ||
     clientId <= 0
   ) {
     notFound();
   }
-
   const client =
     await prisma.client.findUnique({
       where: {
         id: clientId,
       },
-
       include: {
         portalLeads: {
           orderBy: {
             createdAt: "desc",
           },
-
           select: {
             id: true,
             propertyCode: true,
@@ -671,12 +698,10 @@ export default async function ClientePage({
             contactedAt: true,
           },
         },
-
         visits: {
           orderBy: {
             visitDate: "desc",
           },
-
           include: {
             property: {
               select: {
@@ -687,12 +712,10 @@ export default async function ClientePage({
             },
           },
         },
-
         proposals: {
           orderBy: {
             createdAt: "desc",
           },
-
           include: {
             property: {
               select: {
@@ -701,7 +724,6 @@ export default async function ClientePage({
                 title: true,
               },
             },
-
             agent: {
               select: {
                 id: true,
@@ -710,12 +732,10 @@ export default async function ClientePage({
             },
           },
         },
-
         rentalProposals: {
           orderBy: {
             createdAt: "desc",
           },
-
           include: {
             property: {
               select: {
@@ -724,7 +744,6 @@ export default async function ClientePage({
                 title: true,
               },
             },
-
             agent: {
               select: {
                 id: true,
@@ -733,7 +752,6 @@ export default async function ClientePage({
             },
           },
         },
-
         commercialEvents: {
           orderBy: [
             {
@@ -743,7 +761,6 @@ export default async function ClientePage({
               createdAt: "desc",
             },
           ],
-
           include: {
             agent: {
               select: {
@@ -751,14 +768,12 @@ export default async function ClientePage({
                 name: true,
               },
             },
-
             lead: {
               select: {
                 id: true,
                 propertyCode: true,
               },
             },
-
             properties: {
               include: {
                 property: {
@@ -769,7 +784,6 @@ export default async function ClientePage({
                   },
                 },
               },
-
               orderBy: {
                 property: {
                   code: "asc",
@@ -780,56 +794,53 @@ export default async function ClientePage({
         },
       },
     });
-
   if (!client) {
     notFound();
   }
-
   const addPresentedAction =
     addPresentedPropertiesAction.bind(
       null,
       client.id,
     );
-
   const scheduleVisit =
     scheduleVisitAction.bind(
       null,
       client.id,
     );
-
   const deleteClient =
     deleteClientAction.bind(
       null,
       client.id,
     );
-
+  const updateClient =
+    updateClientAction.bind(
+      null,
+      client.id,
+    );
+  const isEditingClient =
+    editar === "1";
   const linkedHistoryCount =
     client.portalLeads.length +
     client.visits.length +
     client.proposals.length +
     client.rentalProposals.length +
     client.commercialEvents.length;
-
   const whatsappDigits =
     client.phone.replace(
       /\D/g,
       "",
     );
-
   const whatsappPhone =
     whatsappDigits.startsWith("55")
       ? whatsappDigits
       : `55${whatsappDigits}`;
-
   const whatsappMessage =
     encodeURIComponent(
       `Olá, ${client.name}. Sou da B&B Consultoria Imobiliária. Como podemos ajudar?`,
     );
-
   const latestEvent =
     client.commercialEvents[0] ??
     null;
-
   const relatedPropertyCodes =
     Array.from(
       new Set([
@@ -843,22 +854,18 @@ export default async function ClientePage({
               code &&
               code !== "GERAL",
           ),
-
         ...client.visits.map(
           (visit) =>
             visit.property.code,
         ),
-
         ...client.proposals.map(
           (proposal) =>
             proposal.property.code,
         ),
-
         ...client.rentalProposals.map(
           (proposal) =>
             proposal.property.code,
         ),
-
         ...client.commercialEvents.flatMap(
           (event) =>
             event.properties.map(
@@ -868,19 +875,16 @@ export default async function ClientePage({
         ),
       ]),
     );
-
   const scheduledVisits =
     client.visits.filter(
       (visit) =>
         visit.status === "AGENDADA",
     );
-
   const completedVisits =
     client.visits.filter(
       (visit) =>
         visit.status === "REALIZADA",
     );
-
   return (
     <main className="min-h-screen bg-[#050505] text-white">
       <div className="mx-auto max-w-[1450px] px-6 py-12 lg:px-10">
@@ -891,17 +895,14 @@ export default async function ClientePage({
           >
             Voltar para clientes e leads
           </Link>
-
           <div className="mt-7 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-amber-400">
                 Ficha do cliente
               </p>
-
               <h1 className="mt-3 font-serif text-5xl">
                 {client.name}
               </h1>
-
               <p className="mt-4 text-sm text-zinc-400">
                 Cliente #{client.id}
                 {" · "}
@@ -912,9 +913,8 @@ export default async function ClientePage({
                 }
               </p>
             </div>
-
             <a
-              href={`https://wa.me/${whatsappPhone}?text=${whatsappMessage}`}
+              href={`https\://wa.me/${whatsappPhone}?text=${whatsappMessage}`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex min-h-12 items-center justify-center border border-emerald-500/40 bg-emerald-500/10 px-6 text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300 transition hover:bg-emerald-500 hover:text-black"
@@ -923,47 +923,40 @@ export default async function ClientePage({
             </a>
           </div>
         </header>
-
         {erro === "imoveis" ? (
           <div className="mt-6 border border-red-500/40 bg-red-500/10 px-5 py-4">
             <p className="text-sm font-semibold text-red-300">
               Não foi possível registrar
               os imóveis apresentados.
             </p>
-
             <p className="mt-2 text-xs leading-5 text-zinc-400">
               Confira se todos os códigos
               informados existem no CRM.
             </p>
           </div>
         ) : null}
-
         {erro === "visita" ? (
           <div className="mt-6 border border-red-500/40 bg-red-500/10 px-5 py-4">
             <p className="text-sm font-semibold text-red-300">
               Não foi possível agendar a visita.
             </p>
-
             <p className="mt-2 text-xs leading-5 text-zinc-400">
               Confira o código do imóvel e a
               data informada.
             </p>
           </div>
         ) : null}
-
         {erro === "excluir-confirmacao" ? (
           <div className="mt-6 border border-red-500/40 bg-red-500/10 px-5 py-4">
             <p className="text-sm font-semibold text-red-300">
               Exclusão não confirmada.
             </p>
-
             <p className="mt-2 text-xs leading-5 text-zinc-400">
               Para excluir definitivamente este cliente,
               digite EXCLUIR no campo de confirmação.
             </p>
           </div>
         ) : null}
-
         {erro === "excluir-permissao" ? (
           <div className="mt-6 border border-red-500/40 bg-red-500/10 px-5 py-4">
             <p className="text-sm font-semibold text-red-300">
@@ -971,7 +964,6 @@ export default async function ClientePage({
             </p>
           </div>
         ) : null}
-
         {ok === "imoveis" ? (
           <div className="mt-6 border border-emerald-500/40 bg-emerald-500/10 px-5 py-4">
             <p className="text-sm font-semibold text-emerald-300">
@@ -980,7 +972,6 @@ export default async function ClientePage({
             </p>
           </div>
         ) : null}
-
         {ok === "visita" ? (
           <div className="mt-6 border border-emerald-500/40 bg-emerald-500/10 px-5 py-4">
             <p className="text-sm font-semibold text-emerald-300">
@@ -988,7 +979,23 @@ export default async function ClientePage({
             </p>
           </div>
         ) : null}
-
+        {ok === "dados-cliente" ? (
+          <div className="mt-6 border border-emerald-500/40 bg-emerald-500/10 px-5 py-4">
+            <p className="text-sm font-semibold text-emerald-300">
+              Dados do cliente atualizados com sucesso.
+            </p>
+          </div>
+        ) : null}
+        {erro === "dados-cliente" ? (
+          <div className="mt-6 border border-red-500/40 bg-red-500/10 px-5 py-4">
+            <p className="text-sm font-semibold text-red-300">
+              Não foi possível salvar os dados do cliente.
+            </p>
+            <p className="mt-2 text-xs leading-5 text-zinc-400">
+              Confira nome, telefone, data de nascimento e status.
+            </p>
+          </div>
+        ) : null}
         <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <InfoCard
             label="Telefone"
@@ -996,7 +1003,6 @@ export default async function ClientePage({
               client.phone,
             )}
           />
-
           <InfoCard
             label="E-mail"
             value={
@@ -1004,21 +1010,18 @@ export default async function ClientePage({
               "Não informado"
             }
           />
-
           <InfoCard
             label="Imóveis relacionados"
             value={String(
               relatedPropertyCodes.length,
             )}
           />
-
           <InfoCard
             label="Visitas agendadas"
             value={String(
               scheduledVisits.length,
             )}
           />
-
           <InfoCard
             label="Visitas realizadas"
             value={String(
@@ -1026,93 +1029,197 @@ export default async function ClientePage({
             )}
           />
         </section>
-
         <section className="mt-8 grid gap-6 xl:grid-cols-[0.82fr_1.18fr]">
           <div className="space-y-6">
             <article className="border border-white/10 bg-[#0a0a0a] p-6">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
-                Dados do cliente
-              </p>
-
-              <div className="mt-5 space-y-4 text-sm">
-                <DataRow
-                  label="Nome"
-                  value={client.name}
-                />
-
-                <DataRow
-                  label="Telefone"
-                  value={formatPhone(
-                    client.phone,
-                  )}
-                />
-
-                <DataRow
-                  label="E-mail"
-                  value={
-                    client.email ||
-                    "Não informado"
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
+                  Dados do cliente
+                </p>
+                <Link
+                  href={
+                    isEditingClient
+                      ? `/admin/clientes/${client.id}`
+                      : `/admin/clientes/${client.id}?editar=1`
                   }
-                />
-
-                <DataRow
-                  label="Documento"
-                  value={
-                    client.document ||
-                    "Não informado"
-                  }
-                />
-
-                <DataRow
-                  label="Nascimento"
-                  value={
-                    client.birthDate
-                      ? formatDateOnly(
-                          client.birthDate,
-                        )
-                      : "Não informado"
-                  }
-                />
-
-                <DataRow
-                  label="Endereço"
-                  value={
-                    client.address ||
-                    "Não informado"
-                  }
-                />
-
-                <DataRow
-                  label="Cadastro"
-                  value={formatDate(
-                    client.createdAt,
-                  )}
-                />
+                  className="inline-flex min-h-10 items-center justify-center border border-amber-500 px-4 text-[9px] font-bold uppercase tracking-[0.14em] text-amber-400 transition hover:bg-amber-500 hover:text-black"
+                >
+                  {isEditingClient
+                    ? "Cancelar edição"
+                    : "Editar dados"}
+                </Link>
               </div>
-
-              {client.notes ? (
-                <div className="mt-6 border-t border-white/10 pt-5">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
-                    Observações
-                  </p>
-
-                  <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
-                    {client.notes}
-                  </p>
-                </div>
-              ) : null}
+              {isEditingClient ? (
+                <form
+                  action={updateClient}
+                  className="mt-6 space-y-5"
+                >
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="block sm:col-span-2">
+                      <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+                        Nome
+                      </span>
+                      <input
+                        name="name"
+                        required
+                        maxLength={180}
+                        defaultValue={client.name}
+                        className="min-h-12 w-full border border-white/15 bg-[#111] px-4 text-sm text-white outline-none focus:border-amber-500"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+                        Telefone / WhatsApp
+                      </span>
+                      <input
+                        name="phone"
+                        required
+                        maxLength={30}
+                        defaultValue={client.phone}
+                        className="min-h-12 w-full border border-white/15 bg-[#111] px-4 text-sm text-white outline-none focus:border-amber-500"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+                        E-mail
+                      </span>
+                      <input
+                        type="email"
+                        name="email"
+                        maxLength={180}
+                        defaultValue={client.email ?? ""}
+                        className="min-h-12 w-full border border-white/15 bg-[#111] px-4 text-sm text-white outline-none focus:border-amber-500"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+                        Documento
+                      </span>
+                      <input
+                        name="document"
+                        maxLength={40}
+                        defaultValue={client.document ?? ""}
+                        className="min-h-12 w-full border border-white/15 bg-[#111] px-4 text-sm text-white outline-none focus:border-amber-500"
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+                        Data de nascimento
+                      </span>
+                      <input
+                        type="date"
+                        name="birthDate"
+                        defaultValue={
+                          client.birthDate
+                            ? formatDateInput(client.birthDate)
+                            : ""
+                        }
+                        className="min-h-12 w-full border border-white/15 bg-[#111] px-4 text-sm text-white outline-none focus:border-amber-500"
+                      />
+                    </label>
+                    <label className="block sm:col-span-2">
+                      <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+                        Endereço
+                      </span>
+                      <input
+                        name="address"
+                        maxLength={300}
+                        defaultValue={client.address ?? ""}
+                        className="min-h-12 w-full border border-white/15 bg-[#111] px-4 text-sm text-white outline-none focus:border-amber-500"
+                      />
+                    </label>
+                    <label className="block sm:col-span-2">
+                      <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+                        Status
+                      </span>
+                      <select
+                        name="status"
+                        defaultValue={client.status}
+                        className="min-h-12 w-full border border-white/15 bg-[#111] px-4 text-sm text-white outline-none focus:border-amber-500"
+                      >
+                        <option value="ATIVO">Ativo</option>
+                        <option value="INATIVO">Inativo</option>
+                        <option value="CONVERTIDO">Convertido</option>
+                      </select>
+                    </label>
+                    <label className="block sm:col-span-2">
+                      <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+                        Observações
+                      </span>
+                      <textarea
+                        name="notes"
+                        maxLength={5000}
+                        rows={4}
+                        defaultValue={client.notes ?? ""}
+                        className="w-full resize-y border border-white/15 bg-[#111] px-4 py-3 text-sm leading-6 text-white outline-none focus:border-amber-500"
+                      />
+                    </label>
+                  </div>
+                  <button
+                    type="submit"
+                    className="inline-flex min-h-12 items-center justify-center bg-amber-500 px-6 text-[10px] font-bold uppercase tracking-[0.15em] text-black transition hover:bg-amber-400"
+                  >
+                    Salvar dados
+                  </button>
+                </form>
+              ) : (
+                <>
+                  <div className="mt-5 space-y-4 text-sm">
+                    <DataRow label="Nome" value={client.name} />
+                    <DataRow
+                      label="Telefone"
+                      value={formatPhone(client.phone)}
+                    />
+                    <DataRow
+                      label="E-mail"
+                      value={client.email || "Não informado"}
+                    />
+                    <DataRow
+                      label="Documento"
+                      value={client.document || "Não informado"}
+                    />
+                    <DataRow
+                      label="Nascimento"
+                      value={
+                        client.birthDate
+                          ? formatDateOnly(client.birthDate)
+                          : "Não informado"
+                      }
+                    />
+                    <DataRow
+                      label="Endereço"
+                      value={client.address || "Não informado"}
+                    />
+                    <DataRow
+                      label="Status"
+                      value={clientStatusLabels[client.status]}
+                    />
+                    <DataRow
+                      label="Cadastro"
+                      value={formatDate(client.createdAt)}
+                    />
+                  </div>
+                  {client.notes ? (
+                    <div className="mt-6 border-t border-white/10 pt-5">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
+                        Observações
+                      </p>
+                      <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
+                        {client.notes}
+                      </p>
+                    </div>
+                  ) : null}
+                </>
+              )}
             </article>
-
             {access.isAdmin ? (
               <article className="border border-red-500/30 bg-red-500/[0.04] p-6">
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-red-300">
                   Administração
                 </p>
-
                 <h2 className="mt-2 font-serif text-2xl text-white">
                   Excluir cliente
                 </h2>
-
                 <p className="mt-3 text-sm leading-6 text-zinc-400">
                   Esta ação exclui definitivamente o cadastro do cliente.
                   Leads, visitas e propostas permanecem no CRM sem vínculo
@@ -1120,7 +1227,6 @@ export default async function ClientePage({
                   que pertencem ao cadastro do cliente, serão excluídos junto
                   com ele.
                 </p>
-
                 {linkedHistoryCount > 0 ? (
                   <div className="mt-4 border border-amber-500/30 bg-amber-500/10 px-4 py-3">
                     <p className="text-xs font-semibold text-amber-300">
@@ -1131,7 +1237,6 @@ export default async function ClientePage({
                     </p>
                   </div>
                 ) : null}
-
                 <form
                   action={deleteClient}
                   className="mt-5 space-y-4"
@@ -1140,7 +1245,6 @@ export default async function ClientePage({
                     <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
                       Digite EXCLUIR para confirmar
                     </span>
-
                     <input
                       name="deleteConfirmation"
                       required
@@ -1149,7 +1253,6 @@ export default async function ClientePage({
                       className="min-h-12 w-full border border-red-500/30 bg-[#111] px-4 text-sm text-white outline-none placeholder:text-zinc-700 focus:border-red-500"
                     />
                   </label>
-
                   <button
                     type="submit"
                     className="inline-flex min-h-11 items-center justify-center border border-red-500/50 bg-red-500/10 px-5 text-[9px] font-bold uppercase tracking-[0.14em] text-red-300 transition hover:bg-red-500 hover:text-white"
@@ -1159,12 +1262,10 @@ export default async function ClientePage({
                 </form>
               </article>
             ) : null}
-
             <article className="border border-white/10 bg-[#0a0a0a] p-6">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
                 Imóveis relacionados
               </p>
-
               {relatedPropertyCodes.length >
               0 ? (
                 <div className="mt-5 flex flex-wrap gap-2">
@@ -1187,12 +1288,10 @@ export default async function ClientePage({
                 </p>
               )}
             </article>
-
             <article className="border border-white/10 bg-[#0a0a0a] p-6">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
                 Resumo comercial
               </p>
-
               <div className="mt-5 space-y-4 text-sm">
                 <DataRow
                   label="Leads vinculados"
@@ -1201,28 +1300,24 @@ export default async function ClientePage({
                       .length,
                   )}
                 />
-
                 <DataRow
                   label="Visitas agendadas"
                   value={String(
                     scheduledVisits.length,
                   )}
                 />
-
                 <DataRow
                   label="Visitas realizadas"
                   value={String(
                     completedVisits.length,
                   )}
                 />
-
                 <DataRow
                   label="Propostas de compra"
                   value={String(
                     client.proposals.length,
                   )}
                 />
-
                 <DataRow
                   label="Propostas de locação"
                   value={String(
@@ -1230,7 +1325,6 @@ export default async function ClientePage({
                       .length,
                   )}
                 />
-
                 <DataRow
                   label="Eventos"
                   value={String(
@@ -1238,7 +1332,6 @@ export default async function ClientePage({
                       .length,
                   )}
                 />
-
                 <DataRow
                   label="Última movimentação"
                   value={
@@ -1252,17 +1345,14 @@ export default async function ClientePage({
               </div>
             </article>
           </div>
-
           <div className="space-y-6">
             <article className="border border-amber-500/20 bg-[#0a0a0a] p-6 lg:p-8">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
                 Registrar atendimento
               </p>
-
               <h2 className="mt-2 font-serif text-3xl">
                 Imóveis apresentados/enviados
               </h2>
-
               <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-500">
                 Informe todos os imóveis
                 apresentados ou enviados
@@ -1271,7 +1361,6 @@ export default async function ClientePage({
                 um único evento da linha
                 do tempo.
               </p>
-
               <form
                 action={
                   addPresentedAction
@@ -1282,26 +1371,22 @@ export default async function ClientePage({
                   <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
                     Códigos dos imóveis
                   </span>
-
                   <input
                     name="propertyCodes"
                     required
                     placeholder="Ex.: BBC001, BBA015, BBC023, BBA021"
                     className="min-h-14 w-full border border-white/15 bg-[#111] px-4 text-sm text-white outline-none placeholder:text-zinc-700 focus:border-amber-500"
                   />
-
                   <span className="mt-2 block text-xs leading-5 text-zinc-600">
                     Separe os códigos por
                     vírgula, espaço ou
                     ponto e vírgula.
                   </span>
                 </label>
-
                 <label className="block">
                   <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
                     Observação opcional
                   </span>
-
                   <textarea
                     name="description"
                     maxLength={5000}
@@ -1310,7 +1395,6 @@ export default async function ClientePage({
                     className="w-full resize-y border border-white/15 bg-[#111] px-4 py-3 text-sm leading-6 text-white outline-none placeholder:text-zinc-700 focus:border-amber-500"
                   />
                 </label>
-
                 <button
                   type="submit"
                   className="inline-flex min-h-12 items-center justify-center bg-amber-500 px-6 text-[10px] font-bold uppercase tracking-[0.15em] text-black transition hover:bg-amber-400"
@@ -1319,16 +1403,13 @@ export default async function ClientePage({
                 </button>
               </form>
             </article>
-
             <article className="border border-sky-500/20 bg-[#0a0a0a] p-6 lg:p-8">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-sky-300">
                 Próxima etapa
               </p>
-
               <h2 className="mt-2 font-serif text-3xl">
                 Agendar visita
               </h2>
-
               <p className="mt-3 max-w-2xl text-sm leading-7 text-zinc-500">
                 Registre a visita confirmada
                 com o cliente. Ela será criada
@@ -1336,7 +1417,6 @@ export default async function ClientePage({
                 automaticamente na linha do
                 tempo.
               </p>
-
               <form
                 action={scheduleVisit}
                 className="mt-6 space-y-5"
@@ -1345,14 +1425,12 @@ export default async function ClientePage({
                   <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
                     Código do imóvel
                   </span>
-
                   <input
                     name="visitPropertyCode"
                     required
                     placeholder="Ex.: BBC008"
                     className="min-h-14 w-full border border-white/15 bg-[#111] px-4 text-sm uppercase text-white outline-none placeholder:text-zinc-700 focus:border-sky-500"
                   />
-
                   {relatedPropertyCodes.length >
                   0 ? (
                     <span className="mt-2 block text-xs leading-5 text-zinc-600">
@@ -1363,13 +1441,11 @@ export default async function ClientePage({
                     </span>
                   ) : null}
                 </label>
-
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block">
                     <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
                       Data
                     </span>
-
                     <input
                       type="date"
                       name="visitDate"
@@ -1377,12 +1453,10 @@ export default async function ClientePage({
                       className="min-h-14 w-full border border-white/15 bg-[#111] px-4 text-sm text-white outline-none focus:border-sky-500"
                     />
                   </label>
-
                   <label className="block">
                     <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
                       Horário
                     </span>
-
                     <input
                       type="time"
                       name="visitTime"
@@ -1390,12 +1464,10 @@ export default async function ClientePage({
                     />
                   </label>
                 </div>
-
                 <label className="block">
                   <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
                     Observação opcional
                   </span>
-
                   <textarea
                     name="visitNotes"
                     maxLength={5000}
@@ -1404,7 +1476,6 @@ export default async function ClientePage({
                     className="w-full resize-y border border-white/15 bg-[#111] px-4 py-3 text-sm leading-6 text-white outline-none placeholder:text-zinc-700 focus:border-sky-500"
                   />
                 </label>
-
                 <button
                   type="submit"
                   className="inline-flex min-h-12 items-center justify-center bg-sky-500 px-6 text-[10px] font-bold uppercase tracking-[0.15em] text-black transition hover:bg-sky-400"
@@ -1413,19 +1484,16 @@ export default async function ClientePage({
                 </button>
               </form>
             </article>
-
             <article className="border border-white/10 bg-[#0a0a0a] p-6 lg:p-8">
               <div className="flex flex-col gap-3 border-b border-white/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
                     Andamento comercial
                   </p>
-
                   <h2 className="mt-2 font-serif text-3xl">
                     Linha do tempo
                   </h2>
                 </div>
-
                 <p className="text-xs text-zinc-500">
                   {
                     client
@@ -1440,7 +1508,6 @@ export default async function ClientePage({
                     : "s"}
                 </p>
               </div>
-
               {client.commercialEvents
                 .length === 0 ? (
                 <div className="py-14 text-center">
@@ -1448,7 +1515,6 @@ export default async function ClientePage({
                     Linha do tempo ainda
                     vazia
                   </p>
-
                   <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-zinc-500">
                     Contato, qualificação,
                     imóveis apresentados,
@@ -1469,12 +1535,10 @@ export default async function ClientePage({
                           (item) =>
                             item.property,
                         );
-
                       const amount =
                         formatCurrency(
                           event.amount,
                         );
-
                       return (
                         <div
                           key={event.id}
@@ -1482,7 +1546,6 @@ export default async function ClientePage({
                         >
                           <div className="relative flex justify-center">
                             <span className="relative z-10 mt-1 h-3 w-3 rounded-full border-2 border-amber-400 bg-[#050505]" />
-
                             {index <
                             client
                               .commercialEvents
@@ -1491,7 +1554,6 @@ export default async function ClientePage({
                               <span className="absolute bottom-0 top-4 w-px bg-white/10" />
                             ) : null}
                           </div>
-
                           <div className="pb-8">
                             <div className="flex flex-wrap items-center gap-3">
                               <p className="font-semibold text-white">
@@ -1502,14 +1564,12 @@ export default async function ClientePage({
                                   ]
                                 }
                               </p>
-
                               <span className="text-xs text-zinc-600">
                                 {formatDate(
                                   event.eventAt,
                                 )}
                               </span>
                             </div>
-
                             {properties.length >
                             0 ? (
                               <div className="mt-3 flex flex-wrap gap-2">
@@ -1532,13 +1592,11 @@ export default async function ClientePage({
                                 )}
                               </div>
                             ) : null}
-
                             {amount ? (
                               <p className="mt-3 text-sm font-semibold text-emerald-300">
                                 {amount}
                               </p>
                             ) : null}
-
                             {event.description ? (
                               <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-zinc-400">
                                 {
@@ -1546,7 +1604,6 @@ export default async function ClientePage({
                                 }
                               </p>
                             ) : null}
-
                             {event.agent ? (
                               <p className="mt-3 text-xs text-zinc-600">
                                 Responsável:{" "}
@@ -1566,7 +1623,6 @@ export default async function ClientePage({
             </article>
           </div>
         </section>
-
         <section className="mt-8 grid gap-6 xl:grid-cols-2">
           <article className="border border-white/10 bg-[#0a0a0a] p-6">
             <div className="flex items-end justify-between gap-4">
@@ -1574,12 +1630,10 @@ export default async function ClientePage({
                 <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
                   Visitas
                 </p>
-
                 <h2 className="mt-2 font-serif text-2xl">
                   Histórico de visitas
                 </h2>
               </div>
-
               <p className="text-xs text-zinc-600">
                 {client.visits.length} registro
                 {client.visits.length === 1
@@ -1587,7 +1641,6 @@ export default async function ClientePage({
                   : "s"}
               </p>
             </div>
-
             {client.visits.length ===
             0 ? (
               <p className="mt-5 text-sm text-zinc-500">
@@ -1613,7 +1666,6 @@ export default async function ClientePage({
                                 .code
                             }
                           </Link>
-
                           <p className="mt-2 text-xs text-zinc-500">
                             {
                               visit.property
@@ -1621,7 +1673,6 @@ export default async function ClientePage({
                             }
                           </p>
                         </div>
-
                         <span
                           className={
                             visit.status ===
@@ -1640,21 +1691,18 @@ export default async function ClientePage({
                           }
                         </span>
                       </div>
-
                       <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-zinc-500">
                         <span>
                           {formatDateOnly(
                             visit.visitDate,
                           )}
                         </span>
-
                         {visit.visitTime ? (
                           <span>
                             · {visit.visitTime}
                           </span>
                         ) : null}
                       </div>
-
                       {visit.interest ? (
                         <p className="mt-3 text-xs text-zinc-400">
                           Interesse:{" "}
@@ -1667,7 +1715,6 @@ export default async function ClientePage({
                               : "Baixo"}
                         </p>
                       ) : null}
-
                       {visit.status ===
                       "AGENDADA" ? (
                         <div className="mt-4 border-t border-white/10 pt-4">
@@ -1679,7 +1726,6 @@ export default async function ClientePage({
                           </Link>
                         </div>
                       ) : null}
-
                       {visit.status ===
                       "REALIZADA" ? (
                         <div className="mt-4 border-t border-white/10 pt-4">
@@ -1697,12 +1743,10 @@ export default async function ClientePage({
               </div>
             )}
           </article>
-
           <article className="border border-white/10 bg-[#0a0a0a] p-6">
             <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
               Propostas
             </p>
-
             {client.proposals.length ===
               0 &&
             client.rentalProposals
@@ -1729,19 +1773,16 @@ export default async function ClientePage({
                               .code
                           }
                         </Link>
-
                         <span className="border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-amber-300">
                           Compra
                         </span>
                       </div>
-
                       <p className="mt-2 text-xs text-zinc-500">
                         {
                           proposal.property
                             .title
                         }
                       </p>
-
                       {formatCurrency(
                         proposal.offeredValue,
                       ) ? (
@@ -1751,7 +1792,6 @@ export default async function ClientePage({
                           )}
                         </p>
                       ) : null}
-
                       <p className="mt-2 text-xs text-zinc-500">
                         Status:{" "}
                         {proposal.status}
@@ -1759,7 +1799,6 @@ export default async function ClientePage({
                     </div>
                   ),
                 )}
-
                 {client.rentalProposals.map(
                   (proposal) => (
                     <div
@@ -1776,25 +1815,21 @@ export default async function ClientePage({
                               .code
                           }
                         </Link>
-
                         <span className="border border-sky-500/30 bg-sky-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-sky-300">
                           Locação
                         </span>
                       </div>
-
                       <p className="mt-2 text-xs text-zinc-500">
                         {
                           proposal.property
                             .title
                         }
                       </p>
-
                       <p className="mt-3 text-sm font-semibold text-emerald-300">
                         {formatCurrency(
                           proposal.offeredRentValue,
                         )}
                       </p>
-
                       <p className="mt-2 text-xs text-zinc-500">
                         Status:{" "}
                         {proposal.status}
@@ -1810,7 +1845,6 @@ export default async function ClientePage({
     </main>
   );
 }
-
 function InfoCard({
   label,
   value,
@@ -1823,14 +1857,12 @@ function InfoCard({
       <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-zinc-500">
         {label}
       </p>
-
       <p className="mt-3 text-lg font-semibold text-white">
         {value}
       </p>
     </article>
   );
 }
-
 function DataRow({
   label,
   value,
@@ -1843,7 +1875,6 @@ function DataRow({
       <span className="text-xs text-zinc-600">
         {label}
       </span>
-
       <span className="text-sm text-zinc-300">
         {value}
       </span>
