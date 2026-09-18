@@ -26,6 +26,7 @@ type CaptacaoSearchRequest = {
 
 type SearchOpportunity = {
   title: string;
+
   sourceName: string;
   sourceType: string;
   sourceUrl: string;
@@ -51,17 +52,13 @@ type SearchOpportunity = {
   notes: string;
 };
 
-function textValue(
-  value: unknown,
-) {
+function textValue(value: unknown) {
   return typeof value === "string"
     ? value.trim()
     : "";
 }
 
-function numberValue(
-  value: unknown,
-) {
+function numberValue(value: unknown) {
   if (
     value === null ||
     value === undefined ||
@@ -99,9 +96,7 @@ function numberValue(
     : null;
 }
 
-function integerValue(
-  value: unknown,
-) {
+function integerValue(value: unknown) {
   const parsed = numberValue(value);
 
   if (parsed === null) {
@@ -114,9 +109,7 @@ function integerValue(
   );
 }
 
-function formatMoney(
-  value: number | null,
-) {
+function formatMoney(value: number | null) {
   if (value === null) {
     return "";
   }
@@ -412,17 +405,58 @@ export async function POST(
               "",
               "IMPORTANTE:",
               "- NÃO pesquise nem recomende imóveis do site bbconsultoriaimoveis.com.br.",
-              "- NÃO invente anúncios, preços, características ou URLs.",
+              "- NÃO invente anúncios, preços, características, imobiliárias ou URLs.",
               "- Cada oportunidade precisa ter um link público real encontrado na web.",
               "- Priorize anúncios ativos e páginas específicas do imóvel.",
-              "- Pesquise múltiplas fontes.",
+              "- Pesquise múltiplas fontes antes de concluir a busca.",
               "- Não limite a busca a grandes portais.",
-              "- Procure também sites de imobiliárias, corretores, parceiros e portais regionais.",
-              "- Considere OLX, ZAP Imóveis, Viva Real, Imovelweb e outras fontes quando houver resultados relevantes.",
+              "- Não limite a busca às primeiras fontes encontradas.",
+              "- Procure também sites próprios de imobiliárias, corretores, parceiros e portais regionais.",
               "- Não copie fotos.",
               "- Não faça contato com anunciante.",
               "- Não tente captar automaticamente.",
               "- Apenas encontre e classifique oportunidades para que um captador humano da B&B abra o link e faça a abordagem.",
+              "",
+              "ESTRATÉGIA DE PESQUISA:",
+              "- Faça uma pesquisa ampla na web para o perfil solicitado.",
+              "- Quando a cidade for São José dos Campos ou região, pesquise explicitamente imobiliárias locais relevantes.",
+              "- Entre as fontes locais prioritárias, procure resultados da I9 Vale.",
+              "- Procure resultados da Pirâmide Imóveis.",
+              "- Procure resultados da Riccio Imóveis.",
+              "- Procure resultados da Nova Freitas.",
+              "- Procure também outras imobiliárias relevantes de São José dos Campos encontradas durante a pesquisa.",
+              "- A lista de imobiliárias locais não é fechada: descubra e utilize outras fontes confiáveis quando possuírem imóveis compatíveis.",
+              "- Pesquise também OLX.",
+              "- Pesquise também ZAP Imóveis.",
+              "- Pesquise também Viva Real.",
+              "- Pesquise também Imovelweb.",
+              "- Considere outros portais imobiliários relevantes quando houver resultados compatíveis.",
+              "- Use pesquisas direcionadas por domínio quando isso ajudar a encontrar anúncios específicos.",
+              "- Pesquisas direcionadas podem ser equivalentes a consultas do tipo site:dominio perfil-do-imovel.",
+              "- Combine localização, bairro, condomínio, tipo, finalidade, dormitórios e faixa de preço nas consultas quando essas informações estiverem disponíveis.",
+              "- Não force resultados de uma fonte que não tenha anúncios compatíveis.",
+              "- Busque diversidade de fontes para evitar que todos os resultados venham do mesmo portal ou da mesma imobiliária.",
+              "",
+              "SÃO JOSÉ DOS CAMPOS:",
+              "- Para pesquisas em São José dos Campos, procure especialmente imóveis anunciados por imobiliárias locais e regionais.",
+              "- Considere bairros e regiões como Urbanova, Jardim Aquarius, Jardim das Colinas, Vila Ema, Jardim Esplanada, Jardim das Indústrias, Bosque dos Eucaliptos, Jardim Satélite e outras regiões compatíveis com o perfil solicitado.",
+              "- Quando houver condomínio ou empreendimento informado, pesquise pelo nome exato e também por variações razoáveis do nome.",
+              "- Quando houver bairro informado, priorize resultados realmente localizados nesse bairro ou em região claramente compatível.",
+              "",
+              "DUPLICIDADES:",
+              "- A mesma propriedade pode aparecer em vários sites.",
+              "- Tente identificar quando OLX, ZAP, Viva Real, Imovelweb ou uma imobiliária estiverem anunciando o mesmo imóvel.",
+              "- Evite repetir claramente o mesmo imóvel apenas porque apareceu em fontes diferentes.",
+              "- Considere semelhanças de preço, área, dormitórios, vagas, condomínio, localização e descrição para reconhecer possíveis duplicidades.",
+              "- Quando existirem várias URLs para o mesmo imóvel, prefira a página mais específica, clara e útil para o captador.",
+              "- Quando houver dúvida real sobre duplicidade, mantenha o resultado e indique isso em notes.",
+              "",
+              "QUALIDADE DA FONTE:",
+              "- Prefira páginas específicas do imóvel em vez de páginas genéricas de busca.",
+              "- Prefira URLs que permitam ao captador conferir diretamente o anúncio.",
+              "- Não apresente uma homepage de imobiliária como se fosse um anúncio específico.",
+              "- Não utilize páginas sem evidência suficiente de que o imóvel anunciado corresponde ao resultado apresentado.",
+              "- Se um anúncio aparentar estar removido, expirado ou indisponível, não o priorize.",
               "",
               "RELEVÂNCIA:",
               "- Localização é um critério muito importante.",
@@ -430,6 +464,8 @@ export async function POST(
               "- Tipo de imóvel precisa ser compatível.",
               "- Respeite o limite de preço informado.",
               "- Dormitórios, suítes, vagas, área e condomínio devem ser considerados quando informados.",
+              "- Não aumente artificialmente a compatibilidade apenas porque o anúncio pertence a uma fonte prioritária.",
+              "- A compatibilidade deve refletir o imóvel encontrado, não a notoriedade do portal ou da imobiliária.",
               "",
               "COMPATIBILIDADE:",
               "- Dê uma nota de 0 a 100.",
@@ -438,14 +474,13 @@ export async function POST(
               "- 60 a 74 = compatibilidade parcial.",
               "- Abaixo de 60 = só inclua se houver poucos resultados melhores.",
               "",
-              "DUPLICIDADES:",
-              "- A mesma propriedade pode aparecer em vários sites.",
-              "- Tente evitar repetir claramente o mesmo imóvel.",
-              "- Quando houver dúvida, mantenha o resultado e indique isso em notes.",
-              "",
               "RETORNO:",
               "- Retorne no máximo 15 oportunidades.",
               "- Ordene da maior compatibilidade para a menor.",
+              "- Procure trazer oportunidades de fontes diferentes sempre que houver opções compatíveis.",
+              "- sourceName deve identificar corretamente o portal, imobiliária ou fonte original encontrada.",
+              "- sourceType deve indicar de forma objetiva o tipo da fonte, por exemplo portal imobiliário, imobiliária local, imobiliária regional ou anúncio classificado.",
+              "- sourceUrl deve apontar para a URL pública real do anúncio.",
               "- price deve ser numérico em reais quando for possível identificar.",
               "- Se um dado não estiver disponível, use null para números e string vazia para textos.",
               "- Seja conciso: compatibilityReason e notes devem ter no máximo 180 caracteres cada.",
@@ -460,7 +495,13 @@ export async function POST(
               "",
               profile,
               "",
-              "Faça uma pesquisa ampla em diferentes fontes e retorne apenas oportunidades que possuam URL pública real.",
+              "Faça uma pesquisa ampla e distribuída entre diferentes fontes.",
+              "Inclua web geral, imobiliárias locais e grandes portais imobiliários.",
+              "Para São José dos Campos, procure também I9 Vale, Pirâmide Imóveis, Riccio Imóveis, Nova Freitas e outras imobiliárias relevantes da cidade.",
+              "Pesquise também OLX, ZAP Imóveis, Viva Real, Imovelweb e outros portais relevantes.",
+              "Use buscas direcionadas por domínio quando forem úteis.",
+              "Não concentre todos os resultados em uma única fonte se houver alternativas compatíveis.",
+              "Retorne apenas oportunidades que possuam URL pública real e verificável.",
             ].join("\n"),
           },
         ],
