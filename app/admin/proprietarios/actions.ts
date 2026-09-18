@@ -787,18 +787,16 @@ export async function deleteOwner(
   const access =
     await getAccessContext();
 
+  if (!access.isAdmin) {
+    throw new Error(
+      "Apenas administradores podem excluir proprietários.",
+    );
+  }
+
   const owner =
-    await prisma.owner.findFirst({
+    await prisma.owner.findUnique({
       where: {
         id,
-
-        ...(access.isAdmin
-          ? {}
-          : {
-              capturedById:
-                access.agentId ??
-                -1,
-            }),
       },
 
       select: {
@@ -808,7 +806,7 @@ export async function deleteOwner(
 
   if (!owner) {
     throw new Error(
-      "Proprietário não encontrado ou acesso não autorizado.",
+      "Proprietário não encontrado.",
     );
   }
 
