@@ -574,3 +574,52 @@ export async function deletePortalLeadAction(
     );
   }
 }
+
+export async function deleteWhatsAppLeadIntentAction(
+  intentId: number,
+) {
+  const access =
+    await getAccessContext();
+
+  if (!access.isAdmin) {
+    throw new Error(
+      "Apenas administradores podem excluir registros de WhatsApp.",
+    );
+  }
+
+  if (
+    !Number.isInteger(intentId) ||
+    intentId <= 0
+  ) {
+    throw new Error(
+      "Registro de WhatsApp inválido.",
+    );
+  }
+
+  const existingIntent =
+    await prisma.whatsAppLeadIntent.findUnique({
+      where: {
+        id: intentId,
+      },
+
+      select: {
+        id: true,
+      },
+    });
+
+  if (!existingIntent) {
+    revalidatePath("/admin");
+    revalidatePath("/admin/clientes");
+
+    return;
+  }
+
+  await prisma.whatsAppLeadIntent.delete({
+    where: {
+      id: intentId,
+    },
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/clientes");
+}

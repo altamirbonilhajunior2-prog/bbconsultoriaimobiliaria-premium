@@ -5,10 +5,12 @@ import { prisma } from "../../../lib/prisma";
 
 import ConvertLeadButton from "./ConvertLeadButton";
 import DeleteLeadButton from "./DeleteLeadButton";
+import DeleteWhatsAppIntentButton from "./DeleteWhatsAppIntentButton";
 
 import {
   convertPortalLeadToClientAction,
   deletePortalLeadAction,
+  deleteWhatsAppLeadIntentAction,
   updatePortalLeadAction,
 } from "./actions";
 
@@ -161,8 +163,12 @@ export default async function ClientesPage() {
     prisma.client.count(),
 
     prisma.whatsAppLeadIntent.findMany({
-      orderBy: { createdAt: "desc" },
+      orderBy: {
+        createdAt: "desc",
+      },
+
       take: 100,
+
       select: {
         id: true,
         propertyCode: true,
@@ -175,7 +181,12 @@ export default async function ClientesPage() {
         utmContent: true,
         gclid: true,
         createdAt: true,
-        property: { select: { title: true } },
+
+        property: {
+          select: {
+            title: true,
+          },
+        },
       },
     }),
   ]);
@@ -194,7 +205,8 @@ export default async function ClientesPage() {
     {
       label:
         "Contatos via WhatsApp",
-      value: whatsAppLeadIntents.length,
+      value:
+        whatsAppLeadIntents.length,
     },
     {
       label:
@@ -236,11 +248,10 @@ export default async function ClientesPage() {
             Acompanhe os contatos
             recebidos pelo portal,
             converta leads
-            qualificados em
-            clientes e mantenha o
-            histórico comercial da
-            B&amp;B centralizado no
-            CRM.
+            qualificados em clientes
+            e mantenha o histórico
+            comercial da B&amp;B
+            centralizado no CRM.
           </p>
         </header>
 
@@ -282,24 +293,29 @@ export default async function ClientesPage() {
             </div>
 
             <p className="text-xs text-zinc-500">
-              {clientRecords.length} cliente
-              {clientRecords.length === 1
+              {clientRecords.length}{" "}
+              cliente
+              {clientRecords.length ===
+              1
                 ? ""
                 : "s"}
             </p>
           </div>
 
-          {clientRecords.length === 0 ? (
+          {clientRecords.length ===
+          0 ? (
             <div className="border border-white/10 bg-[#0a0a0a] p-10 text-center text-zinc-400">
-              Nenhum cliente cadastrado
-              até o momento.
+              Nenhum cliente
+              cadastrado até o
+              momento.
             </div>
           ) : (
             <div className="grid gap-4 xl:grid-cols-2">
               {clientRecords.map(
                 (client) => {
                   const proposalCount =
-                    client._count.proposals +
+                    client._count
+                      .proposals +
                     client._count
                       .rentalProposals;
 
@@ -314,7 +330,8 @@ export default async function ClientesPage() {
                             <span className="border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-emerald-300">
                               {
                                 clientStatusLabels[
-                                  client.status
+                                  client
+                                    .status
                                 ]
                               }
                             </span>
@@ -326,7 +343,9 @@ export default async function ClientesPage() {
                           </div>
 
                           <h3 className="mt-4 font-serif text-3xl">
-                            {client.name}
+                            {
+                              client.name
+                            }
                           </h3>
 
                           <p className="mt-3 text-sm text-zinc-400">
@@ -337,7 +356,9 @@ export default async function ClientesPage() {
 
                           {client.email ? (
                             <p className="mt-1 text-xs text-zinc-600">
-                              {client.email}
+                              {
+                                client.email
+                              }
                             </p>
                           ) : null}
                         </div>
@@ -354,7 +375,8 @@ export default async function ClientesPage() {
                         <ClientMetric
                           label="Leads"
                           value={
-                            client._count
+                            client
+                              ._count
                               .portalLeads
                           }
                         />
@@ -362,7 +384,8 @@ export default async function ClientesPage() {
                         <ClientMetric
                           label="Visitas"
                           value={
-                            client._count
+                            client
+                              ._count
                               .visits
                           }
                         />
@@ -377,7 +400,8 @@ export default async function ClientesPage() {
                         <ClientMetric
                           label="Eventos"
                           value={
-                            client._count
+                            client
+                              ._count
                               .commercialEvents
                           }
                         />
@@ -408,106 +432,230 @@ export default async function ClientesPage() {
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-400">
                 Intenção de contato
               </p>
+
               <h2 className="mt-2 font-serif text-3xl">
-                Contatos iniciados pelo WhatsApp
+                Contatos iniciados
+                pelo WhatsApp
               </h2>
+
               <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-500">
-                Registros de cliques nos botões de WhatsApp do portal. O clique indica intenção de contato, mas não confirma que a mensagem foi enviada.
+                Registros de cliques
+                nos botões de
+                WhatsApp do portal. O
+                clique indica intenção
+                de contato, mas não
+                confirma que a mensagem
+                foi enviada.
               </p>
             </div>
+
             <p className="text-xs text-zinc-500">
-              {whatsAppLeadIntents.length} registro
-              {whatsAppLeadIntents.length === 1 ? "" : "s"}
+              {
+                whatsAppLeadIntents.length
+              }{" "}
+              registro
+              {whatsAppLeadIntents.length ===
+              1
+                ? ""
+                : "s"}
             </p>
           </div>
 
-          {whatsAppLeadIntents.length === 0 ? (
+          {whatsAppLeadIntents.length ===
+          0 ? (
             <div className="border border-white/10 bg-[#0a0a0a] p-10 text-center text-zinc-400">
-              Nenhum contato iniciado pelo WhatsApp foi registrado até o momento.
+              Nenhum contato iniciado
+              pelo WhatsApp foi
+              registrado até o
+              momento.
             </div>
           ) : (
             <div className="space-y-4">
-              {whatsAppLeadIntents.map((intent) => {
-                const hasCampaignData = Boolean(
-                  intent.utmSource ||
-                    intent.utmMedium ||
-                    intent.utmCampaign ||
-                    intent.utmTerm ||
-                    intent.utmContent ||
-                    intent.gclid,
-                );
+              {whatsAppLeadIntents.map(
+                (intent) => {
+                  const hasCampaignData =
+                    Boolean(
+                      intent.utmSource ||
+                        intent.utmMedium ||
+                        intent.utmCampaign ||
+                        intent.utmTerm ||
+                        intent.utmContent ||
+                        intent.gclid,
+                    );
 
-                return (
-                  <article
-                    key={intent.id}
-                    className="border border-emerald-500/20 bg-[#0a0a0a] p-6 lg:p-7"
-                  >
-                    <div className="grid gap-6 lg:grid-cols-[1fr_1fr_1.2fr]">
-                      <div>
-                        <div className="flex flex-wrap items-center gap-3">
-                          <span className="border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-emerald-300">
-                            Clique no WhatsApp
-                          </span>
-                          <span className="text-xs text-zinc-500">
-                            {formatDate(intent.createdAt)}
-                          </span>
-                        </div>
-                        <h3 className="mt-4 font-serif text-2xl">
-                          {intent.propertyCode
-                            ? `Imóvel ${intent.propertyCode}`
-                            : "Atendimento geral"}
-                        </h3>
-                        {intent.propertyCode ? (
-                          <Link
-                            href={`/imovel/${intent.propertyCode.toLowerCase()}`}
-                            target="_blank"
-                            className="mt-3 inline-flex text-sm font-medium text-amber-400 hover:text-amber-300"
-                          >
-                            {intent.property?.title ?? "Abrir imóvel"}
-                          </Link>
-                        ) : null}
-                      </div>
+                  const deleteIntentAction =
+                    deleteWhatsAppLeadIntentAction.bind(
+                      null,
+                      intent.id,
+                    );
 
-                      <div className="text-sm leading-7 text-zinc-400">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
-                          Origem
-                        </p>
-                        <p className="mt-2 font-medium text-white">
-                          {getSourceLabel(intent.utmSource, intent.utmCampaign)}
-                        </p>
-                        <p className="mt-3 break-all text-xs text-zinc-500">
-                          Página: {intent.sourcePage}
-                        </p>
-                        {intent.referrer ? (
-                          <p className="mt-1 break-all text-xs text-zinc-600">
-                            Referência: {intent.referrer}
-                          </p>
-                        ) : null}
-                      </div>
+                  return (
+                    <article
+                      key={intent.id}
+                      className="border border-emerald-500/20 bg-[#0a0a0a] p-6 lg:p-7"
+                    >
+                      <div className="grid gap-6 lg:grid-cols-[1fr_1fr_1.2fr]">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <span className="border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-emerald-300">
+                              Clique no
+                              WhatsApp
+                            </span>
 
-                      <div className="text-xs leading-6 text-zinc-500">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
-                          Campanha / rastreamento
-                        </p>
-                        {hasCampaignData ? (
-                          <div className="mt-2 space-y-1">
-                            {intent.utmSource ? <p>utm_source: <span className="text-zinc-300">{intent.utmSource}</span></p> : null}
-                            {intent.utmMedium ? <p>utm_medium: <span className="text-zinc-300">{intent.utmMedium}</span></p> : null}
-                            {intent.utmCampaign ? <p>utm_campaign: <span className="text-zinc-300">{intent.utmCampaign}</span></p> : null}
-                            {intent.utmTerm ? <p>utm_term: <span className="text-zinc-300">{intent.utmTerm}</span></p> : null}
-                            {intent.utmContent ? <p>utm_content: <span className="text-zinc-300">{intent.utmContent}</span></p> : null}
-                            {intent.gclid ? <p className="break-all">gclid: <span className="text-zinc-300">{intent.gclid}</span></p> : null}
+                            <span className="text-xs text-zinc-500">
+                              {formatDate(
+                                intent.createdAt,
+                              )}
+                            </span>
                           </div>
-                        ) : (
-                          <p className="mt-2 text-zinc-600">
-                            Sem parâmetros de campanha registrados.
+
+                          <h3 className="mt-4 font-serif text-2xl">
+                            {intent.propertyCode
+                              ? `Imóvel ${intent.propertyCode}`
+                              : "Atendimento geral"}
+                          </h3>
+
+                          {intent.propertyCode ? (
+                            <Link
+                              href={`/imovel/${intent.propertyCode.toLowerCase()}`}
+                              target="_blank"
+                              className="mt-3 inline-flex text-sm font-medium text-amber-400 hover:text-amber-300"
+                            >
+                              {intent
+                                .property
+                                ?.title ??
+                                "Abrir imóvel"}
+                            </Link>
+                          ) : null}
+                        </div>
+
+                        <div className="text-sm leading-7 text-zinc-400">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                            Origem
                           </p>
-                        )}
+
+                          <p className="mt-2 font-medium text-white">
+                            {getSourceLabel(
+                              intent.utmSource,
+                              intent.utmCampaign,
+                            )}
+                          </p>
+
+                          <p className="mt-3 break-all text-xs text-zinc-500">
+                            Página:{" "}
+                            {
+                              intent.sourcePage
+                            }
+                          </p>
+
+                          {intent.referrer ? (
+                            <p className="mt-1 break-all text-xs text-zinc-600">
+                              Referência:{" "}
+                              {
+                                intent.referrer
+                              }
+                            </p>
+                          ) : null}
+                        </div>
+
+                        <div className="text-xs leading-6 text-zinc-500">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-zinc-500">
+                            Campanha /
+                            rastreamento
+                          </p>
+
+                          {hasCampaignData ? (
+                            <div className="mt-2 space-y-1">
+                              {intent.utmSource ? (
+                                <p>
+                                  utm_source:{" "}
+                                  <span className="text-zinc-300">
+                                    {
+                                      intent.utmSource
+                                    }
+                                  </span>
+                                </p>
+                              ) : null}
+
+                              {intent.utmMedium ? (
+                                <p>
+                                  utm_medium:{" "}
+                                  <span className="text-zinc-300">
+                                    {
+                                      intent.utmMedium
+                                    }
+                                  </span>
+                                </p>
+                              ) : null}
+
+                              {intent.utmCampaign ? (
+                                <p>
+                                  utm_campaign:{" "}
+                                  <span className="text-zinc-300">
+                                    {
+                                      intent.utmCampaign
+                                    }
+                                  </span>
+                                </p>
+                              ) : null}
+
+                              {intent.utmTerm ? (
+                                <p>
+                                  utm_term:{" "}
+                                  <span className="text-zinc-300">
+                                    {
+                                      intent.utmTerm
+                                    }
+                                  </span>
+                                </p>
+                              ) : null}
+
+                              {intent.utmContent ? (
+                                <p>
+                                  utm_content:{" "}
+                                  <span className="text-zinc-300">
+                                    {
+                                      intent.utmContent
+                                    }
+                                  </span>
+                                </p>
+                              ) : null}
+
+                              {intent.gclid ? (
+                                <p className="break-all">
+                                  gclid:{" "}
+                                  <span className="text-zinc-300">
+                                    {
+                                      intent.gclid
+                                    }
+                                  </span>
+                                </p>
+                              ) : null}
+                            </div>
+                          ) : (
+                            <p className="mt-2 text-zinc-600">
+                              Sem
+                              parâmetros
+                              de campanha
+                              registrados.
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                );
-              })}
+
+                      {access.isAdmin ? (
+                        <div className="mt-5 flex justify-end border-t border-white/10 pt-4">
+                          <DeleteWhatsAppIntentButton
+                            onDelete={
+                              deleteIntentAction
+                            }
+                          />
+                        </div>
+                      ) : null}
+                    </article>
+                  );
+                },
+              )}
             </div>
           )}
         </section>
@@ -556,9 +704,7 @@ export default async function ClientesPage() {
 
                   return (
                     <article
-                      key={
-                        lead.id
-                      }
+                      key={lead.id}
                       className="border border-white/10 bg-[#0a0a0a] p-6 lg:p-7"
                     >
                       <div className="grid gap-7 xl:grid-cols-[1.1fr_1fr_1.35fr]">
@@ -567,7 +713,8 @@ export default async function ClientesPage() {
                             <span className="border border-amber-500/50 bg-amber-500/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-amber-400">
                               {
                                 statusLabels[
-                                  lead.status
+                                  lead
+                                    .status
                                 ]
                               }
                             </span>
