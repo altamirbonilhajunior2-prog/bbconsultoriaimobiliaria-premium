@@ -274,6 +274,7 @@ export async function updatePropertyAction(
 
       select: {
         id: true,
+        ownerId: true,
         captorId: true,
         coCaptorId: true,
       },
@@ -312,15 +313,20 @@ export async function updatePropertyAction(
     coCaptorId =
       requestedCoCaptorId;
   } else {
-    if (
-      !access.agentId ||
-      existingProperty.captorId !==
-        access.agentId
-    ) {
+    const canEditProperty =
+      access.agentId !== null &&
+      (
+        existingProperty.captorId ===
+          access.agentId ||
+        existingProperty.coCaptorId ===
+          access.agentId
+      );
+
+    if (!canEditProperty) {
       return {
         success: false,
         message:
-          "Somente o angariador principal pode alterar os dados de angariação deste imóvel.",
+          "Você não tem permissão para alterar este imóvel.",
       };
     }
 
@@ -328,7 +334,7 @@ export async function updatePropertyAction(
       existingProperty.captorId;
 
     coCaptorId =
-      requestedCoCaptorId;
+      existingProperty.coCaptorId;
   }
 
   if (!captorId) {
@@ -426,10 +432,13 @@ export async function updatePropertyAction(
 
           ...(access.isAdmin
             ? {}
-            : {
-                capturedById:
-                  access.agentId ?? -1,
-              }),
+            : ownerId ===
+                existingProperty.ownerId
+              ? {}
+              : {
+                  capturedById:
+                    access.agentId ?? -1,
+                }),
         },
 
         select: {
@@ -539,9 +548,23 @@ export async function updatePropertyAction(
       ),
     );
 
-  const mapEnabled = formData.get("mapEnabled") === "on";
-  const requestedMapRadius = getOptionalInteger(formData, "mapRadiusMeters") ?? 700;
-  const mapRadiusMeters = Math.min(Math.max(requestedMapRadius, 300), 2000);
+  const mapEnabled =
+    formData.get("mapEnabled") === "on";
+
+  const requestedMapRadius =
+    getOptionalInteger(
+      formData,
+      "mapRadiusMeters",
+    ) ?? 700;
+
+  const mapRadiusMeters =
+    Math.min(
+      Math.max(
+        requestedMapRadius,
+        300,
+      ),
+      2000,
+    );
 
   if (
     latitude !== null &&
@@ -647,256 +670,273 @@ export async function updatePropertyAction(
 
   try {
     const city =
-      getText(formData, "city") ||
+      getText(
+        formData,
+        "city",
+      ) ||
       "São José dos Campos";
-    const confirmedLocation = confirmedNeighborhoodLocation(formData, {
-      state,
-      city,
-      neighborhood,
-    });
 
-    await prisma.$transaction(async (tx) => {
-      if (confirmedLocation) {
-        await tx.neighborhoodMapLocation.upsert({
-          where: {
-            state_city_normalizedName: {
-              state: confirmedLocation.state,
-              city: confirmedLocation.city,
-              normalizedName: confirmedLocation.normalizedName,
+    const confirmedLocation =
+      confirmedNeighborhoodLocation(
+        formData,
+        {
+          state,
+          city,
+          neighborhood,
+        },
+      );
+
+    await prisma.$transaction(
+      async (tx) => {
+        if (confirmedLocation) {
+          await tx.neighborhoodMapLocation.upsert({
+            where: {
+              state_city_normalizedName: {
+                state:
+                  confirmedLocation.state,
+                city:
+                  confirmedLocation.city,
+                normalizedName:
+                  confirmedLocation.normalizedName,
+              },
             },
+
+            update: {
+              ...confirmedLocation,
+              active: true,
+              verifiedAt:
+                new Date(),
+            },
+
+            create: {
+              ...confirmedLocation,
+              aliases: [],
+              active: true,
+              verifiedAt:
+                new Date(),
+            },
+          });
+        }
+
+        await tx.property.update({
+          where: {
+            code: originalCode,
           },
-          update: {
-            ...confirmedLocation,
-            active: true,
-            verifiedAt: new Date(),
-          },
-          create: {
-            ...confirmedLocation,
-            aliases: [],
-            active: true,
-            verifiedAt: new Date(),
+
+          data: {
+            code:
+              normalizedCode,
+
+            title,
+
+            slug:
+              createSlug(
+                normalizedCode,
+                title,
+              ),
+
+            purpose,
+
+            opportunityProfiles,
+
+            propertyType,
+
+            category,
+
+            status,
+
+            highlight:
+              formData.get(
+                "highlight",
+              ) === "on",
+
+            internalNotes,
+
+            tag:
+              getOptionalText(
+                formData,
+                "tag",
+              ),
+
+            state:
+              state.toUpperCase(),
+
+            city,
+
+            neighborhood,
+
+            ownerId:
+              validatedOwnerId,
+
+            captorId,
+
+            coCaptorId,
+
+            development:
+              getOptionalText(
+                formData,
+                "development",
+              ),
+
+            location:
+              getOptionalText(
+                formData,
+                "location",
+              ),
+
+            address:
+              getOptionalText(
+                formData,
+                "address",
+              ),
+
+            zipCode:
+              getOptionalText(
+                formData,
+                "zipCode",
+              ),
+
+            latitude,
+
+            longitude,
+
+            googleMapsUrl:
+              getOptionalText(
+                formData,
+                "googleMapsUrl",
+              ),
+
+            mapEnabled,
+
+            mapRadiusMeters,
+
+            price:
+              parseDecimal(
+                getText(
+                  formData,
+                  "price",
+                ),
+              ),
+
+            rentalPrice:
+              parseDecimal(
+                getText(
+                  formData,
+                  "rentalPrice",
+                ),
+              ),
+
+            condominium:
+              parseDecimal(
+                getText(
+                  formData,
+                  "condominium",
+                ),
+              ),
+
+            iptu:
+              parseDecimal(
+                getText(
+                  formData,
+                  "iptu",
+                ),
+              ),
+
+            area:
+              parseDecimal(
+                getText(
+                  formData,
+                  "area",
+                ),
+              ),
+
+            landArea:
+              parseDecimal(
+                getText(
+                  formData,
+                  "landArea",
+                ),
+              ),
+
+            bedrooms:
+              parseInteger(
+                getText(
+                  formData,
+                  "bedrooms",
+                ),
+              ),
+
+            suites:
+              parseInteger(
+                getText(
+                  formData,
+                  "suites",
+                ),
+              ),
+
+            bathrooms:
+              parseInteger(
+                getText(
+                  formData,
+                  "bathrooms",
+                ),
+              ),
+
+            parking:
+              parseInteger(
+                getText(
+                  formData,
+                  "parking",
+                ),
+              ),
+
+            description:
+              getOptionalText(
+                formData,
+                "description",
+              ),
+
+            features,
+
+            video:
+              getOptionalText(
+                formData,
+                "video",
+              ),
+
+            virtualTour:
+              getOptionalText(
+                formData,
+                "virtualTour",
+              ),
+
+            brochure:
+              getOptionalText(
+                formData,
+                "brochure",
+              ),
+
+            seoTitle:
+              getOptionalText(
+                formData,
+                "seoTitle",
+              ),
+
+            seoDescription:
+              getOptionalText(
+                formData,
+                "seoDescription",
+              ),
+
+            seoImage:
+              getOptionalText(
+                formData,
+                "seoImage",
+              ),
           },
         });
-      }
-
-      await tx.property.update({
-      where: {
-        code: originalCode,
       },
-
-      data: {
-        code:
-          normalizedCode,
-
-        title,
-
-        slug:
-          createSlug(
-            normalizedCode,
-            title,
-          ),
-
-        purpose,
-
-        opportunityProfiles,
-
-        propertyType,
-
-        category,
-
-        status,
-
-        highlight:
-          formData.get(
-            "highlight",
-          ) === "on",
-
-        internalNotes,
-
-        tag:
-          getOptionalText(
-            formData,
-            "tag",
-          ),
-
-        state:
-          state.toUpperCase(),
-
-        city,
-
-        neighborhood,
-
-        ownerId:
-          validatedOwnerId,
-
-        captorId,
-
-        coCaptorId,
-
-        development:
-          getOptionalText(
-            formData,
-            "development",
-          ),
-
-        location:
-          getOptionalText(
-            formData,
-            "location",
-          ),
-
-        address:
-          getOptionalText(
-            formData,
-            "address",
-          ),
-
-        zipCode:
-          getOptionalText(
-            formData,
-            "zipCode",
-          ),
-
-        latitude,
-
-        longitude,
-
-        googleMapsUrl:
-          getOptionalText(
-            formData,
-            "googleMapsUrl",
-          ),
-
-        mapEnabled,
-
-        mapRadiusMeters,
-
-        price:
-          parseDecimal(
-            getText(
-              formData,
-              "price",
-            ),
-          ),
-
-        rentalPrice:
-          parseDecimal(
-            getText(
-              formData,
-              "rentalPrice",
-            ),
-          ),
-
-        condominium:
-          parseDecimal(
-            getText(
-              formData,
-              "condominium",
-            ),
-          ),
-
-        iptu:
-          parseDecimal(
-            getText(
-              formData,
-              "iptu",
-            ),
-          ),
-
-        area:
-          parseDecimal(
-            getText(
-              formData,
-              "area",
-            ),
-          ),
-
-        landArea:
-          parseDecimal(
-            getText(
-              formData,
-              "landArea",
-            ),
-          ),
-
-        bedrooms:
-          parseInteger(
-            getText(
-              formData,
-              "bedrooms",
-            ),
-          ),
-
-        suites:
-          parseInteger(
-            getText(
-              formData,
-              "suites",
-            ),
-          ),
-
-        bathrooms:
-          parseInteger(
-            getText(
-              formData,
-              "bathrooms",
-            ),
-          ),
-
-        parking:
-          parseInteger(
-            getText(
-              formData,
-              "parking",
-            ),
-          ),
-
-        description:
-          getOptionalText(
-            formData,
-            "description",
-          ),
-
-        features,
-
-        video:
-          getOptionalText(
-            formData,
-            "video",
-          ),
-
-        virtualTour:
-          getOptionalText(
-            formData,
-            "virtualTour",
-          ),
-
-        brochure:
-          getOptionalText(
-            formData,
-            "brochure",
-          ),
-
-        seoTitle:
-          getOptionalText(
-            formData,
-            "seoTitle",
-          ),
-
-        seoDescription:
-          getOptionalText(
-            formData,
-            "seoDescription",
-          ),
-
-        seoImage:
-          getOptionalText(
-            formData,
-            "seoImage",
-          ),
-      },
-      });
-    });
+    );
 
     revalidatePath(
       "/admin",

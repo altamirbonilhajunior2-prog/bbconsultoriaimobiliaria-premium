@@ -167,25 +167,48 @@ export default async function EditarImovelPage({
   const access =
     await getAccessContext();
 
-  const owners =
-    await prisma.owner.findMany({
-      where: access.isAdmin
-        ? {}
-        : {
-            capturedById:
-              access.agentId ?? -1,
-          },
+  const propertyAccess = await prisma.property.findUnique({
+    where: {
+      code: code.toUpperCase(),
+    },
+    select: {
+      id: true,
+      ownerId: true,
+      captorId: true,
+      coCaptorId: true,
+    },
+  });
 
-      orderBy: {
-        name: "asc",
-      },
+  if (!propertyAccess) {
+    notFound();
+  }
 
-      select: {
-        id: true,
-        name: true,
-        cpf: true,
-      },
-    });
+  const canManageProperty =
+    access.isAdmin ||
+    (access.agentId !== null &&
+      (propertyAccess.captorId === access.agentId ||
+        propertyAccess.coCaptorId === access.agentId));
+
+  const owners = canManageProperty
+    ? await prisma.owner.findMany({
+        where: access.isAdmin
+          ? {}
+          : {
+              OR: [
+                { capturedById: access.agentId ?? -1 },
+                { id: propertyAccess.ownerId ?? -1 },
+              ],
+            },
+        orderBy: {
+          name: "asc",
+        },
+        select: {
+          id: true,
+          name: true,
+          cpf: true,
+        },
+      })
+    : [];
 
   const agents =
     await prisma.agent.findMany({
@@ -226,6 +249,9 @@ export default async function EditarImovelPage({
         },
 
         visits: {
+          where: canManageProperty
+            ? undefined
+            : { id: -1 },
           orderBy: [
             {
               visitDate:
@@ -239,6 +265,10 @@ export default async function EditarImovelPage({
         },
 
         proposals: {
+          where:
+            access.isAdmin || canManageProperty
+              ? undefined
+              : { agentId: access.agentId ?? -1 },
           orderBy: {
             createdAt:
               "desc",
@@ -256,6 +286,10 @@ export default async function EditarImovelPage({
         },
 
         rentalProposals: {
+          where:
+            access.isAdmin || canManageProperty
+              ? undefined
+              : { agentId: access.agentId ?? -1 },
           orderBy: {
             createdAt: "desc",
           },
@@ -276,6 +310,14 @@ export default async function EditarImovelPage({
   if (!property) {
     notFound();
   }
+
+  const captorName =
+    agents.find((agent) => agent.id === property.captorId)?.name ??
+    "Não informado";
+  const coCaptorName = property.coCaptorId
+    ? agents.find((agent) => agent.id === property.coCaptorId)?.name ??
+      "Não informado"
+    : null;
 
   const allowsSale =
     property.purpose === "VENDA" ||
@@ -492,7 +534,7 @@ export default async function EditarImovelPage({
           </p>
 
           <h1 className="mt-3 font-serif text-5xl font-normal">
-            Editar imóvel
+            {canManageProperty ? "Editar imóvel" : "Consultar imóvel"}
           </h1>
 
           <p className="mt-3 text-sm font-semibold text-amber-400">
@@ -500,8 +542,9 @@ export default async function EditarImovelPage({
           </p>
 
           <p className="mt-4 max-w-3xl leading-7 text-zinc-400">
-            Edite os dados administrativos e comerciais do imóvel.
-            As alterações serão gravadas diretamente no banco de dados.
+            {canManageProperty
+              ? "Edite os dados administrativos e comerciais do imóvel. As alterações serão gravadas diretamente no banco de dados."
+              : "Consulta comercial do imóvel. Dados do proprietário e informações internas da captação permanecem restritos ao captador responsável, co-captador e administradores."}
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
@@ -536,27 +579,67 @@ export default async function EditarImovelPage({
               </Link>
             ) : null}
 
-            <Link
-              href={`/admin/imoveis/${property.code.toLowerCase()}/fichas/imovel`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-11 items-center justify-center border border-white/15 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-300 transition hover:border-amber-500 hover:text-amber-300"
-            >
-              Imprimir ficha do imóvel
-            </Link>
+            {canManageProperty ? (
+              <Link
+                href={`/admin/imoveis/${property.code.toLowerCase()}/fichas/imovel`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex min-h-11 items-center justify-center border border-white/15 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-300 transition hover:border-amber-500 hover:text-amber-300"
+              >
+                Imprimir ficha do imóvel
+              </Link>
+            ) : null}
           </div>
 
-          <div className="mt-6 border border-amber-500/20 bg-amber-500/5 px-5 py-4">
-            <p className="text-sm leading-6 text-amber-200">
-              Salvar alterações não publica o imóvel automaticamente.
-              A publicação e o gerenciamento das imagens continuam
-              protegidos em controles separados.
-            </p>
-          </div>
+          {canManageProperty ? (
+            <div className="mt-6 border border-amber-500/20 bg-amber-500/5 px-5 py-4">
+              <p className="text-sm leading-6 text-amber-200">
+                Salvar alterações não publica o imóvel automaticamente.
+                A publicação e o gerenciamento das imagens continuam
+                protegidos em controles separados.
+              </p>
+            </div>
+          ) : null}
         </div>
 
+        {!canManageProperty ? (
+          <section className="mt-10 border border-white/10 bg-white/[0.03] p-6 lg:p-8">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
+              Consulta comercial
+            </p>
+            <h2 className="mt-2 font-serif text-3xl font-normal">
+              {property.title}
+            </h2>
+            <div className="mt-6 grid gap-4 text-sm text-zinc-300 sm:grid-cols-2 lg:grid-cols-4">
+              <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">Finalidade</p><p className="mt-1">{purposeLabels[property.purpose]}</p></div>
+              <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">Tipo</p><p className="mt-1">{propertyTypeLabels[property.propertyType]}</p></div>
+              <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">Situação</p><p className="mt-1">{statusLabels[property.status]}</p></div>
+              <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">Bairro</p><p className="mt-1">{property.neighborhood}</p></div>
+              <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">Empreendimento</p><p className="mt-1">{property.development ?? "Não informado"}</p></div>
+              <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">Venda</p><p className="mt-1">{formatCurrency(property.price)}</p></div>
+              <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">Locação</p><p className="mt-1">{formatCurrency(property.rentalPrice)}</p></div>
+              <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">Área</p><p className="mt-1">{property.area ? `${property.area.toString()} m²` : "Não informada"}</p></div>
+              <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">Dormitórios</p><p className="mt-1">{property.bedrooms}</p></div>
+              <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">Suítes</p><p className="mt-1">{property.suites}</p></div>
+              <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">Vagas</p><p className="mt-1">{property.parking}</p></div>
+              <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">Captador responsável</p><p className="mt-1">{captorName}</p></div>
+              {coCaptorName ? (
+                <div><p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">Co-captador</p><p className="mt-1">{coCaptorName}</p></div>
+              ) : null}
+            </div>
+            {property.description ? (
+              <div className="mt-6 border-t border-white/10 pt-5">
+                <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-zinc-500">Descrição comercial</p>
+                <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-300">{property.description}</p>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
+        {canManageProperty ? (
         <section className="mt-10 border border-white/10 bg-white/[0.03] p-6 lg:p-8">
           <div className="flex flex-wrap items-end justify-between gap-4">
+
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
                 CRM
@@ -800,6 +883,7 @@ export default async function EditarImovelPage({
             </div>
           )}
         </section>
+        ) : null}
 
         {allowsSale || property.proposals.length > 0 ? (
         <section className="mt-10 border border-white/10 bg-white/[0.03] p-6 lg:p-8">
@@ -1835,51 +1919,55 @@ export default async function EditarImovelPage({
         </section>
         ) : null}
 
+        {canManageProperty ? (
+          <>
         <div className="mt-10">
-          <EditPropertyForm
-            property={
-              editableProperty
-            }
-            owners={
-              owners
-            }
-            agents={
-              agents
-            }
-            isAdmin={
-              access.isAdmin
-            }
-            agentId={
-              access.agentId ??
-              null
-            }
-          />
-        </div>
-
-        <div className="mt-10">
-          <PublicationControl
-            code={
-              property.code
-            }
-            published={
-              property.published
-            }
-            publishedAt={
-              publishedAt
-            }
-          />
-        </div>
-
-        <div className="mt-10">
-          <ImageManager
-            code={
-              property.code
-            }
-            images={
-              images
-            }
-          />
-        </div>
+            <EditPropertyForm
+              property={
+                editableProperty
+              }
+              owners={
+                owners
+              }
+              agents={
+                agents
+              }
+              isAdmin={
+                access.isAdmin
+              }
+              agentId={
+                access.agentId ??
+                null
+              }
+            />
+          </div>
+  
+          <div className="mt-10">
+            <PublicationControl
+              code={
+                property.code
+              }
+              published={
+                property.published
+              }
+              publishedAt={
+                publishedAt
+              }
+            />
+          </div>
+  
+          <div className="mt-10">
+            <ImageManager
+              code={
+                property.code
+              }
+              images={
+                images
+              }
+            />
+          </div>
+            </>
+        ) : null}
       </div>
     </main>
   );
