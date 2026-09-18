@@ -1,421 +1,840 @@
 "use server";
 
+
+
 import { revalidatePath } from "next/cache";
+
 import { redirect } from "next/navigation";
 
+
+
 import { getAccessContext } from "../../../../../../lib/admin/access";
+
 import { prisma } from "../../../../../../lib/prisma";
 
+
+
 function getOptionalText(
+
   formData: FormData,
+
   field: string,
+
 ) {
+
   const value =
+
     formData.get(field);
 
+
+
   if (
+
     typeof value !==
+
     "string"
+
   ) {
+
     return null;
+
   }
+
+
 
   const trimmed =
+
     value.trim();
 
+
+
   return trimmed.length > 0
+
     ? trimmed
+
     : null;
+
 }
+
+
 
 function getRequiredText(
+
   formData: FormData,
+
   field: string,
+
   label: string,
+
 ) {
+
   const value =
+
     getOptionalText(
+
       formData,
+
       field,
+
     );
+
+
 
   if (!value) {
+
     throw new Error(
+
       `${label} é obrigatório.`,
+
     );
+
   }
 
+
+
   return value;
+
 }
+
+
 
 function parseOptionalDate(
+
   value: string | null,
+
 ) {
+
   if (!value) {
+
     return null;
+
   }
+
+
 
   const parsedDate =
+
     new Date(
+
       `${value}T12:00:00-03:00`,
+
     );
 
+
+
   if (
+
     Number.isNaN(
+
       parsedDate.getTime(),
+
     )
+
   ) {
+
     return null;
+
   }
 
+
+
   return parsedDate;
+
 }
+
+
 
 function parseRequiredDate(
+
   value: string | null,
+
   label: string,
+
 ) {
+
   const parsedDate =
+
     parseOptionalDate(
+
       value,
+
     );
+
+
 
   if (!parsedDate) {
+
     throw new Error(
+
       `${label} é obrigatória.`,
+
     );
+
   }
+
+
 
   return parsedDate;
+
 }
+
+
 
 function combineVisitDateAndTime(
+
   visitDate: Date,
+
   visitTime: string | null,
+
 ) {
+
   if (!visitTime) {
+
     return visitDate;
+
   }
+
+
 
   const normalizedTime =
+
     visitTime.trim();
 
+
+
   if (
+
     !/^\d{2}:\d{2}$/.test(
+
       normalizedTime,
+
     )
+
   ) {
+
     return visitDate;
+
   }
+
+
 
   const year =
+
     visitDate
+
       .getUTCFullYear()
+
       .toString()
+
       .padStart(4, "0");
 
+
+
   const month =
+
     (visitDate.getUTCMonth() + 1)
+
       .toString()
+
       .padStart(2, "0");
+
+
 
   const day =
+
     visitDate
+
       .getUTCDate()
+
       .toString()
+
       .padStart(2, "0");
 
+
+
   const eventDate =
+
     new Date(
+
       `${year}-${month}-${day}T${normalizedTime}:00-03:00`,
+
     );
 
+
+
   if (
+
     Number.isNaN(
+
       eventDate.getTime(),
+
     )
+
   ) {
+
     return visitDate;
+
   }
+
+
 
   return eventDate;
+
 }
+
+
 
 function parseInterest(
+
   value: string | null,
+
 ) {
+
   if (
+
     value === "ALTO" ||
+
     value === "MEDIO" ||
+
     value === "BAIXO"
+
   ) {
+
     return value;
+
   }
 
+
+
   return null;
+
 }
+
+
 
 function parseReturnType(
+
   value: string | null,
+
 ) {
+
   if (
+
     value === "PROPOSTA" ||
+
     value === "NOVA_VISITA" ||
+
     value === "SEM_INTERESSE"
+
   ) {
+
     return value;
+
   }
 
+
+
   return null;
+
 }
+
+
 
 function normalizePhone(
+
   value: string | null,
+
 ) {
+
   if (!value) {
+
     return null;
+
   }
+
+
 
   const digits =
+
     value.replace(/\D/g, "");
 
-  if (
-    digits.length === 10 ||
-    digits.length === 11
-  ) {
-    return `55${digits}`;
-  }
+
 
   if (
-    (
-      digits.length === 12 ||
-      digits.length === 13
-    ) &&
-    digits.startsWith("55")
+
+    digits.length === 10 ||
+
+    digits.length === 11
+
   ) {
-    return digits;
+
+    return `55${digits}`;
+
   }
+
+
+
+  if (
+
+    (
+
+      digits.length === 12 ||
+
+      digits.length === 13
+
+    ) &&
+
+    digits.startsWith("55")
+
+  ) {
+
+    return digits;
+
+  }
+
+
 
   return value;
+
 }
+
+
 
 function getInterestLabel(
+
   interest:
+
     | "ALTO"
+
     | "MEDIO"
+
     | "BAIXO"
+
     | null,
+
 ) {
+
   if (interest === "ALTO") {
+
     return "alto";
+
   }
+
+
 
   if (interest === "MEDIO") {
+
     return "médio";
+
   }
+
+
 
   if (interest === "BAIXO") {
+
     return "baixo";
+
   }
 
+
+
   return null;
+
 }
+
+
 
 function getReturnLabel(
+
   returnType:
+
     | "PROPOSTA"
+
     | "NOVA_VISITA"
+
     | "SEM_INTERESSE"
+
     | null,
+
 ) {
+
   if (returnType === "PROPOSTA") {
+
     return "proposta";
+
   }
 
+
+
   if (
+
     returnType === "NOVA_VISITA"
+
   ) {
+
     return "nova visita";
+
   }
 
+
+
   if (
+
     returnType === "SEM_INTERESSE"
+
   ) {
+
     return "sem interesse";
+
   }
+
+
 
   return null;
+
 }
+
+
 
 function parseVisitId(
+
   formData: FormData,
+
 ) {
+
   const rawValue =
+
     getOptionalText(
+
       formData,
+
       "visitId",
+
     );
+
+
 
   if (!rawValue) {
+
     return null;
+
   }
 
+
+
   const visitId =
+
     Number(rawValue);
 
+
+
   if (
+
     !Number.isInteger(visitId) ||
+
     visitId <= 0
+
   ) {
+
     throw new Error(
+
       "Visita inválida.",
+
     );
+
   }
+
+
 
   return visitId;
+
 }
 
+
+
 export async function savePropertyVisit(
+
   propertyCode: string,
+
   formData: FormData,
+
 ) {
+
   const access =
+
     await getAccessContext();
 
+
+
   const normalizedCode =
+
     propertyCode
+
       .trim()
+
       .toUpperCase();
 
+
+
   const property =
+
     await prisma.property.findUnique({
+
       where: {
+
         code:
+
           normalizedCode,
+
       },
+
+
 
       select: {
+
         id: true,
+
         code: true,
+
         title: true,
+
       },
+
     });
 
+
+
   if (!property) {
+
     throw new Error(
+
       "Imóvel não encontrado.",
+
     );
+
   }
 
+
+
   const visitId =
+
     parseVisitId(
+
       formData,
+
     );
+
+
 
   const visitorName =
+
     getRequiredText(
+
       formData,
+
       "visitorName",
+
       "Nome completo",
+
     );
+
+
 
   const visitorDocument =
+
     getOptionalText(
+
       formData,
+
       "visitorDocument",
+
     );
+
+
 
   const visitorPhone =
+
     getOptionalText(
+
       formData,
+
       "visitorPhone",
+
     );
+
+
 
   const visitorEmail =
+
     getOptionalText(
+
       formData,
+
       "visitorEmail",
+
     );
+
+
 
   const visitorBirthDate =
+
     parseOptionalDate(
+
       getOptionalText(
+
         formData,
+
         "visitorBirthDate",
+
       ),
+
     );
+
+
 
   const visitorAddress =
+
     getOptionalText(
+
       formData,
+
       "visitorAddress",
+
     );
+
+
 
   const visitDate =
+
     parseRequiredDate(
+
       getOptionalText(
+
         formData,
+
         "visitDate",
+
       ),
+
       "Data da visita",
+
     );
+
+
 
   const visitTime =
+
     getOptionalText(
+
       formData,
+
       "visitTime",
+
     );
+
+
 
   const visitEventAt =
+
     combineVisitDateAndTime(
+
       visitDate,
+
       visitTime,
+
     );
+
+
 
   const companions =
+
     getOptionalText(
+
       formData,
+
       "companions",
+
     );
+
+
 
   const interest =
+
     parseInterest(
+
       getOptionalText(
+
         formData,
+
         "interest",
+
       ),
+
     );
+
+
 
   const returnType =
+
     parseReturnType(
+
       getOptionalText(
+
         formData,
+
         "returnType",
+
       ),
+
     );
+
+
 
   const notes =
+
     getOptionalText(
+
       formData,
+
       "visitNotes",
+
     );
+
+
 
   const visitorSignature =
+
     getOptionalText(
+
       formData,
+
       "visitorSignature",
+
     );
+
+
 
   const responsibleSignature =
+
     getOptionalText(
+
       formData,
+
       "responsibleSignature",
+
     );
 
+
+
   const normalizedVisitorPhone =
+
     normalizePhone(
+
       visitorPhone,
+
     );
+
+
 
   const existingClient =
     normalizedVisitorPhone
@@ -423,6 +842,21 @@ export async function savePropertyVisit(
           where: {
             phone:
               normalizedVisitorPhone,
+
+            ...(access.isAdmin
+              ? {}
+              : {
+                  OR: [
+                    {
+                      agentId:
+                        access.agentId ??
+                        -1,
+                    },
+                    {
+                      agentId: null,
+                    },
+                  ],
+                }),
           },
 
           orderBy: {
@@ -432,260 +866,552 @@ export async function savePropertyVisit(
 
           select: {
             id: true,
+            agentId: true,
           },
         })
       : null;
 
+
+
   const visit =
+
     await prisma.$transaction(
+
       async (tx) => {
+
         let savedVisit: {
+
           id: number;
+
           clientId: number | null;
+
         };
 
-        if (visitId) {
-          const scheduledVisit =
-            await tx.propertyVisit.findFirst({
-              where: {
-                id: visitId,
-                propertyId:
-                  property.id,
-              },
-
-              select: {
-                id: true,
-                clientId: true,
-                status: true,
-              },
-            });
-
-          if (!scheduledVisit) {
-            throw new Error(
-              "Visita agendada não encontrada.",
-            );
-          }
-
-          if (
-            scheduledVisit.status !==
-            "AGENDADA"
-          ) {
-            throw new Error(
-              "Esta visita não está mais com status agendada.",
-            );
-          }
-
-          savedVisit =
-            await tx.propertyVisit.update({
-              where: {
-                id:
-                  scheduledVisit.id,
-              },
-
-              data: {
-                status:
-                  "REALIZADA",
-
-                clientId:
-                  scheduledVisit.clientId ??
-                  existingClient?.id ??
-                  null,
-
-                visitorName,
-                visitorDocument,
-
-                visitorPhone:
-                  normalizedVisitorPhone ??
-                  visitorPhone,
-
-                visitorEmail,
-                visitorBirthDate,
-                visitorAddress,
-
-                visitDate,
-                visitTime,
-                companions,
-
-                interest,
-                returnType,
-
-                notes,
-
-                visitorSignature,
-                responsibleSignature,
-              },
-
-              select: {
-                id: true,
-                clientId: true,
-              },
-            });
-        } else {
-          savedVisit =
-            await tx.propertyVisit.create({
-              data: {
-                propertyId:
-                  property.id,
-
-                clientId:
-                  existingClient?.id ??
-                  null,
-
-                status:
-                  "REALIZADA",
-
-                visitorName,
-                visitorDocument,
-
-                visitorPhone:
-                  normalizedVisitorPhone ??
-                  visitorPhone,
-
-                visitorEmail,
-                visitorBirthDate,
-                visitorAddress,
-
-                visitDate,
-                visitTime,
-                companions,
-
-                interest,
-                returnType,
-
-                notes,
-
-                visitorSignature,
-                responsibleSignature,
-              },
-
-              select: {
-                id: true,
-                clientId: true,
-              },
-            });
-        }
-
         if (
-          savedVisit.clientId
+          existingClient &&
+          existingClient.agentId === null &&
+          access.agentId
         ) {
-          await tx.commercialEvent.create({
+          await tx.client.update({
+            where: {
+              id: existingClient.id,
+            },
             data: {
-              clientId:
-                savedVisit.clientId,
-
               agentId:
                 access.agentId,
-
-              type:
-                "VISITA_REALIZADA",
-
-              description:
-                `Visita realizada no imóvel ${property.code} — ${property.title}.`,
-
-              eventAt:
-                visitEventAt,
-
-              properties: {
-                create: {
-                  propertyId:
-                    property.id,
-                },
-              },
             },
           });
+        }
+
+
+
+        if (visitId) {
+
+          const scheduledVisit =
+
+            await tx.propertyVisit.findFirst({
+
+              where: {
+
+                id: visitId,
+
+                propertyId:
+
+                  property.id,
+
+              },
+
+
+
+              select: {
+
+                id: true,
+
+                clientId: true,
+
+                agentId: true,
+                status: true,
+
+              },
+
+            });
+
+
+
+          if (!scheduledVisit) {
+
+            throw new Error(
+
+              "Visita agendada não encontrada.",
+
+            );
+
+          }
+
+
 
           if (
-            interest ||
-            returnType ||
-            notes
+
+            scheduledVisit.status !==
+
+            "AGENDADA"
+
           ) {
-            const interestLabel =
-              getInterestLabel(
-                interest,
-              );
 
-            const returnLabel =
-              getReturnLabel(
-                returnType,
-              );
+            throw new Error(
 
-            const summaryParts =
-              [
-                interestLabel
-                  ? `Interesse ${interestLabel}`
-                  : null,
+              "Esta visita não está mais com status agendada.",
 
-                returnLabel
-                  ? `Retorno: ${returnLabel}`
-                  : null,
-              ].filter(Boolean);
+            );
 
-            const summary =
-              summaryParts.length > 0
-                ? summaryParts.join(
-                    " · ",
-                  )
-                : "Retorno pós-visita registrado.";
+          }
 
-            const description =
-              notes
-                ? `${summary}\n${notes}`
-                : summary;
+          if (
+            !access.isAdmin &&
+            scheduledVisit.agentId !== null &&
+            scheduledVisit.agentId !==
+              access.agentId
+          ) {
+            throw new Error(
+              "Você não tem permissão para realizar esta visita agendada.",
+            );
+          }
 
-            await tx.commercialEvent.create({
+
+
+          savedVisit =
+
+            await tx.propertyVisit.update({
+
+              where: {
+
+                id:
+
+                  scheduledVisit.id,
+
+              },
+
+
+
               data: {
-                clientId:
-                  savedVisit.clientId,
+
+                status:
+
+                  "REALIZADA",
 
                 agentId:
+                  scheduledVisit.agentId ??
+                  access.agentId ??
+                  null,
+
+
+
+                clientId:
+
+                  scheduledVisit.clientId ??
+
+                  existingClient?.id ??
+
+                  null,
+
+
+
+                visitorName,
+
+                visitorDocument,
+
+
+
+                visitorPhone:
+
+                  normalizedVisitorPhone ??
+
+                  visitorPhone,
+
+
+
+                visitorEmail,
+
+                visitorBirthDate,
+
+                visitorAddress,
+
+
+
+                visitDate,
+
+                visitTime,
+
+                companions,
+
+
+
+                interest,
+
+                returnType,
+
+
+
+                notes,
+
+
+
+                visitorSignature,
+
+                responsibleSignature,
+
+              },
+
+
+
+              select: {
+
+                id: true,
+
+                clientId: true,
+
+              },
+
+            });
+
+        } else {
+
+          savedVisit =
+
+            await tx.propertyVisit.create({
+
+              data: {
+
+                propertyId:
+
+                  property.id,
+
+                agentId:
+                  access.agentId ??
+                  null,
+
+
+
+                clientId:
+
+                  existingClient?.id ??
+
+                  null,
+
+
+
+                status:
+
+                  "REALIZADA",
+
+
+
+                visitorName,
+
+                visitorDocument,
+
+
+
+                visitorPhone:
+
+                  normalizedVisitorPhone ??
+
+                  visitorPhone,
+
+
+
+                visitorEmail,
+
+                visitorBirthDate,
+
+                visitorAddress,
+
+
+
+                visitDate,
+
+                visitTime,
+
+                companions,
+
+
+
+                interest,
+
+                returnType,
+
+
+
+                notes,
+
+
+
+                visitorSignature,
+
+                responsibleSignature,
+
+              },
+
+
+
+              select: {
+
+                id: true,
+
+                clientId: true,
+
+              },
+
+            });
+
+        }
+
+
+
+        if (
+
+          savedVisit.clientId
+
+        ) {
+
+          await tx.commercialEvent.create({
+
+            data: {
+
+              clientId:
+
+                savedVisit.clientId,
+
+
+
+              agentId:
+
+                access.agentId,
+
+
+
+              type:
+
+                "VISITA_REALIZADA",
+
+
+
+              description:
+
+                `Visita realizada no imóvel ${property.code} — ${property.title}.`,
+
+
+
+              eventAt:
+
+                visitEventAt,
+
+
+
+              properties: {
+
+                create: {
+
+                  propertyId:
+
+                    property.id,
+
+                },
+
+              },
+
+            },
+
+          });
+
+
+
+          if (
+
+            interest ||
+
+            returnType ||
+
+            notes
+
+          ) {
+
+            const interestLabel =
+
+              getInterestLabel(
+
+                interest,
+
+              );
+
+
+
+            const returnLabel =
+
+              getReturnLabel(
+
+                returnType,
+
+              );
+
+
+
+            const summaryParts =
+
+              [
+
+                interestLabel
+
+                  ? `Interesse ${interestLabel}`
+
+                  : null,
+
+
+
+                returnLabel
+
+                  ? `Retorno: ${returnLabel}`
+
+                  : null,
+
+              ].filter(Boolean);
+
+
+
+            const summary =
+
+              summaryParts.length > 0
+
+                ? summaryParts.join(
+
+                    " · ",
+
+                  )
+
+                : "Retorno pós-visita registrado.";
+
+
+
+            const description =
+
+              notes
+
+                ? `${summary}\n${notes}`
+
+                : summary;
+
+
+
+            await tx.commercialEvent.create({
+
+              data: {
+
+                clientId:
+
+                  savedVisit.clientId,
+
+
+
+                agentId:
+
                   access.agentId,
 
+
+
                 type:
+
                   "POS_VISITA",
+
+
 
                 description,
 
+
+
                 eventAt:
+
                   new Date(),
 
+
+
                 properties: {
+
                   create: {
+
                     propertyId:
+
                       property.id,
+
                   },
+
                 },
+
               },
+
             });
+
           }
+
         }
 
+
+
         return savedVisit;
+
       },
+
     );
 
+
+
   revalidatePath(
+
     `/admin/imoveis/${property.code.toLowerCase()}`,
+
   );
 
+
+
   revalidatePath(
+
     `/admin/imoveis/${property.code.toLowerCase()}/fichas/visita`,
+
   );
 
+
+
   revalidatePath(
+
     `/admin/imoveis/${property.code.toLowerCase()}/visitas/${visit.id}`,
+
   );
 
+
+
   revalidatePath(
+
     "/admin/clientes",
+
   );
+
+
 
   if (visit.clientId) {
+
     revalidatePath(
+
       `/admin/clientes/${visit.clientId}`,
+
     );
+
   }
 
+
+
   redirect(
+
     `/admin/imoveis/${property.code.toLowerCase()}/visitas/${visit.id}`,
+
   );
+
 }

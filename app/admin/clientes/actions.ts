@@ -82,11 +82,28 @@ export async function updatePortalLeadAction(
         notes: true,
         createdAt: true,
         contactedAt: true,
+
+        client: {
+          select: {
+            agentId: true,
+          },
+        },
       },
     });
 
   if (!existingLead) {
     redirect("/admin/clientes");
+  }
+
+  if (
+    !access.isAdmin &&
+    existingLead.client?.agentId !== null &&
+    existingLead.client?.agentId !==
+      access.agentId
+  ) {
+    throw new Error(
+      "Você não tem permissão para alterar o atendimento deste cliente.",
+    );
   }
 
   const contactedAt =
@@ -97,6 +114,24 @@ export async function updatePortalLeadAction(
 
   await prisma.$transaction(
     async (tx) => {
+      if (
+        existingLead.clientId &&
+        existingLead.client?.agentId === null &&
+        access.agentId
+      ) {
+        await tx.client.update({
+          where: {
+            id:
+              existingLead.clientId,
+          },
+
+          data: {
+            agentId:
+              access.agentId,
+          },
+        });
+      }
+
       await tx.portalLead.update({
         where: {
           id: leadId,
@@ -156,9 +191,12 @@ export async function updatePortalLeadAction(
           where: {
             clientId:
               existingLead.clientId,
+
             leadId:
               existingLead.id,
-            type: eventType,
+
+            type:
+              eventType,
           },
 
           select: {
@@ -250,6 +288,12 @@ export async function convertPortalLeadToClientAction(
 
         clientId: true,
 
+        client: {
+          select: {
+            agentId: true,
+          },
+        },
+
         propertyId: true,
         propertyCode: true,
         propertyTitle: true,
@@ -268,7 +312,36 @@ export async function convertPortalLeadToClientAction(
     );
   }
 
+  if (
+    lead.clientId &&
+    !access.isAdmin &&
+    lead.client?.agentId !== null &&
+    lead.client?.agentId !==
+      access.agentId
+  ) {
+    throw new Error(
+      "Este lead já está vinculado à carteira de outro corretor.",
+    );
+  }
+
   if (lead.clientId) {
+    if (
+      lead.client?.agentId === null &&
+      access.agentId
+    ) {
+      await prisma.client.update({
+        where: {
+          id:
+            lead.clientId,
+        },
+
+        data: {
+          agentId:
+            access.agentId,
+        },
+      });
+    }
+
     revalidatePath(
       "/admin/clientes",
     );
@@ -285,6 +358,22 @@ export async function convertPortalLeadToClientAction(
       where: {
         phone:
           lead.phone,
+
+        ...(access.isAdmin
+          ? {}
+          : {
+              OR: [
+                {
+                  agentId:
+                    access.agentId ??
+                    -1,
+                },
+
+                {
+                  agentId: null,
+                },
+              ],
+            }),
       },
 
       orderBy: {
@@ -294,6 +383,7 @@ export async function convertPortalLeadToClientAction(
 
       select: {
         id: true,
+        agentId: true,
       },
     });
 
@@ -312,6 +402,10 @@ export async function convertPortalLeadToClientAction(
 
                 phone:
                   lead.phone,
+
+                agentId:
+                  access.agentId ??
+                  null,
               },
 
               select: {
@@ -321,6 +415,22 @@ export async function convertPortalLeadToClientAction(
 
           resolvedClientId =
             client.id;
+        } else if (
+          existingClient &&
+          existingClient.agentId === null &&
+          access.agentId
+        ) {
+          await tx.client.update({
+            where: {
+              id:
+                existingClient.id,
+            },
+
+            data: {
+              agentId:
+                access.agentId,
+            },
+          });
         }
 
         await tx.portalLead.update({
@@ -616,7 +726,8 @@ export async function deleteWhatsAppLeadIntentAction(
 
   await prisma.whatsAppLeadIntent.delete({
     where: {
-      id: intentId,
+      id:
+        intentId,
     },
   });
 

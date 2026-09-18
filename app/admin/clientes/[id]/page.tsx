@@ -159,7 +159,8 @@ async function updateClientAction(
   formData: FormData,
 ) {
   "use server";
-  await getAccessContext();
+  const access =
+    await getAccessContext();
   if (
     !Number.isInteger(clientId) ||
     clientId <= 0
@@ -240,9 +241,16 @@ async function updateClientAction(
     }
   }
   const existingClient =
-    await prisma.client.findUnique({
+    await prisma.client.findFirst({
       where: {
         id: clientId,
+        ...(access.isAdmin
+          ? {}
+          : {
+              agentId:
+                access.agentId ??
+                -1,
+            }),
       },
       select: {
         id: true,
@@ -314,9 +322,16 @@ async function addPresentedPropertiesAction(
     );
   }
   const client =
-    await prisma.client.findUnique({
+    await prisma.client.findFirst({
       where: {
         id: clientId,
+        ...(access.isAdmin
+          ? {}
+          : {
+              agentId:
+                access.agentId ??
+                -1,
+            }),
       },
       select: {
         id: true,
@@ -453,12 +468,20 @@ async function scheduleVisitAction(
     client,
     property,
   ] = await Promise.all([
-    prisma.client.findUnique({
+    prisma.client.findFirst({
       where: {
         id: clientId,
+        ...(access.isAdmin
+          ? {}
+          : {
+              agentId:
+                access.agentId ??
+                -1,
+            }),
       },
       select: {
         id: true,
+        agentId: true,
         name: true,
         phone: true,
         email: true,
@@ -494,6 +517,10 @@ async function scheduleVisitAction(
             property.id,
           clientId:
             client.id,
+          agentId:
+            client.agentId ??
+            access.agentId ??
+            null,
           status:
             "AGENDADA",
           visitorName:
@@ -679,9 +706,16 @@ export default async function ClientePage({
     notFound();
   }
   const client =
-    await prisma.client.findUnique({
+    await prisma.client.findFirst({
       where: {
         id: clientId,
+        ...(access.isAdmin
+          ? {}
+          : {
+              agentId:
+                access.agentId ??
+                -1,
+            }),
       },
       include: {
         portalLeads: {
@@ -914,7 +948,7 @@ export default async function ClientePage({
               </p>
             </div>
             <a
-              href={`https\://wa.me/${whatsappPhone}?text=${whatsappMessage}`}
+              href={`https\\://wa.me/${whatsappPhone}?text=${whatsappMessage}`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex min-h-12 items-center justify-center border border-emerald-500/40 bg-emerald-500/10 px-6 text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300 transition hover:bg-emerald-500 hover:text-black"

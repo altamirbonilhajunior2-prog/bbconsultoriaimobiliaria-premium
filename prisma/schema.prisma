@@ -218,6 +218,9 @@ model Client {
 
   status ClientStatus @default(ATIVO)
 
+  agentId Int?
+  agent   Agent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -227,6 +230,7 @@ model Client {
   rentalProposals  PropertyRentalProposal[]
   commercialEvents CommercialEvent[]
 
+  @@index([agentId])
   @@index([name])
   @@index([phone])
   @@index([email])
@@ -315,6 +319,9 @@ model PropertyVisit {
   clientId Int?
   client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
 
+  agentId Int?
+  agent   Agent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
   status PropertyVisitStatus @default(REALIZADA)
 
   visitorName      String    @db.VarChar(180)
@@ -342,6 +349,7 @@ model PropertyVisit {
 
   @@index([propertyId])
   @@index([clientId])
+  @@index([agentId])
   @@index([status])
   @@index([visitDate])
   @@index([visitorName])
@@ -576,7 +584,9 @@ model Agent {
   capturedProperties   Property[] @relation("PropertyPrimaryCaptor")
   coCapturedProperties Property[] @relation("PropertyCoCaptor")
 
-  proposals        PropertyProposal[]
+  clients           Client[]
+  visits            PropertyVisit[]
+  proposals          PropertyProposal[]
   rentalProposals  PropertyRentalProposal[]
   commercialEvents CommercialEvent[]
 

@@ -93,6 +93,33 @@ export default async function ClientesPage() {
   const access =
     await getAccessContext();
 
+  const clientWhere =
+    access.isAdmin
+      ? {}
+      : {
+          agentId:
+            access.agentId ??
+            -1,
+        };
+
+  const leadWhere =
+    access.isAdmin
+      ? {}
+      : {
+          OR: [
+            {
+              clientId: null,
+            },
+            {
+              client: {
+                agentId:
+                  access.agentId ??
+                  -1,
+              },
+            },
+          ],
+        };
+
   const [
     leads,
     clientRecords,
@@ -104,6 +131,9 @@ export default async function ClientesPage() {
     whatsAppLeadIntents,
   ] = await Promise.all([
     prisma.portalLead.findMany({
+      where:
+        leadWhere,
+
       orderBy: {
         createdAt: "desc",
       },
@@ -112,6 +142,9 @@ export default async function ClientesPage() {
     }),
 
     prisma.client.findMany({
+      where:
+        clientWhere,
+
       orderBy: {
         updatedAt: "desc",
       },
@@ -139,16 +172,21 @@ export default async function ClientesPage() {
       },
     }),
 
-    prisma.portalLead.count(),
+    prisma.portalLead.count({
+      where:
+        leadWhere,
+    }),
 
     prisma.portalLead.count({
       where: {
+        ...leadWhere,
         status: "NOVO",
       },
     }),
 
     prisma.portalLead.count({
       where: {
+        ...leadWhere,
         status:
           "VISITA_AGENDADA",
       },
@@ -156,11 +194,15 @@ export default async function ClientesPage() {
 
     prisma.portalLead.count({
       where: {
+        ...leadWhere,
         status: "CONVERTIDO",
       },
     }),
 
-    prisma.client.count(),
+    prisma.client.count({
+      where:
+        clientWhere,
+    }),
 
     prisma.whatsAppLeadIntent.findMany({
       orderBy: {
