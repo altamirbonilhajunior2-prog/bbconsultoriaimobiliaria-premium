@@ -381,7 +381,7 @@ export default function AgendarVisitaPage() {
           : propertyCode
             ? propertyCode
             : propertyTitle ||
-              "Ainda não definido";
+              "A definir";
 
       const message = [
         `Olá, sou ${name} e gostaria de agendar uma visita.`,

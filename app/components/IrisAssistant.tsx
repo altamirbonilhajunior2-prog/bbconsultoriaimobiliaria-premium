@@ -1,593 +1,1051 @@
 "use client";
 
 import Image from "next/image";
+
 import {
+
   FormEvent,
+
   useEffect,
+
   useMemo,
+
   useState,
+
 } from "react";
+
 import { trackWhatsAppClick } from "./whatsappTracking";
 
 type Step =
+
   | "purpose"
+
   | "type"
+
   | "region"
+
   | "value"
+
   | "bedrooms"
+
   | "objective"
+
   | "details"
+
   | "timeline"
+
   | "summary";
 
 type IrisAnswers = {
+
   purpose: string;
+
   propertyType: string;
+
   region: string;
+
   value: string;
+
   bedrooms: string;
+
   objective: string;
+
   details: string;
+
   timeline: string;
+
 };
 
 type IrisSearchResult = {
+
   code: string;
+
   title: string;
+
   propertyType: string;
+
   category: string;
+
   neighborhood: string;
+
   city: string;
+
   development: string | null;
+
   purpose: string;
+
   price: number | null;
+
   bedrooms: number;
+
   suites: number;
+
   parking: number;
+
   image: string | null;
+
   url: string;
+
 };
 
 type IrisSearchResponse = {
+
   success: boolean;
+
   count: number;
+
   matchType?: "exact" | "similar" | "none";
+
   results: IrisSearchResult[];
+
   message?: string;
+
 };
 
 const initialAnswers: IrisAnswers = {
+
   purpose: "",
+
   propertyType: "",
+
   region: "",
+
   value: "",
+
   bedrooms: "",
+
   objective: "",
+
   details: "",
+
   timeline: "",
+
 };
 
 const purchaseValueOptions = [
+
   "Até R$ 500 mil",
+
   "De R$ 500 mil a R$ 1 milhão",
+
   "De R$ 1 milhão a R$ 2 milhões",
+
   "De R$ 2 milhões a R$ 3 milhões",
+
   "Acima de R$ 3 milhões",
+
   "Ainda não defini",
+
 ];
 
 const rentalValueOptions = [
+
   "Até R$ 3 mil/mês",
+
   "De R$ 3 mil a R$ 5 mil/mês",
+
   "De R$ 5 mil a R$ 8 mil/mês",
+
   "De R$ 8 mil a R$ 12 mil/mês",
+
   "Acima de R$ 12 mil/mês",
+
   "Ainda não defini",
+
 ];
 
 const bedroomOptions = [
+
   "1 dormitório",
+
   "2 dormitórios",
+
   "3 dormitórios",
+
   "4 ou mais dormitórios",
+
   "Não é relevante",
+
 ];
 
 const objectiveOptions = [
+
   "Moradia",
+
   "Investimento",
+
   "Renda",
+
   "Valorização patrimonial",
+
   "Outro",
+
 ];
 
 const timelineOptions = [
+
   "Imediatamente",
+
   "Em até 30 dias",
+
   "De 1 a 3 meses",
+
   "De 3 a 6 meses",
+
   "Mais de 6 meses",
+
   "Ainda não defini",
+
 ];
 
 function formatCurrency(
+
   value: number | null,
+
 ) {
+
   if (value === null) {
+
     return "Sob consulta";
+
   }
 
   return new Intl.NumberFormat(
+
     "pt-BR",
+
     {
+
       style: "currency",
+
       currency: "BRL",
+
       minimumFractionDigits: 2,
+
       maximumFractionDigits: 2,
+
     },
+
   ).format(value);
+
 }
 
 function summaryValue(
+
   value: string,
+
 ) {
+
   return value.trim() || "Não informado.";
+
 }
 
 export default function IrisAssistant() {
+
   const [
+
     isOpen,
+
     setIsOpen,
+
   ] = useState(false);
 
   const [
+
     step,
+
     setStep,
+
   ] = useState<Step>(
+
     "purpose",
+
   );
 
   const [
+
     answers,
+
     setAnswers,
+
   ] = useState<IrisAnswers>(
+
     initialAnswers,
+
   );
 
   const [
+
     regionInput,
+
     setRegionInput,
+
   ] = useState("");
 
   const [
+
     searchResults,
+
     setSearchResults,
+
   ] = useState<IrisSearchResult[]>(
+
     [],
+
   );
 
   const [
+
     isSearching,
+
     setIsSearching,
+
   ] = useState(false);
 
   const [
+
     searchCompleted,
+
     setSearchCompleted,
+
   ] = useState(false);
 
   const [
+
     searchError,
+
     setSearchError,
+
   ] = useState(false);
 
   const [
+
     searchMatchType,
+
     setSearchMatchType,
+
   ] = useState<
+
     "exact" | "similar" | "none"
+
   >("none");
 
   useEffect(() => {
+
     if (!isOpen) {
+
       return;
+
     }
 
     function handleEscape(
+
       event: KeyboardEvent,
+
     ) {
+
       if (
+
         event.key === "Escape"
+
       ) {
+
         setIsOpen(false);
+
       }
+
     }
 
     document.addEventListener(
+
       "keydown",
+
       handleEscape,
+
     );
 
     return () => {
+
       document.removeEventListener(
+
         "keydown",
+
         handleEscape,
+
       );
+
     };
+
   }, [isOpen]);
 
   const summaryItems =
+
     useMemo(
+
       () => [
+
         {
+
           label: "Finalidade",
+
           value:
+
             summaryValue(
+
               answers.purpose,
+
             ),
+
         },
+
         {
+
           label: "Tipo de imóvel",
+
           value:
+
             summaryValue(
+
               answers.propertyType,
+
             ),
+
         },
+
         {
+
           label: "Bairro ou região",
+
           value:
+
             summaryValue(
+
               answers.region,
+
             ),
+
         },
+
         {
+
           label: "Faixa de valor",
+
           value:
+
             summaryValue(
+
               answers.value,
+
             ),
+
         },
+
         {
+
           label: "Dormitórios",
+
           value:
+
             summaryValue(
+
               answers.bedrooms,
+
             ),
+
         },
+
         {
+
           label: "Objetivo",
+
           value:
+
             summaryValue(
+
               answers.objective,
+
             ),
+
         },
+
         {
+
           label: "Preferências",
+
           value:
+
             summaryValue(
+
               answers.details,
+
             ),
+
         },
+
         {
+
           label:
+
             answers.purpose ===
+
             "Locação"
+
               ? "Prazo para mudança"
+
               : "Prazo para compra",
+
           value:
+
             summaryValue(
+
               answers.timeline,
+
             ),
+
         },
+
       ],
+
       [answers],
+
     );
 
   function resetConversation() {
+
     setStep(
+
       "purpose",
+
     );
 
     setAnswers(
+
       initialAnswers,
+
     );
 
     setRegionInput("");
 
     setSearchResults(
+
       [],
+
     );
 
     setSearchMatchType(
+
       "none",
+
     );
 
     setIsSearching(
+
       false,
+
     );
 
     setSearchCompleted(
+
       false,
+
     );
 
     setSearchError(
+
       false,
+
     );
+
   }
 
   function openAssistant() {
+
     setIsOpen(true);
+
   }
 
   function choosePurpose(
+
     purpose: string,
+
   ) {
+
     setAnswers(
+
       (current) => ({
+
         ...current,
+
         purpose,
+
         value: "",
+
       }),
+
     );
 
     setStep(
+
       "type",
+
     );
+
   }
 
   function choosePropertyType(
+
     propertyType: string,
+
   ) {
+
     setAnswers(
+
       (current) => ({
+
         ...current,
+
         propertyType,
+
         bedrooms:
+
           propertyType === "Casa" ||
+
           propertyType === "Apartamento"
+
             ? ""
+
             : "Não é relevante",
+
       }),
+
     );
 
     setStep(
+
       "region",
+
     );
+
   }
 
   function handleRegionSubmit(
+
     event: FormEvent<HTMLFormElement>,
+
   ) {
+
     event.preventDefault();
 
     const normalizedRegion =
+
       regionInput.trim();
 
     if (
+
       !normalizedRegion
+
     ) {
+
       return;
+
     }
 
     setAnswers(
+
       (current) => ({
+
         ...current,
+
         region:
+
           normalizedRegion,
+
       }),
+
     );
 
     setStep(
+
       "value",
+
     );
+
   }
 
   function chooseValue(
+
     value: string,
+
   ) {
+
     setAnswers(
+
       (current) => ({
+
         ...current,
+
         value,
+
       }),
+
     );
 
     setStep(
+
       answers.propertyType === "Casa" ||
+
         answers.propertyType === "Apartamento"
+
         ? "bedrooms"
+
         : "objective",
+
     );
+
   }
 
   function chooseBedrooms(
+
     bedrooms: string,
+
   ) {
+
     setAnswers(
+
       (current) => ({
+
         ...current,
+
         bedrooms,
+
       }),
+
     );
 
     setStep(
+
       "objective",
+
     );
+
   }
 
   function chooseObjective(
+
     objective: string,
+
   ) {
+
     setAnswers(
+
       (current) => ({
+
         ...current,
+
         objective,
+
       }),
+
     );
 
     setStep(
+
       "details",
+
     );
+
   }
 
   async function searchProperties(
+
     nextAnswers: IrisAnswers,
+
   ) {
+
     setIsSearching(
+
       true,
+
     );
 
     setSearchCompleted(
+
       false,
+
     );
 
     setSearchError(
+
       false,
+
     );
 
     setSearchResults(
+
       [],
+
     );
 
     setSearchMatchType(
+
       "none",
+
     );
 
     try {
+
       const response =
+
         await fetch(
+
           "/api/iris/search",
+
           {
+
             method: "POST",
 
             headers: {
+
               "Content-Type":
+
                 "application/json",
+
             },
 
             body:
+
               JSON.stringify({
+
                 purpose:
+
                   nextAnswers.purpose,
 
                 propertyType:
+
                   nextAnswers.propertyType,
 
                 region:
+
                   nextAnswers.region,
 
                 value:
+
                   nextAnswers.value,
 
                 bedrooms:
+
                   nextAnswers.bedrooms,
 
                 objective:
+
                   nextAnswers.objective,
+
               }),
+
           },
+
         );
 
       if (!response.ok) {
+
         throw new Error(
+
           "Falha na busca de imóveis.",
+
         );
+
       }
 
       const data =
+
         (await response.json()) as
+
           IrisSearchResponse;
 
       if (!data.success) {
+
         throw new Error(
+
           data.message ||
+
             "Falha na busca de imóveis.",
+
         );
+
       }
 
       setSearchResults(
+
         data.results,
+
       );
 
       setSearchMatchType(
+
         data.matchType ??
+
           (data.results.length > 0
+
             ? "exact"
+
             : "none"),
+
       );
+
     } catch (error) {
+
       console.error(
+
         "Erro ao consultar imóveis com a Íris:",
+
         error,
+
       );
 
       setSearchError(
+
         true,
+
       );
+
     } finally {
+
       setIsSearching(
+
         false,
+
       );
 
       setSearchCompleted(
+
         true,
+
       );
+
     }
+
   }
 
   function handleDetailsSubmit(
+
     event: FormEvent<HTMLFormElement>,
+
   ) {
+
     event.preventDefault();
 
     const formData =
+
       new FormData(
+
         event.currentTarget,
+
       );
 
     const details =
+
       String(
+
         formData.get(
+
           "details",
+
         ) || "",
+
       ).trim();
 
     const nextAnswers: IrisAnswers = {
+
       ...answers,
+
       details,
+
     };
 
     setAnswers(
+
       nextAnswers,
+
     );
 
     setStep(
+
       "timeline",
+
     );
+
   }
 
   async function chooseTimeline(
+
     timeline: string,
+
   ) {
+
     const nextAnswers: IrisAnswers = {
+
       ...answers,
+
       timeline,
+
     };
 
     setAnswers(
+
       nextAnswers,
+
     );
 
     setStep(
+
       "summary",
+
     );
 
     await searchProperties(
+
       nextAnswers,
+
     );
+
   }
 
   function sendToWhatsApp() {
+    function whatsappValue(
+      value: string,
+    ) {
+      const normalized =
+        value
+          .trim()
+          .toLowerCase();
+
+      if (
+        normalized ===
+          "ainda não defini" ||
+        normalized ===
+          "ainda nao defini" ||
+        normalized ===
+          "ainda não define" ||
+        normalized ===
+          "ainda nao define" ||
+        normalized ===
+          "ainda não definiu" ||
+        normalized ===
+          "ainda nao definiu" ||
+        normalized ===
+          "ainda não difine" ||
+        normalized ===
+          "ainda nao difine"
+      ) {
+        return "A definir";
+      }
+
+      return (
+        value.trim() ||
+        "Não informado."
+      );
+    }
+
     const references =
       searchResults.length > 0
         ? `Referências: ${searchResults
@@ -608,22 +1066,22 @@ export default function IrisAssistant() {
       "",
       introduction,
       "",
-      `Finalidade: ${summaryValue(
+      `Finalidade: ${whatsappValue(
         answers.purpose,
       )}`,
-      `Tipo de imóvel: ${summaryValue(
+      `Tipo de imóvel: ${whatsappValue(
         answers.propertyType,
       )}`,
-      `Bairro ou região: ${summaryValue(
+      `Bairro ou região: ${whatsappValue(
         answers.region,
       )}`,
-      `Faixa de valor: ${summaryValue(
+      `Faixa de valor: ${whatsappValue(
         answers.value,
       )}`,
-      `Dormitórios: ${summaryValue(
+      `Dormitórios: ${whatsappValue(
         answers.bedrooms,
       )}`,
-      `Objetivo: ${summaryValue(
+      `Objetivo: ${whatsappValue(
         answers.objective,
       )}`,
       `${
@@ -631,12 +1089,12 @@ export default function IrisAssistant() {
         "Locação"
           ? "Prazo para mudança"
           : "Prazo para compra"
-      }: ${summaryValue(
+      }: ${whatsappValue(
         answers.timeline,
       )}`,
       "",
       "Preferências adicionais:",
-      summaryValue(
+      whatsappValue(
         answers.details,
       ),
       ...(references
@@ -653,780 +1111,1424 @@ export default function IrisAssistant() {
       )}`;
 
     trackWhatsAppClick();
+
     window.open(
       whatsappUrl,
       "_blank",
       "noopener,noreferrer",
     );
   }
+
   function renderStep() {
+
     if (
+
       step === "purpose"
+
     ) {
+
       return (
+
         <>
+
           <IrisMessage>
+
             Olá, eu sou a Íris, assistente virtual da B&amp;B Consultoria
+
             Imobiliária.
+
           </IrisMessage>
 
           <IrisMessage>
+
             Vou guiar você por algumas perguntas rápidas para encontrar o imóvel
+
             mais adequado ao seu perfil.
+
           </IrisMessage>
 
           <IrisQuestion>
+
             Para começarmos, o que você procura?
+
           </IrisQuestion>
 
           <Options>
+
             <OptionButton
+
               onClick={() =>
+
                 choosePurpose(
+
                   "Compra",
+
                 )
+
               }
+
             >
+
               Comprar um imóvel
+
             </OptionButton>
 
             <OptionButton
+
               onClick={() =>
+
                 choosePurpose(
+
                   "Locação",
+
                 )
+
               }
+
             >
+
               Alugar um imóvel
+
             </OptionButton>
 
             <OptionButton
+
               onClick={() =>
+
                 choosePurpose(
+
                   "Investimento",
+
                 )
+
               }
+
             >
+
               Buscar uma oportunidade de investimento
+
             </OptionButton>
+
           </Options>
+
         </>
+
       );
+
     }
 
     if (
+
       step === "type"
+
     ) {
+
       return (
+
         <>
+
           <UserAnswer>
+
             {
+
               answers.purpose
+
             }
+
           </UserAnswer>
+
 <Options>
+
   {[
+
     "Casa",
+
     "Apartamento",
+
     "Terreno",
+
     "Comercial",
+
     "Chácara",
+
     "Fazenda",
+
     "Sítio",
+
     "Área Rural",
+
   ].map(          
+
               (item) => (
+
                 <OptionButton
+
                   key={item}
+
                   onClick={() =>
+
                     choosePropertyType(
+
                       item,
+
                     )
+
                   }
+
                 >
+
                   {item}
+
                 </OptionButton>
+
               ),
+
             )}
+
           </Options>
+
         </>
+
       );
+
     }
 
     if (
+
       step === "region"
+
     ) {
+
       return (
+
         <>
+
           <UserAnswer>
+
             {
+
               answers.propertyType
+
             }
+
           </UserAnswer>
 
           <IrisQuestion>
+
             Em qual bairro ou região você gostaria de buscar?
+
           </IrisQuestion>
 
           <form
+
             onSubmit={
+
               handleRegionSubmit
+
             }
+
             className="mt-4"
+
           >
+
             <input
+
               type="text"
+
               value={
+
                 regionInput
+
               }
+
               onChange={(event) =>
+
                 setRegionInput(
+
                   event.target.value,
+
                 )
+
               }
+
               placeholder="Ex.: Urbanova, Jardim Aquarius..."
+
               autoFocus
+
               className="h-13 w-full rounded-xl border border-white/10 bg-[#101010] px-4 text-sm text-white outline-none placeholder:text-zinc-600 transition focus:border-[#d5a85a]/60"
+
             />
 
             <button
+
               type="submit"
+
               className="mt-3 min-h-12 w-full rounded-xl bg-[#d5a85a] px-5 text-xs font-bold uppercase tracking-[0.14em] text-black transition hover:bg-[#e8c47d]"
+
             >
+
               Continuar
+
             </button>
+
           </form>
+
         </>
+
       );
+
     }
 
     if (
+
       step === "value"
+
     ) {
+
       return (
+
         <>
+
           <UserAnswer>
+
             {
+
               answers.region
+
             }
+
           </UserAnswer>
 
           <IrisQuestion>
+
             {answers.purpose === "Locação"
+
               ? "Qual faixa de aluguel mensal você considera?"
+
               : "Qual faixa de valor você considera?"}
+
           </IrisQuestion>
 
           <Options>
+
             {(answers.purpose === "Locação"
+
               ? rentalValueOptions
+
               : purchaseValueOptions
+
             ).map(
+
               (item) => (
+
                 <OptionButton
+
                   key={item}
+
                   onClick={() =>
+
                     chooseValue(
+
                       item,
+
                     )
+
                   }
+
                 >
+
                   {item}
+
                 </OptionButton>
+
               ),
+
             )}
+
           </Options>
+
         </>
+
       );
+
     }
 
     if (
+
       step === "bedrooms"
+
     ) {
+
       return (
+
         <>
+
           <UserAnswer>
+
             {
+
               answers.value
+
             }
+
           </UserAnswer>
 
           <IrisQuestion>
+
             Quantos dormitórios você procura?
+
           </IrisQuestion>
 
           <Options>
+
             {bedroomOptions.map(
+
               (item) => (
+
                 <OptionButton
+
                   key={item}
+
                   onClick={() =>
+
                     chooseBedrooms(
+
                       item,
+
                     )
+
                   }
+
                 >
+
                   {item}
+
                 </OptionButton>
+
               ),
+
             )}
+
           </Options>
+
         </>
+
       );
+
     }
 
     if (
+
       step === "objective"
+
     ) {
+
       return (
+
         <>
+
           <UserAnswer>
+
             {
+
               answers.bedrooms
+
             }
+
           </UserAnswer>
 
           <IrisQuestion>
+
             Qual é o principal objetivo dessa busca?
+
           </IrisQuestion>
 
           <Options>
+
             {objectiveOptions.map(
+
               (item) => (
+
                 <OptionButton
+
                   key={item}
+
                   onClick={() =>
+
                     chooseObjective(
+
                       item,
+
                     )
+
                   }
+
                 >
+
                   {item}
+
                 </OptionButton>
+
               ),
+
             )}
+
           </Options>
+
         </>
+
       );
+
     }
 
     if (
+
       step === "details"
+
     ) {
+
       return (
+
         <>
+
           <UserAnswer>
+
             {
+
               answers.objective
+
             }
+
           </UserAnswer>
 
           <IrisQuestion>
+
             Quer me contar mais alguma preferência?
+
           </IrisQuestion>
 
           <p className="mt-2 text-xs leading-5 text-zinc-500">
+
             Exemplos: metragem, condomínio específico, piscina, escritório,
+
             posição solar ou qualquer outra característica importante.
+
           </p>
 
           <form
+
             onSubmit={
+
               handleDetailsSubmit
+
             }
+
             className="relative z-10 mt-4"
+
           >
+
             <textarea
+
               name="details"
+
               rows={5}
+
               defaultValue={
+
                 answers.details
+
               }
+
               placeholder="Digite suas preferências..."
+
               className="relative z-10 w-full resize-y rounded-xl border border-white/10 bg-[#101010] px-4 py-4 text-sm leading-6 text-white outline-none placeholder:text-zinc-600 transition focus:border-[#d5a85a]/60"
+
             />
 
             <button
+
               type="submit"
+
               className="mt-3 min-h-12 w-full rounded-xl bg-[#d5a85a] px-5 text-xs font-bold uppercase tracking-[0.14em] text-black transition hover:bg-[#e8c47d]"
+
             >
+
               Continuar
+
             </button>
+
           </form>
+
         </>
+
       );
+
     }
 
     if (
+
       step === "timeline"
+
     ) {
+
       return (
+
         <>
+
           <UserAnswer>
+
             {answers.details ||
+
               "Nenhuma preferência adicional"}
+
           </UserAnswer>
 
           <IrisQuestion>
+
             {answers.purpose ===
+
             "Locação"
+
               ? "Em quanto tempo pretende se mudar?"
+
               : "Em quanto tempo pretende comprar?"}
+
           </IrisQuestion>
 
           <Options>
+
             {timelineOptions.map(
+
               (item) => (
+
                 <OptionButton
+
                   key={item}
+
                   onClick={() =>
+
                     chooseTimeline(
+
                       item,
+
                     )
+
                   }
+
                 >
+
                   {item}
+
                 </OptionButton>
+
               ),
+
             )}
+
           </Options>
+
         </>
+
       );
+
     }
 
     return (
+
       <>
+
         <IrisMessage>
+
           Perfeito. Organizei o perfil da sua busca.
+
         </IrisMessage>
 
         <div className="mt-5 rounded-2xl border border-[#d5a85a]/25 bg-[#d5a85a]/5 p-4">
+
           <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#d5a85a]">
+
             Resumo da busca
+
           </p>
 
           <div className="mt-4 space-y-3">
+
             {summaryItems.map(
+
               (item) => (
+
                 <div
+
                   key={
+
                     item.label
+
                   }
+
                   className="border-b border-white/10 pb-3 last:border-b-0 last:pb-0"
+
                 >
+
                   <p className="text-[9px] uppercase tracking-[0.12em] text-zinc-600">
+
                     {
+
                       item.label
+
                     }
+
                   </p>
 
                   <p className="mt-1 text-sm text-zinc-200">
+
                     {
+
                       item.value
+
                     }
+
                   </p>
+
                 </div>
+
               ),
+
             )}
+
           </div>
+
         </div>
 
         {isSearching ? (
+
           <div className="mt-5 rounded-2xl border border-white/10 bg-[#111111] px-4 py-5">
+
             <p className="text-sm leading-6 text-zinc-300">
+
               Estou consultando os imóveis disponíveis da B&amp;B para encontrar
+
               as opções mais compatíveis com o seu perfil...
+
             </p>
 
             <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
+
               <div className="h-full w-2/3 animate-pulse rounded-full bg-[#d5a85a]" />
+
             </div>
+
           </div>
+
         ) : null}
 
         {searchCompleted &&
+
         !searchError &&
+
         searchResults.length >
+
           0 ? (
+
           <>
+
             <IrisMessage>
+
               {searchMatchType ===
+
               "similar"
+
                 ? `Não encontrei uma correspondência exata, mas selecionei ${
+
                     searchResults.length
+
                   } ${
+
                     searchResults.length ===
+
                     1
+
                       ? "alternativa próxima"
+
                       : "alternativas próximas"
+
                   } ao seu perfil.`
+
                 : `Encontrei ${
+
                     searchResults.length
+
                   } ${
+
                     searchResults.length ===
+
                     1
+
                       ? "imóvel compatível"
+
                       : "imóveis compatíveis"
+
                   } com os critérios informados.`}
+
             </IrisMessage>
 
             <div className="mt-4 space-y-3">
+
               {searchResults.map(
+
                 (property) => (
+
                   <article
+
                     key={
+
                       property.code
+
                     }
+
                     className="overflow-hidden rounded-2xl border border-white/10 bg-[#101010]"
+
                   >
+
                     {property.image ? (
+
                       <div className="aspect-[16/9] overflow-hidden bg-black">
+
                         <Image
+
   src={property.image}
+
   alt={property.title}
+
   width={800}
+
   height={450}
+
   className="h-full w-full object-cover"
+
 />
+
                       </div>
+
                     ) : null}
 
                     <div className="p-4">
+
                       <div className="flex items-center justify-between gap-4">
+
                         <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#d5a85a]">
+
                           {
+
                             property.code
+
                           }
+
                         </span>
 
                         <span className="text-xs font-semibold text-white">
+
                           {
+
                             formatCurrency(
+
                               property.price,
+
                             )
+
                           }
+
                         </span>
+
                       </div>
 
                       <h3 className="mt-2 font-serif text-lg leading-6 text-white">
+
                         {
+
                           property.title
+
                         }
+
                       </h3>
 
                       <p className="mt-2 text-xs leading-5 text-zinc-400">
+
                         {
+
                           property.neighborhood
+
                         }
+
                         {" • "}
+
                         {
+
                           property.city
+
                         }
+
                       </p>
 
                       {property.development ? (
+
                         <p className="mt-1 text-xs leading-5 text-zinc-500">
+
                           {
+
                             property.development
+
                           }
+
                         </p>
+
                       ) : null}
 
                       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-zinc-400">
+
                        {property.propertyType !== "TERRENO" &&
+
 property.propertyType !== "RURAL" &&
+
 property.bedrooms > 0 ? (
+
   <span>
+
     {property.bedrooms}{" "}
+
     dormitórios
+
   </span>
+
 ) : null}
+
                         {property.propertyType !== "TERRENO" &&
+
 property.propertyType !== "RURAL" &&
+
 property.suites > 0 ? (
+
                           <span>
+
                             {
+
                               property.suites
+
                             }{" "}
+
                             suítes
+
                           </span>
+
                         ) : null}
 
 {property.propertyType !== "TERRENO" &&
+
 property.propertyType !== "RURAL" &&
+
 property.parking > 0 ? (                          <span>
+
                             {
+
                               property.parking
+
                             }{" "}
+
                             vagas
+
                           </span>
+
                         ) : null}
+
                       </div>
 
                       <a
+
                         href={
+
                           property.url
+
                         }
+
                         className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-[#d5a85a]/50 px-4 text-[10px] font-bold uppercase tracking-[0.14em] text-[#d5a85a] transition hover:bg-[#d5a85a] hover:text-black"
+
                       >
+
                         Ver imóvel
+
                       </a>
+
                     </div>
+
                   </article>
+
                 ),
+
               )}
+
             </div>
+
           </>
+
         ) : null}
 
         {searchCompleted &&
+
         !searchError &&
+
         searchResults.length ===
+
           0 ? (
+
           <IrisMessage>
+
             Não encontrei neste momento um imóvel publicado que corresponda
+
             exatamente a todos esses critérios. A equipe da B&amp;B pode fazer
+
             uma curadoria personalizada para você.
+
           </IrisMessage>
+
         ) : null}
 
         {searchCompleted &&
+
         searchError ? (
+
           <IrisMessage>
+
             Não consegui consultar os imóveis automaticamente neste momento,
+
             mas seu perfil já está organizado e pode ser encaminhado para a
+
             equipe da B&amp;B continuar a busca.
+
           </IrisMessage>
+
         ) : null}
 
         {searchCompleted ? (
+
           <>
+
             <IrisMessage>
+
               Posso encaminhar seu perfil para a equipe da B&amp;B continuar o
+
               atendimento pelo WhatsApp.
+
             </IrisMessage>
 
             <button
+
               type="button"
+
               onClick={
+
                 sendToWhatsApp
+
               }
+
               className="mt-4 min-h-13 w-full rounded-xl bg-[#d5a85a] px-5 text-xs font-bold uppercase tracking-[0.14em] text-black transition hover:bg-[#e8c47d]"
+
             >
+
               Enviar para a B&amp;B
+
             </button>
 
             <button
+
               type="button"
+
               onClick={
+
                 resetConversation
+
               }
+
               className="mt-3 min-h-12 w-full rounded-xl border border-white/10 bg-[#101010] px-5 text-xs font-bold uppercase tracking-[0.12em] text-zinc-300 transition hover:border-[#d5a85a]/50 hover:text-[#d5a85a]"
+
             >
+
               Fazer uma nova busca
+
             </button>
+
           </>
+
         ) : null}
+
       </>
+
     );
+
   }
 
   return (
+
     <>
+
       <button
+
         type="button"
+
         onClick={
+
           openAssistant
+
         }
+
         aria-label="Falar com a Íris, assistente virtual da B&B"
+
         className="fixed bottom-6 right-28 z-[998] hidden min-h-16 items-center gap-4 rounded-full border border-[#d5a85a]/60 bg-[#090909]/95 px-5 pr-6 text-left shadow-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-[#d5a85a] hover:shadow-[0_16px_40px_rgba(213,168,90,0.22)] md:flex"
+
       >
+
         <IrisAvatar />
 
         <span>
+
           <span className="block text-[9px] font-bold uppercase tracking-[0.18em] text-[#d5a85a]">
+
             Assistente virtual
+
           </span>
 
           <span className="mt-1 block text-sm font-semibold text-white">
+
             Fale com a Íris
+
           </span>
+
         </span>
+
       </button>
 
       <button
+
         type="button"
+
         onClick={
+
           openAssistant
+
         }
+
         aria-label="Falar com a Íris, assistente virtual da B&B"
+
         className="fixed bottom-24 right-6 z-[998] flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-[#d5a85a] bg-[#090909] shadow-2xl transition-all duration-300 hover:scale-105 md:hidden"
+
       >
+
         <Image
+
           src="/iris-avatar.webp"
+
           alt="Íris"
+
           width={112}
+
           height={112}
+
           className="h-full w-full object-cover object-top"
+
         />
+
       </button>
 
       {isOpen ? (
+
         <div
+
           className="fixed inset-0 z-[1000] flex items-start justify-end overflow-y-auto bg-black/30 p-3 pt-[max(12px,env(safe-area-inset-top))] backdrop-blur-[2px] sm:items-end sm:p-5"
+
           onMouseDown={(event) => {
+
             if (
+
               event.target ===
+
               event.currentTarget
+
             ) {
+
               setIsOpen(false);
+
             }
+
           }}
+
         >
+
           <section
+
             role="dialog"
+
             aria-modal="true"
+
             aria-labelledby="iris-title"
+
             className="flex max-h-[calc(100dvh-24px)] w-full max-w-[420px] flex-col overflow-hidden rounded-2xl border border-[#d5a85a]/30 bg-[#080808] shadow-[0_28px_90px_rgba(0,0,0,0.72)] sm:max-h-[min(760px,calc(100vh-40px))]"
+
           >
+
             <header className="flex shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-[#0d0d0d] px-5 py-4">
+
               <div className="flex items-center gap-3">
+
                 <IrisAvatar />
 
                 <div>
+
                   <h2
+
                     id="iris-title"
+
                     className="font-serif text-xl font-normal text-white"
+
                   >
+
                     Íris
+
                   </h2>
 
                   <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#d5a85a]">
+
                     Assistente virtual da B&amp;B
+
                   </p>
+
                 </div>
+
               </div>
 
               <button
+
                 type="button"
+
                 onClick={() =>
+
                   setIsOpen(false)
+
                 }
+
                 aria-label="Fechar atendimento da Íris"
+
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 text-xl text-zinc-400 transition hover:border-[#d5a85a]/60 hover:text-[#d5a85a]"
+
               >
+
                 ×
+
               </button>
+
             </header>
 
             <div className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
+
               {
+
                 renderStep()
+
               }
 
               <p className="mt-7 text-center text-[10px] leading-5 text-zinc-600">
+
                 A Íris é uma assistente virtual. As sugestões exibidas são
+
                 baseadas nos imóveis publicados no Portal B&amp;B. Quando
+
                 necessário, o atendimento poderá ser encaminhado para a equipe.
+
               </p>
+
             </div>
+
           </section>
+
         </div>
+
       ) : null}
+
     </>
+
   );
+
 }
 
 function IrisAvatar() {
+
   return (
+
     <span className="relative flex h-11 w-11 shrink-0 overflow-hidden rounded-full border border-[#d5a85a]/70 bg-[#111111] shadow-[0_0_18px_rgba(213,168,90,0.14)]">
+
       <Image
+
         src="/iris-avatar.webp"
+
         alt="Íris, assistente virtual da B&B"
+
         width={88}
+
         height={88}
+
         className="h-full w-full object-cover object-top"
+
       />
+
     </span>
+
   );
+
 }
 
 function IrisMessage({
+
   children,
+
 }: {
+
   children:
+
     React.ReactNode;
+
 }) {
+
   return (
+
     <div className="mt-3 max-w-[92%] rounded-2xl rounded-tl-sm border border-white/10 bg-[#111111] px-4 py-4 first:mt-0">
+
       <p className="text-sm leading-6 text-zinc-300">
+
         {children}
+
       </p>
+
     </div>
+
   );
+
 }
 
 function IrisQuestion({
+
   children,
+
 }: {
+
   children:
+
     React.ReactNode;
+
 }) {
+
   return (
+
     <div className="mt-5 max-w-[92%] rounded-2xl rounded-tl-sm border border-[#d5a85a]/20 bg-[#d5a85a]/5 px-4 py-4">
+
       <p className="text-sm font-medium leading-6 text-white">
+
         {children}
+
       </p>
+
     </div>
+
   );
+
 }
 
 function UserAnswer({
+
   children,
+
 }: {
+
   children:
+
     React.ReactNode;
+
 }) {
+
   return (
+
     <div className="ml-auto max-w-[82%] rounded-2xl rounded-tr-sm bg-[#d5a85a] px-4 py-3 text-black">
+
       <p className="text-sm font-medium leading-5">
+
         {children}
+
       </p>
+
     </div>
+
   );
+
 }
 
 function Options({
+
   children,
+
 }: {
+
   children:
+
     React.ReactNode;
+
 }) {
+
   return (
+
     <div className="mt-4 grid gap-2">
+
       {children}
+
     </div>
+
   );
+
 }
 
 function OptionButton({
+
   children,
+
   onClick,
+
 }: {
+
   children:
+
     React.ReactNode;
+
   onClick:
+
     () => void;
+
 }) {
+
   return (
+
     <button
+
       type="button"
+
       onClick={
+
         onClick
+
       }
+
       className="min-h-12 rounded-xl border border-white/10 bg-[#101010] px-4 text-left text-sm text-zinc-200 transition hover:border-[#d5a85a]/60 hover:bg-[#d5a85a]/5 hover:text-[#d5a85a]"
+
     >
+
       {children}
+
     </button>
+
   );
+
 }

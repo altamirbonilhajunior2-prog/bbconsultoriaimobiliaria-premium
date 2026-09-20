@@ -5,6 +5,46 @@ type IrisInterpretRequest = {
   message?: string;
 };
 
+type IrisInterpretedSearch = {
+  purpose: string;
+  propertyType: string;
+  region: string;
+  value: string;
+  bedrooms: string;
+  objective: string;
+  details: string;
+};
+
+function normalizeUndefinedAnswer(
+  value: string,
+) {
+  const normalized =
+    value
+      .trim()
+      .toLowerCase();
+
+  const undefinedAnswers = [
+    "ainda não defini",
+    "ainda nao defini",
+    "ainda não define",
+    "ainda nao define",
+    "ainda não definiu",
+    "ainda nao definiu",
+    "ainda não difine",
+    "ainda nao difine",
+  ];
+
+  if (
+    undefinedAnswers.includes(
+      normalized,
+    )
+  ) {
+    return "Ainda não defini";
+  }
+
+  return value;
+}
+
 export async function POST(
   request: Request,
 ) {
@@ -67,6 +107,11 @@ export async function POST(
                 "Extraia apenas informações explicitamente informadas ou claramente inferíveis do texto.",
                 "Não invente dados.",
                 "",
+                "LINGUAGEM E PADRONIZAÇÃO:",
+                'Quando representar uma resposta do cliente sobre algo que ele ainda não decidiu, use exatamente "Ainda não defini".',
+                'Nunca use "Ainda não define", "Ainda não definiu", "Ainda não difine" ou qualquer outra variação.',
+                'A expressão deve permanecer sempre em primeira pessoa: "Ainda não defini".',
+                "",
                 "TIPO DE IMÓVEL:",
                 "Use Casa, Apartamento, Terreno, Comercial ou Rural.",
                 "Considere Rural quando o cliente mencionar chácara, sítio, sitio, fazenda, área rural, terreno rural ou propriedade de campo.",
@@ -105,6 +150,8 @@ export async function POST(
                 "Procuro aluguel de até 7 mil -> Locação / De R$ 5 mil a R$ 8 mil/mês.",
                 "Quero uma casa para alugar por 15 mil -> Locação / Acima de R$ 12 mil/mês.",
                 "Quero comprar até 900 mil -> Compra / De R$ 500 mil a R$ 1 milhão.",
+                'Ainda não sei quanto quero gastar -> Ainda não defini.',
+                'Não defini o valor ainda -> Ainda não defini.',
               ].join("\n"),
           },
           {
@@ -240,14 +287,25 @@ export async function POST(
       );
     }
 
-    const interpreted =
-      JSON.parse(output);
+    const parsed =
+      JSON.parse(
+        output,
+      ) as IrisInterpretedSearch;
+
+    const interpreted: IrisInterpretedSearch =
+      {
+        ...parsed,
+
+        value:
+          normalizeUndefinedAnswer(
+            parsed.value,
+          ),
+      };
 
     return NextResponse.json({
       success: true,
       interpreted,
     });
-
   } catch (error) {
     console.error(
       "Erro na interpretação da Íris:",
