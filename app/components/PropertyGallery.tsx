@@ -39,21 +39,35 @@ export default function PropertyGallery({
   }
 
   const showPreviousImage = useCallback(() => {
-  setSelectedIndex((currentIndex) =>
-    currentIndex === 0 ? safeImages.length - 1 : currentIndex - 1,
-  );
-}, [safeImages.length]);
+    setSelectedIndex((currentIndex) =>
+      currentIndex === 0 ? safeImages.length - 1 : currentIndex - 1,
+    );
+  }, [safeImages.length]);
+
   const showNextImage = useCallback(() => {
-  setSelectedIndex((currentIndex) =>
-    currentIndex === safeImages.length - 1 ? 0 : currentIndex + 1,
-  );
-}, [safeImages.length]);
+    setSelectedIndex((currentIndex) =>
+      currentIndex === safeImages.length - 1 ? 0 : currentIndex + 1,
+    );
+  }, [safeImages.length]);
+
   function openLightbox() {
     setIsLightboxOpen(true);
   }
 
   function closeLightbox() {
     setIsLightboxOpen(false);
+  }
+
+  function preventImageContextMenu(
+    event: React.MouseEvent<HTMLElement>,
+  ) {
+    event.preventDefault();
+  }
+
+  function preventImageDrag(
+    event: React.DragEvent<HTMLElement>,
+  ) {
+    event.preventDefault();
   }
 
   useEffect(() => {
@@ -84,7 +98,7 @@ export default function PropertyGallery({
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-    }, [
+  }, [
     isLightboxOpen,
     safeImages.length,
     showPreviousImage,
@@ -93,7 +107,11 @@ export default function PropertyGallery({
 
   return (
     <>
-      <div>
+      <div
+        onContextMenu={preventImageContextMenu}
+        onDragStart={preventImageDrag}
+        className="select-none"
+      >
         <div className="relative min-h-[420px] overflow-hidden border border-white/10 bg-[#0a0a0a] sm:min-h-[580px]">
           <button
             type="button"
@@ -110,8 +128,9 @@ export default function PropertyGallery({
             alt={`${title} — foto ${selectedIndex + 1}`}
             fill
             priority
+            draggable={false}
             sizes="(max-width: 1024px) 100vw, 70vw"
-            className="object-cover"
+            className="pointer-events-none select-none object-cover"
           />
 
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10" />
@@ -125,8 +144,9 @@ export default function PropertyGallery({
               src="/logo-bb.png"
               alt=""
               fill
+              draggable={false}
               sizes="208px"
-              className="object-contain"
+              className="select-none object-contain"
             />
           </div>
 
@@ -203,8 +223,9 @@ export default function PropertyGallery({
                   src={image}
                   alt={`${title} — miniatura ${index + 1}`}
                   fill
+                  draggable={false}
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-                  className="object-cover transition duration-500 group-hover:scale-105"
+                  className="pointer-events-none select-none object-cover transition duration-500 group-hover:scale-105"
                 />
 
                 <div
@@ -236,7 +257,9 @@ export default function PropertyGallery({
           aria-modal="true"
           aria-label={`Galeria ampliada de ${title}`}
           onClick={closeLightbox}
-          className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/95 p-4 backdrop-blur-sm sm:p-8"
+          onContextMenu={preventImageContextMenu}
+          onDragStart={preventImageDrag}
+          className="fixed inset-0 z-[1100] flex select-none items-center justify-center bg-black/95 p-4 backdrop-blur-sm sm:p-8"
         >
           <button
             type="button"
@@ -257,8 +280,9 @@ export default function PropertyGallery({
               alt={`${title} — foto ampliada ${selectedIndex + 1}`}
               fill
               priority
+              draggable={false}
               sizes="100vw"
-              className="object-contain"
+              className="pointer-events-none select-none object-contain"
             />
 
             <div className="pointer-events-none absolute bottom-8 right-8 z-30 h-24 w-60 opacity-70 sm:bottom-10 sm:right-10 sm:h-28 sm:w-64">
@@ -266,8 +290,9 @@ export default function PropertyGallery({
                 src="/logo-bb.png"
                 alt=""
                 fill
+                draggable={false}
                 sizes="256px"
-                className="object-contain"
+                className="select-none object-contain"
               />
             </div>
 
