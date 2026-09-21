@@ -1450,7 +1450,7 @@ export default function EditPropertyForm({
 
 
 
-            <Field label="Proprietário">
+            <Field label="Proprietário *">
 
               <select
 

@@ -19,11 +19,18 @@ export type PropertyFormAgent = {
   role: "ADMIN" | "CAPTADOR";
 };
 
+export type PropertyFormOwner = {
+  id: number;
+  name: string;
+  cpf: string | null;
+};
+
 export type PropertyFormAccessData = {
   success: boolean;
   isAdmin: boolean;
   agentId: number | null;
   agents: PropertyFormAgent[];
+  owners: PropertyFormOwner[];
 };
 
 function getText(
@@ -282,28 +289,50 @@ export async function getPropertyFormAccessAction(): Promise<PropertyFormAccessD
       isAdmin: false,
       agentId: null,
       agents: [],
+      owners: [],
     };
   }
 
   const access =
     await getAccessContext();
 
-  const agents =
-    await prisma.agent.findMany({
-      where: {
-        active: true,
-      },
+  const [agents, owners] =
+    await Promise.all([
+      prisma.agent.findMany({
+        where: {
+          active: true,
+        },
 
-      orderBy: {
-        name: "asc",
-      },
+        orderBy: {
+          name: "asc",
+        },
 
-      select: {
-        id: true,
-        name: true,
-        role: true,
-      },
-    });
+        select: {
+          id: true,
+          name: true,
+          role: true,
+        },
+      }),
+
+      prisma.owner.findMany({
+        where: access.isAdmin
+          ? {}
+          : {
+              capturedById:
+                access.agentId ?? -1,
+            },
+
+        orderBy: {
+          name: "asc",
+        },
+
+        select: {
+          id: true,
+          name: true,
+          cpf: true,
+        },
+      }),
+    ]);
 
   return {
     success: true,
@@ -311,6 +340,7 @@ export async function getPropertyFormAccessAction(): Promise<PropertyFormAccessD
     agentId:
       access.agentId ?? null,
     agents,
+    owners,
   };
 }
 
@@ -352,6 +382,14 @@ export async function createPropertyAction(
       formData,
       "ownerId",
     );
+
+  if (!ownerId) {
+    return {
+      success: false,
+      message:
+        "Selecione o proprietário do imóvel.",
+    };
+  }
 
   const requestedCaptorId =
     getOptionalInteger(
@@ -479,9 +517,24 @@ export async function createPropertyAction(
       ),
     );
 
-  const mapEnabled = formData.get("mapEnabled") === "on";
-  const requestedMapRadius = getOptionalInteger(formData, "mapRadiusMeters") ?? 700;
-  const mapRadiusMeters = Math.min(Math.max(requestedMapRadius, 300), 2000);
+  const mapEnabled =
+    formData.get("mapEnabled") ===
+    "on";
+
+  const requestedMapRadius =
+    getOptionalInteger(
+      formData,
+      "mapRadiusMeters",
+    ) ?? 700;
+
+  const mapRadiusMeters =
+    Math.min(
+      Math.max(
+        requestedMapRadius,
+        300,
+      ),
+      2000,
+    );
 
   if (
     latitude !== null &&
@@ -571,6 +624,32 @@ export async function createPropertyAction(
     | null = null;
 
   try {
+    const allowedOwner =
+      await prisma.owner.findFirst({
+        where: {
+          id: ownerId,
+
+          ...(access.isAdmin
+            ? {}
+            : {
+                capturedById:
+                  access.agentId ?? -1,
+              }),
+        },
+
+        select: {
+          id: true,
+        },
+      });
+
+    if (!allowedOwner) {
+      return {
+        success: false,
+        message:
+          "Proprietário não encontrado ou acesso não autorizado.",
+      };
+    }
+
     const agents =
       await prisma.agent.findMany({
         where: {
@@ -582,6 +661,7 @@ export async function createPropertyAction(
                 : []),
             ],
           },
+
           active: true,
         },
 
@@ -689,30 +769,42 @@ export async function createPropertyAction(
               highestNumber + 1,
             ).padStart(3, "0")}`;
 
-          const confirmedLocation = confirmedNeighborhoodLocation(formData, {
-            state,
-            city,
-            neighborhood,
-          });
+          const confirmedLocation =
+            confirmedNeighborhoodLocation(
+              formData,
+              {
+                state,
+                city,
+                neighborhood,
+              },
+            );
+
           if (confirmedLocation) {
             await tx.neighborhoodMapLocation.upsert({
               where: {
                 state_city_normalizedName: {
-                  state: confirmedLocation.state,
-                  city: confirmedLocation.city,
-                  normalizedName: confirmedLocation.normalizedName,
+                  state:
+                    confirmedLocation.state,
+                  city:
+                    confirmedLocation.city,
+                  normalizedName:
+                    confirmedLocation.normalizedName,
                 },
               },
+
               update: {
                 ...confirmedLocation,
                 active: true,
-                verifiedAt: new Date(),
+                verifiedAt:
+                  new Date(),
               },
+
               create: {
                 ...confirmedLocation,
                 aliases: [],
                 active: true,
-                verifiedAt: new Date(),
+                verifiedAt:
+                  new Date(),
               },
             });
           }
@@ -747,10 +839,11 @@ export async function createPropertyAction(
 
               internalNotes,
 
-              tag: getOptionalText(
-                formData,
-                "tag",
-              ),
+              tag:
+                getOptionalText(
+                  formData,
+                  "tag",
+                ),
 
               state:
                 state.toUpperCase(),
@@ -934,6 +1027,7 @@ export async function createPropertyAction(
             },
           });
         },
+
         {
           isolationLevel:
             "Serializable",

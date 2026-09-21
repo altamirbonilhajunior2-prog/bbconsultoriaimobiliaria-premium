@@ -433,13 +433,13 @@ export default function NovoImovelPage() {
               </p>
 
               <p className="mt-2 text-sm leading-6 text-zinc-500">
-                Defina o corretor responsável pela angariação do imóvel e, quando houver, um co-angariador.
+                Vincule obrigatoriamente o proprietário e defina o corretor responsável pela angariação do imóvel e, quando houver, um co-angariador.
               </p>
 
               {accessLoading ? (
                 <div className="mt-5 border border-white/10 bg-[#111111] px-5 py-5">
                   <p className="text-sm text-zinc-500">
-                    Carregando angariadores...
+                    Carregando dados de angariação...
                   </p>
                 </div>
               ) : !accessData?.success ? (
@@ -450,6 +450,44 @@ export default function NovoImovelPage() {
                 </div>
               ) : (
                 <div className="mt-5 grid gap-5 md:grid-cols-2">
+                  <label className="flex flex-col gap-2 md:col-span-2">
+                    <span className={labelTitleClass}>
+                      Proprietário *
+                    </span>
+
+                    <select
+                      name="ownerId"
+                      required
+                      defaultValue=""
+                      className={inputClass}
+                    >
+                      <option value="">
+                        Selecione o proprietário
+                      </option>
+
+                      {accessData.owners.map(
+                        (owner) => (
+                          <option
+                            key={owner.id}
+                            value={owner.id}
+                          >
+                            {owner.name}
+                            {owner.cpf
+                              ? ` — CPF ${owner.cpf}`
+                              : ""}
+                          </option>
+                        ),
+                      )}
+                    </select>
+
+                    {accessData.owners.length ===
+                    0 ? (
+                      <span className="text-xs leading-5 text-amber-300">
+                        Nenhum proprietário disponível. Cadastre um proprietário antes de salvar o imóvel.
+                      </span>
+                    ) : null}
+                  </label>
+
                   {accessData.isAdmin ? (
                     <label className="flex flex-col gap-2">
                       <span className={labelTitleClass}>
@@ -1193,7 +1231,9 @@ Ar-condicionado`}
               disabled={
                 isPending ||
                 accessLoading ||
-                !accessData?.success
+                !accessData?.success ||
+                accessData.owners.length ===
+                  0
               }
               className="inline-flex min-h-14 items-center justify-center bg-amber-500 px-8 text-xs font-bold uppercase tracking-[0.16em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
             >

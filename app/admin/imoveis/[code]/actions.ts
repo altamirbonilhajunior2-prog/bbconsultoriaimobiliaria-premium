@@ -421,42 +421,45 @@ export async function updatePropertyAction(
       "ownerId",
     );
 
-  let validatedOwnerId:
-    number | null = null;
-
-  if (ownerId !== null) {
-    const allowedOwner =
-      await prisma.owner.findFirst({
-        where: {
-          id: ownerId,
-
-          ...(access.isAdmin
-            ? {}
-            : ownerId ===
-                existingProperty.ownerId
-              ? {}
-              : {
-                  capturedById:
-                    access.agentId ?? -1,
-                }),
-        },
-
-        select: {
-          id: true,
-        },
-      });
-
-    if (!allowedOwner) {
-      return {
-        success: false,
-        message:
-          "Proprietário não encontrado ou acesso não autorizado.",
-      };
-    }
-
-    validatedOwnerId =
-      allowedOwner.id;
+  if (!ownerId) {
+    return {
+      success: false,
+      message:
+        "Selecione o proprietário do imóvel.",
+    };
   }
+
+  const allowedOwner =
+    await prisma.owner.findFirst({
+      where: {
+        id: ownerId,
+
+        ...(access.isAdmin
+          ? {}
+          : ownerId ===
+              existingProperty.ownerId
+            ? {}
+            : {
+                capturedById:
+                  access.agentId ?? -1,
+              }),
+      },
+
+      select: {
+        id: true,
+      },
+    });
+
+  if (!allowedOwner) {
+    return {
+      success: false,
+      message:
+        "Proprietário não encontrado ou acesso não autorizado.",
+    };
+  }
+
+  const validatedOwnerId =
+    allowedOwner.id;
 
   const neighborhood =
     getText(
