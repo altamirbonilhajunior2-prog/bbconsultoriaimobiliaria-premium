@@ -555,7 +555,7 @@ export default function PropertyAddressFields({
             labelClass
           }
         >
-          CEP
+          CEP (obrigatório se não informar o endereço)
         </span>
 
         <input
@@ -605,7 +605,7 @@ export default function PropertyAddressFields({
             labelClass
           }
         >
-          Endereço
+          Endereço (obrigatório se não informar o CEP)
         </span>
 
         <input
@@ -639,13 +639,7 @@ export default function PropertyAddressFields({
         </div>
 
         <span className="text-[10px] leading-5 text-zinc-600">
-          Para buscar o CEP pela
-          rua, informe também a
-          cidade e a UF. Quando o
-          endereço for localizado
-          pelo CEP, complete
-          manualmente o número do
-          imóvel quando necessário.
+          Informe obrigatoriamente o endereço ou um CEP válido. Para buscar o CEP pela rua, informe também a cidade e a UF. Quando o endereço for localizado pelo CEP, complete manualmente o número do imóvel quando necessário.
         </span>
       </label>
 

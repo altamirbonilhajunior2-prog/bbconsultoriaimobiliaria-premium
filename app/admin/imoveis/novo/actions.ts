@@ -608,6 +608,48 @@ export async function createPropertyAction(
     ) ||
     "São José dos Campos";
 
+  const address =
+    getOptionalText(
+      formData,
+      "address",
+    );
+
+  const zipCode =
+    getOptionalText(
+      formData,
+      "zipCode",
+    );
+
+  const zipCodeDigits =
+    zipCode
+      ? zipCode.replace(
+          /\D/g,
+          "",
+        )
+      : "";
+
+  if (
+    !address &&
+    !zipCode
+  ) {
+    return {
+      success: false,
+      message:
+        "Informe o endereço ou o CEP do imóvel.",
+    };
+  }
+
+  if (
+    zipCode &&
+    zipCodeDigits.length !== 8
+  ) {
+    return {
+      success: false,
+      message:
+        "Informe um CEP válido com 8 dígitos.",
+    };
+  }
+
   if (state.length > 2) {
     return {
       success: false,
@@ -870,17 +912,9 @@ export async function createPropertyAction(
                   "location",
                 ),
 
-              address:
-                getOptionalText(
-                  formData,
-                  "address",
-                ),
+              address,
 
-              zipCode:
-                getOptionalText(
-                  formData,
-                  "zipCode",
-                ),
+              zipCode,
 
               latitude,
 
