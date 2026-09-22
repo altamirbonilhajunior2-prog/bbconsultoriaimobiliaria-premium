@@ -8,6 +8,7 @@ import ImageManager from "./ImageManager";
 import PublicationControl from "./PublicationControl";
 import DeleteVisitButton from "./DeleteVisitButton";
 import DeleteProposalButton from "./DeleteProposalButton";
+import DeletePropertyButton from "./DeletePropertyButton";
 import { deletePropertyVisit } from "./visit-actions";
 import {
   deletePropertyProposal,
@@ -601,6 +602,14 @@ export default async function EditarImovelPage({
             </div>
           ) : null}
         </div>
+
+        {access.isAdmin ? (
+          <div className="mt-6">
+            <DeletePropertyButton
+              code={property.code}
+            />
+          </div>
+        ) : null}
 
         {!canManageProperty ? (
           <section className="mt-10 border border-white/10 bg-white/[0.03] p-6 lg:p-8">
