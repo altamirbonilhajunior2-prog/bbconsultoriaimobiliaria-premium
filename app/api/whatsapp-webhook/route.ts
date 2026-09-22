@@ -10,6 +10,57 @@ import {
 
 export const runtime = "nodejs";
 
+type WhatsAppTextMessage = {
+  id?: string;
+  from?: string;
+  timestamp?: string;
+  type?: string;
+  text?: {
+    body?: string;
+  };
+};
+
+type WhatsAppContact = {
+  profile?: {
+    name?: string;
+  };
+  wa_id?: string;
+};
+
+type WhatsAppWebhookValue = {
+  messaging_product?: string;
+
+  metadata?: {
+    display_phone_number?: string;
+    phone_number_id?: string;
+  };
+
+  contacts?: WhatsAppContact[];
+
+  messages?: WhatsAppTextMessage[];
+};
+
+type WhatsAppWebhookPayload = {
+  object?: string;
+
+  entry?: Array<{
+    id?: string;
+
+    changes?: Array<{
+      field?: string;
+      value?: WhatsAppWebhookValue;
+    }>;
+  }>;
+};
+
+type IncomingWhatsAppMessage = {
+  messageId: string;
+  from: string;
+  contactName: string | null;
+  phoneNumberId: string | null;
+  text: string;
+};
+
 function getVerifyToken() {
   const token =
     process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN?.trim();
@@ -87,6 +138,105 @@ function isValidMetaSignature(
     received,
     expected,
   );
+}
+
+function maskPhone(
+  value: string,
+) {
+  if (value.length <= 4) {
+    return "****";
+  }
+
+  return `${"*".repeat(
+    Math.max(
+      0,
+      value.length - 4,
+    ),
+  )}${value.slice(-4)}`;
+}
+
+function extractTextMessages(
+  payload: WhatsAppWebhookPayload,
+): IncomingWhatsAppMessage[] {
+  const extracted:
+    IncomingWhatsAppMessage[] =
+    [];
+
+  for (
+    const entry of
+      payload.entry ?? []
+  ) {
+    for (
+      const change of
+        entry.changes ?? []
+    ) {
+      if (
+        change.field !==
+        "messages"
+      ) {
+        continue;
+      }
+
+      const value =
+        change.value;
+
+      if (!value) {
+        continue;
+      }
+
+      const contact =
+        value.contacts?.[0];
+
+      const contactName =
+        contact?.profile?.name?.trim() ||
+        null;
+
+      const phoneNumberId =
+        value.metadata
+          ?.phone_number_id
+          ?.trim() ||
+        null;
+
+      for (
+        const message of
+          value.messages ?? []
+      ) {
+        if (
+          message.type !==
+          "text"
+        ) {
+          continue;
+        }
+
+        const text =
+          message.text?.body?.trim();
+
+        const from =
+          message.from?.trim();
+
+        const messageId =
+          message.id?.trim();
+
+        if (
+          !text ||
+          !from ||
+          !messageId
+        ) {
+          continue;
+        }
+
+        extracted.push({
+          messageId,
+          from,
+          contactName,
+          phoneNumberId,
+          text,
+        });
+      }
+    }
+  }
+
+  return extracted;
 }
 
 export async function GET(
@@ -216,13 +366,14 @@ export async function POST(
     );
   }
 
-  let body: unknown;
+  let body:
+    WhatsAppWebhookPayload;
 
   try {
     body =
       JSON.parse(
         rawBody,
-      );
+      ) as WhatsAppWebhookPayload;
   } catch {
     return NextResponse.json(
       {
@@ -250,21 +401,50 @@ export async function POST(
     );
   }
 
+  const messages =
+    extractTextMessages(
+      body,
+    );
+
+  for (
+    const message of messages
+  ) {
+    console.info(
+      "WhatsApp: mensagem de texto recebida.",
+      {
+        messageId:
+          message.messageId,
+        from:
+          maskPhone(
+            message.from,
+          ),
+        contactName:
+          message.contactName,
+        phoneNumberId:
+          message.phoneNumberId,
+        textLength:
+          message.text.length,
+      },
+    );
+  }
+
   /*
-   * A assinatura da Meta já foi validada.
+   * Nesta etapa:
    *
-   * Nesta etapa ainda não:
-   * - gravamos mensagens no banco;
-   * - acionamos a Íris;
-   * - enviamos respostas automáticas.
-   *
-   * O processamento do campo "messages"
-   * será adicionado na próxima etapa.
+   * - a assinatura da Meta é validada;
+   * - mensagens de texto são identificadas;
+   * - remetente, nome e phone_number_id são extraídos;
+   * - não armazenamos o texto nos logs;
+   * - não gravamos no banco;
+   * - não acionamos a Íris;
+   * - não enviamos resposta automática.
    */
 
   return NextResponse.json(
     {
       received: true,
+      textMessages:
+        messages.length,
     },
     {
       status: 200,
