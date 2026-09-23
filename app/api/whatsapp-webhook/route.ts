@@ -16,6 +16,11 @@ import {
   Prisma,
 } from "../../../generated/prisma/client";
 
+import {
+  decideNextIrisQuestion,
+  mergeIrisProfile,
+} from "../../../lib/iris/conversation";
+
 import { interpretIrisMessage } from "../../../lib/iris/interpret";
 import { prisma } from "../../../lib/prisma";
 
@@ -406,28 +411,93 @@ async function persistIncomingMessage(
   }
 }
 
-async function interpretAndStoreSearchProfile(
+async function processIrisConversation(
   conversationId: number,
   text: string,
 ) {
+  const conversation =
+    await prisma.irisConversation.findUnique({
+      where: {
+        id:
+          conversationId,
+      },
+
+      select: {
+        searchProfile: true,
+      },
+    });
+
   const interpreted =
     await interpretIrisMessage(
       text,
     );
 
-  await prisma.irisConversation.update({
-    where: {
-      id:
-        conversationId,
-    },
+  const mergedProfile =
+    mergeIrisProfile(
+      conversation?.searchProfile,
+      interpreted,
+    );
 
-    data: {
-      searchProfile:
-        interpreted as Prisma.InputJsonValue,
-    },
+  const decision =
+    decideNextIrisQuestion(
+      mergedProfile,
+    );
+
+  const nextStatus =
+    decision.readyForHandoff
+      ? IrisConversationStatus.HANDOFF
+      : IrisConversationStatus.AGUARDANDO_CLIENTE;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.irisConversation.update({
+      where: {
+        id:
+          conversationId,
+      },
+
+      data: {
+        searchProfile:
+          decision.profile as Prisma.InputJsonValue,
+
+        status:
+          nextStatus,
+
+        lastMessageAt:
+          new Date(),
+
+        ...(decision.readyForHandoff
+          ? {
+              handedOffAt:
+                new Date(),
+            }
+          : {}),
+      },
+    });
+
+    if (
+      decision.nextQuestion
+    ) {
+      await tx.irisMessage.create({
+        data: {
+          conversationId,
+
+          author:
+            IrisMessageAuthor.IRIS,
+
+          direction:
+            IrisMessageDirection.SAIDA,
+
+          text:
+            decision.nextQuestion,
+        },
+      });
+    }
   });
 
-  return interpreted;
+  return {
+    interpreted,
+    decision,
+  };
 }
 
 export async function GET(
@@ -601,6 +671,8 @@ export async function POST(
   let storedMessages = 0;
   let duplicateMessages = 0;
   let interpretedMessages = 0;
+  let generatedQuestions = 0;
+  let handoffs = 0;
 
   for (
     const message of messages
@@ -653,16 +725,31 @@ export async function POST(
           result.conversationId
         ) {
           try {
-            const interpreted =
-              await interpretAndStoreSearchProfile(
+            const {
+              interpreted,
+              decision,
+            } =
+              await processIrisConversation(
                 result.conversationId,
                 message.text,
               );
 
             interpretedMessages += 1;
 
+            if (
+              decision.nextQuestion
+            ) {
+              generatedQuestions += 1;
+            }
+
+            if (
+              decision.readyForHandoff
+            ) {
+              handoffs += 1;
+            }
+
             console.info(
-              "Íris: mensagem interpretada e perfil atualizado.",
+              "Íris: conversa processada.",
               {
                 conversationId:
                   result.conversationId,
@@ -675,11 +762,19 @@ export async function POST(
 
                 region:
                   interpreted.region,
+
+                nextQuestion:
+                  Boolean(
+                    decision.nextQuestion,
+                  ),
+
+                readyForHandoff:
+                  decision.readyForHandoff,
               },
             );
           } catch (error) {
             console.error(
-              "Erro ao interpretar mensagem recebida pela Íris:",
+              "Erro ao processar conversa da Íris:",
               error,
             );
           }
@@ -709,18 +804,20 @@ export async function POST(
    * Nesta etapa:
    *
    * - a assinatura da Meta é validada;
-   * - mensagens de texto são identificadas;
-   * - a conversa da Íris é localizada ou criada;
-   * - a mensagem integral é armazenada no banco;
-   * - externalMessageId protege contra duplicidade;
-   * - a mensagem é interpretada pelo mesmo cérebro da Íris usado pelo portal;
-   * - o perfil estruturado é salvo em IrisConversation.searchProfile;
+   * - mensagens recebidas são armazenadas;
+   * - mensagens duplicadas são ignoradas;
+   * - o mesmo interpretador da Íris é usado no portal e WhatsApp;
+   * - o perfil acumulado da conversa é mantido em searchProfile;
+   * - somente informações novas substituem campos vazios;
+   * - a próxima pergunta é determinada;
+   * - a pergunta da Íris é armazenada como IRIS / SAIDA;
+   * - ao concluir a qualificação, a conversa muda para HANDOFF.
    *
    * Ainda não:
+   * - enviamos a pergunta pelo WhatsApp;
    * - pesquisamos imóveis;
-   * - enviamos resposta automática;
    * - criamos/atribuímos Client automaticamente;
-   * - fazemos handoff ao corretor.
+   * - entregamos o atendimento ao corretor no CRM.
    */
 
   return NextResponse.json(
@@ -735,6 +832,10 @@ export async function POST(
       duplicateMessages,
 
       interpretedMessages,
+
+      generatedQuestions,
+
+      handoffs,
     },
     {
       status: 200,

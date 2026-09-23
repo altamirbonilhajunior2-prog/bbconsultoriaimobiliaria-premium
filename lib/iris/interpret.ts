@@ -8,6 +8,7 @@ export type IrisInterpretedSearch = {
   bedrooms: string;
   objective: string;
   details: string;
+  timeline: string;
 };
 
 function normalizeUndefinedAnswer(
@@ -76,24 +77,40 @@ export async function interpretIrisMessage(
           role: "system",
           content:
             [
-              "Você interpreta pedidos de busca imobiliária da B&B Consultoria Imobiliária.",
-              "Extraia apenas informações explicitamente informadas ou claramente inferíveis do texto.",
+              "Você interpreta mensagens de clientes da B&B Consultoria Imobiliária.",
+              "Extraia somente informações que o CLIENTE realmente informou ou que sejam claramente inferíveis da própria mensagem.",
               "Não invente dados.",
+              "Não converse com o cliente.",
+              "Não dê instruções.",
+              "Não escreva perguntas.",
+              "Não explique o que está faltando.",
+              "",
+              "REGRA FUNDAMENTAL PARA CAMPOS AUSENTES:",
+              'Quando determinada informação não estiver presente na mensagem, retorne "" nesse campo.',
+              "Nunca preencha um campo ausente com explicações, recomendações, perguntas ou comentários.",
+              "",
+              "CAMPO details:",
+              "Use details exclusivamente para preferências ou informações adicionais realmente fornecidas pelo cliente.",
+              'Se o cliente não informou preferência adicional, retorne details como "".',
+              "",
+              "CAMPO timeline:",
+              "Use timeline para o prazo informado pelo cliente para compra, mudança, locação ou decisão.",
+              'Se nenhum prazo tiver sido informado, retorne timeline como "".',
+              "Use somente:",
+              "Imediatamente",
+              "Até 3 meses",
+              "De 3 a 6 meses",
+              "De 6 a 12 meses",
+              "Acima de 12 meses",
+              "Ainda não defini",
               "",
               "LINGUAGEM E PADRONIZAÇÃO:",
-              'Quando representar uma resposta do cliente sobre algo que ele ainda não decidiu, use exatamente "Ainda não defini".',
-              'Nunca use "Ainda não define", "Ainda não definiu", "Ainda não difine" ou qualquer outra variação.',
-              'A expressão deve permanecer sempre em primeira pessoa: "Ainda não defini".',
+              'Quando o próprio cliente disser que ainda não decidiu determinado item, represente essa resposta como "Ainda não defini".',
+              'Nunca use "Ainda não define", "Ainda não definiu", "Ainda não difine" ou variações.',
               "",
               "TIPO DE IMÓVEL:",
               "Use Casa, Apartamento, Terreno, Comercial ou Rural.",
               "Considere Rural quando o cliente mencionar chácara, sítio, sitio, fazenda, área rural, terreno rural ou propriedade de campo.",
-              "",
-              "Exemplos:",
-              "Quero uma chácara em São José dos Campos -> Rural.",
-              "Procuro uma fazenda para investimento -> Rural.",
-              "Quero um sítio com área verde -> Rural.",
-              "Terreno rural para comprar -> Rural.",
               "",
               "Região pode ser bairro, condomínio, cidade ou região.",
               "",
@@ -123,8 +140,9 @@ export async function interpretIrisMessage(
               "Procuro aluguel de até 7 mil -> Locação / De R$ 5 mil a R$ 8 mil/mês.",
               "Quero uma casa para alugar por 15 mil -> Locação / Acima de R$ 12 mil/mês.",
               "Quero comprar até 900 mil -> Compra / De R$ 500 mil a R$ 1 milhão.",
-              "Ainda não sei quanto quero gastar -> Ainda não defini.",
-              "Não defini o valor ainda -> Ainda não defini.",
+              "Quero comprar nos próximos dois meses -> Até 3 meses.",
+              "Pretendo me mudar imediatamente -> Imediatamente.",
+              "Ainda não sei quando vou comprar -> Ainda não defini.",
             ].join("\n"),
         },
         {
@@ -152,7 +170,6 @@ export async function interpretIrisMessage(
               purpose: {
                 type:
                   "string",
-
                 enum: [
                   "",
                   "Compra",
@@ -164,7 +181,6 @@ export async function interpretIrisMessage(
               propertyType: {
                 type:
                   "string",
-
                 enum: [
                   "",
                   "Casa",
@@ -183,7 +199,6 @@ export async function interpretIrisMessage(
               value: {
                 type:
                   "string",
-
                 enum: [
                   "",
                   "Até R$ 500 mil",
@@ -203,7 +218,6 @@ export async function interpretIrisMessage(
               bedrooms: {
                 type:
                   "string",
-
                 enum: [
                   "",
                   "1 dormitório",
@@ -217,7 +231,6 @@ export async function interpretIrisMessage(
               objective: {
                 type:
                   "string",
-
                 enum: [
                   "",
                   "Moradia",
@@ -232,6 +245,20 @@ export async function interpretIrisMessage(
                 type:
                   "string",
               },
+
+              timeline: {
+                type:
+                  "string",
+                enum: [
+                  "",
+                  "Imediatamente",
+                  "Até 3 meses",
+                  "De 3 a 6 meses",
+                  "De 6 a 12 meses",
+                  "Acima de 12 meses",
+                  "Ainda não defini",
+                ],
+              },
             },
 
             required: [
@@ -242,6 +269,7 @@ export async function interpretIrisMessage(
               "bedrooms",
               "objective",
               "details",
+              "timeline",
             ],
 
             additionalProperties:
@@ -271,6 +299,11 @@ export async function interpretIrisMessage(
     value:
       normalizeUndefinedAnswer(
         parsed.value,
+      ),
+
+    timeline:
+      normalizeUndefinedAnswer(
+        parsed.timeline,
       ),
   };
 }
