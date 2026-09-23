@@ -8,6 +8,16 @@ import {
   NextResponse,
 } from "next/server";
 
+import {
+  IrisConversationChannel,
+  IrisConversationStatus,
+  IrisMessageAuthor,
+  IrisMessageDirection,
+  Prisma,
+} from "../../../generated/prisma/client";
+
+import { prisma } from "../../../lib/prisma";
+
 export const runtime = "nodejs";
 
 type WhatsAppTextMessage = {
@@ -239,6 +249,148 @@ function extractTextMessages(
   return extracted;
 }
 
+async function persistIncomingMessage(
+  message: IncomingWhatsAppMessage,
+) {
+  const existingMessage =
+    await prisma.irisMessage.findUnique({
+      where: {
+        externalMessageId:
+          message.messageId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+  if (existingMessage) {
+    return {
+      stored: false,
+      duplicate: true,
+    };
+  }
+
+  let conversation =
+    await prisma.irisConversation.findFirst({
+      where: {
+        channel:
+          IrisConversationChannel.WHATSAPP,
+
+        externalContactId:
+          message.from,
+
+        status: {
+          in: [
+            IrisConversationStatus.IRIS_ATENDENDO,
+            IrisConversationStatus.AGUARDANDO_CLIENTE,
+            IrisConversationStatus.HANDOFF,
+          ],
+        },
+      },
+
+      orderBy: {
+        lastMessageAt:
+          "desc",
+      },
+
+      select: {
+        id: true,
+      },
+    });
+
+  if (!conversation) {
+    conversation =
+      await prisma.irisConversation.create({
+        data: {
+          channel:
+            IrisConversationChannel.WHATSAPP,
+
+          status:
+            IrisConversationStatus.IRIS_ATENDENDO,
+
+          externalContactId:
+            message.from,
+
+          contactName:
+            message.contactName,
+
+          contactPhone:
+            message.from,
+        },
+
+        select: {
+          id: true,
+        },
+      });
+  }
+
+  try {
+    await prisma.$transaction([
+      prisma.irisMessage.create({
+        data: {
+          conversationId:
+            conversation.id,
+
+          author:
+            IrisMessageAuthor.CLIENTE,
+
+          direction:
+            IrisMessageDirection.ENTRADA,
+
+          externalMessageId:
+            message.messageId,
+
+          text:
+            message.text,
+        },
+      }),
+
+      prisma.irisConversation.update({
+        where: {
+          id:
+            conversation.id,
+        },
+
+        data: {
+          contactName:
+            message.contactName ??
+            undefined,
+
+          contactPhone:
+            message.from,
+
+          externalContactId:
+            message.from,
+
+          lastMessageAt:
+            new Date(),
+
+          status:
+            IrisConversationStatus.IRIS_ATENDENDO,
+        },
+      }),
+    ]);
+
+    return {
+      stored: true,
+      duplicate: false,
+    };
+  } catch (error) {
+    if (
+      error instanceof
+        Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return {
+        stored: false,
+        duplicate: true,
+      };
+    }
+
+    throw error;
+  }
+}
+
 export async function GET(
   request: NextRequest,
 ) {
@@ -281,6 +433,7 @@ export async function GET(
       challenge,
       {
         status: 200,
+
         headers: {
           "Content-Type":
             "text/plain; charset=utf-8",
@@ -406,6 +559,9 @@ export async function POST(
       body,
     );
 
+  let storedMessages = 0;
+  let duplicateMessages = 0;
+
   for (
     const message of messages
   ) {
@@ -414,18 +570,71 @@ export async function POST(
       {
         messageId:
           message.messageId,
+
         from:
           maskPhone(
             message.from,
           ),
+
         contactName:
           message.contactName,
+
         phoneNumberId:
           message.phoneNumberId,
+
         textLength:
           message.text.length,
       },
     );
+
+    try {
+      const result =
+        await persistIncomingMessage(
+          message,
+        );
+
+      if (result.stored) {
+        storedMessages += 1;
+
+        console.info(
+          "Íris: mensagem recebida armazenada.",
+          {
+            messageId:
+              message.messageId,
+
+            from:
+              maskPhone(
+                message.from,
+              ),
+          },
+        );
+      }
+
+      if (result.duplicate) {
+        duplicateMessages += 1;
+
+        console.info(
+          "Íris: mensagem duplicada ignorada.",
+          {
+            messageId:
+              message.messageId,
+          },
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Erro ao armazenar mensagem recebida pela Íris:",
+        error,
+      );
+
+      /*
+       * O webhook continua respondendo 200 para a Meta.
+       * A Meta pode reenviar eventos quando recebe erros.
+       * O erro fica registrado para diagnóstico,
+       * enquanto a deduplicação por externalMessageId
+       * protege contra processamento repetido.
+       */
+    }
   }
 
   /*
@@ -433,18 +642,29 @@ export async function POST(
    *
    * - a assinatura da Meta é validada;
    * - mensagens de texto são identificadas;
-   * - remetente, nome e phone_number_id são extraídos;
-   * - não armazenamos o texto nos logs;
-   * - não gravamos no banco;
-   * - não acionamos a Íris;
-   * - não enviamos resposta automática.
+   * - a conversa da Íris é localizada ou criada;
+   * - a mensagem integral é armazenada no banco;
+   * - externalMessageId protege contra duplicidade;
+   * - remetente e contexto técnico são preservados;
+   *
+   * Ainda não:
+   * - acionamos a interpretação da Íris;
+   * - pesquisamos imóveis;
+   * - enviamos resposta automática;
+   * - criamos/atribuímos Client automaticamente;
+   * - fazemos handoff ao corretor.
    */
 
   return NextResponse.json(
     {
       received: true,
+
       textMessages:
         messages.length,
+
+      storedMessages,
+
+      duplicateMessages,
     },
     {
       status: 200,
