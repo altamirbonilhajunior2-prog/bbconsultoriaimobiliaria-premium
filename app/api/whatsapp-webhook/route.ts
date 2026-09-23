@@ -23,6 +23,7 @@ import {
 
 import { interpretIrisMessage } from "../../../lib/iris/interpret";
 import { prisma } from "../../../lib/prisma";
+import { sendWhatsAppText } from "../../../lib/whatsapp/send";
 
 export const runtime = "nodejs";
 
@@ -448,56 +449,125 @@ async function processIrisConversation(
       ? IrisConversationStatus.HANDOFF
       : IrisConversationStatus.AGUARDANDO_CLIENTE;
 
-  await prisma.$transaction(async (tx) => {
-    await tx.irisConversation.update({
-      where: {
-        id:
-          conversationId,
-      },
+  let irisMessageId:
+    number | null =
+    null;
 
-      data: {
-        searchProfile:
-          decision.profile as Prisma.InputJsonValue,
+  await prisma.$transaction(
+    async (tx) => {
+      await tx.irisConversation.update({
+        where: {
+          id:
+            conversationId,
+        },
 
-        status:
-          nextStatus,
-
-        lastMessageAt:
-          new Date(),
-
-        ...(decision.readyForHandoff
-          ? {
-              handedOffAt:
-                new Date(),
-            }
-          : {}),
-      },
-    });
-
-    if (
-      decision.nextQuestion
-    ) {
-      await tx.irisMessage.create({
         data: {
-          conversationId,
+          searchProfile:
+            decision.profile as Prisma.InputJsonValue,
 
-          author:
-            IrisMessageAuthor.IRIS,
+          status:
+            nextStatus,
 
-          direction:
-            IrisMessageDirection.SAIDA,
+          lastMessageAt:
+            new Date(),
 
-          text:
-            decision.nextQuestion,
+          ...(decision.readyForHandoff
+            ? {
+                handedOffAt:
+                  new Date(),
+              }
+            : {}),
         },
       });
-    }
-  });
+
+      if (
+        decision.nextQuestion
+      ) {
+        const irisMessage =
+          await tx.irisMessage.create({
+            data: {
+              conversationId,
+
+              author:
+                IrisMessageAuthor.IRIS,
+
+              direction:
+                IrisMessageDirection.SAIDA,
+
+              text:
+                decision.nextQuestion,
+            },
+
+            select: {
+              id: true,
+            },
+          });
+
+        irisMessageId =
+          irisMessage.id;
+      }
+    },
+  );
 
   return {
     interpreted,
     decision,
+    irisMessageId,
   };
+}
+
+async function sendIrisQuestion(
+  params: {
+    conversationId: number;
+    irisMessageId: number;
+    phoneNumberId: string;
+    to: string;
+    text: string;
+  },
+) {
+  const sent =
+    await sendWhatsAppText({
+      phoneNumberId:
+        params.phoneNumberId,
+
+      to:
+        params.to,
+
+      text:
+        params.text,
+    });
+
+  if (
+    sent.externalMessageId
+  ) {
+    await prisma.irisMessage.update({
+      where: {
+        id:
+          params.irisMessageId,
+      },
+
+      data: {
+        externalMessageId:
+          sent.externalMessageId,
+      },
+    });
+  }
+
+  console.info(
+    "Íris: resposta enviada pelo WhatsApp.",
+    {
+      conversationId:
+        params.conversationId,
+
+      to:
+        maskPhone(
+          params.to,
+        ),
+
+      externalMessageId:
+        sent.externalMessageId,
+    },
+  );
 }
 
 export async function GET(
@@ -672,6 +742,7 @@ export async function POST(
   let duplicateMessages = 0;
   let interpretedMessages = 0;
   let generatedQuestions = 0;
+  let sentMessages = 0;
   let handoffs = 0;
 
   for (
@@ -728,6 +799,7 @@ export async function POST(
             const {
               interpreted,
               decision,
+              irisMessageId,
             } =
               await processIrisConversation(
                 result.conversationId,
@@ -772,6 +844,37 @@ export async function POST(
                   decision.readyForHandoff,
               },
             );
+
+            if (
+              decision.nextQuestion &&
+              irisMessageId &&
+              message.phoneNumberId
+            ) {
+              try {
+                await sendIrisQuestion({
+                  conversationId:
+                    result.conversationId,
+
+                  irisMessageId,
+
+                  phoneNumberId:
+                    message.phoneNumberId,
+
+                  to:
+                    message.from,
+
+                  text:
+                    decision.nextQuestion,
+                });
+
+                sentMessages += 1;
+              } catch (error) {
+                console.error(
+                  "Erro ao enviar resposta da Íris pelo WhatsApp:",
+                  error,
+                );
+              }
+            }
           } catch (error) {
             console.error(
               "Erro ao processar conversa da Íris:",
@@ -800,26 +903,6 @@ export async function POST(
     }
   }
 
-  /*
-   * Nesta etapa:
-   *
-   * - a assinatura da Meta é validada;
-   * - mensagens recebidas são armazenadas;
-   * - mensagens duplicadas são ignoradas;
-   * - o mesmo interpretador da Íris é usado no portal e WhatsApp;
-   * - o perfil acumulado da conversa é mantido em searchProfile;
-   * - somente informações novas substituem campos vazios;
-   * - a próxima pergunta é determinada;
-   * - a pergunta da Íris é armazenada como IRIS / SAIDA;
-   * - ao concluir a qualificação, a conversa muda para HANDOFF.
-   *
-   * Ainda não:
-   * - enviamos a pergunta pelo WhatsApp;
-   * - pesquisamos imóveis;
-   * - criamos/atribuímos Client automaticamente;
-   * - entregamos o atendimento ao corretor no CRM.
-   */
-
   return NextResponse.json(
     {
       received: true,
@@ -834,6 +917,8 @@ export async function POST(
       interpretedMessages,
 
       generatedQuestions,
+
+      sentMessages,
 
       handoffs,
     },
