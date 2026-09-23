@@ -202,6 +202,32 @@ enum CommercialEventType {
   PERDIDO_ENCERRADO
 }
 
+enum IrisConversationChannel {
+  WHATSAPP
+  PORTAL
+}
+
+enum IrisConversationStatus {
+  IRIS_ATENDENDO
+  AGUARDANDO_CLIENTE
+  HANDOFF
+  CORRETOR_ASSUMIU
+  ENCERRADO
+}
+
+enum IrisMessageAuthor {
+  CLIENTE
+  IRIS
+  CORRETOR
+  SISTEMA
+}
+
+enum IrisMessageDirection {
+  ENTRADA
+  SAIDA
+  INTERNA
+}
+
 model Client {
   id Int @id @default(autoincrement())
 
@@ -224,11 +250,12 @@ model Client {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  portalLeads      PortalLead[]
-  visits           PropertyVisit[]
-  proposals        PropertyProposal[]
-  rentalProposals  PropertyRentalProposal[]
-  commercialEvents CommercialEvent[]
+  portalLeads       PortalLead[]
+  visits            PropertyVisit[]
+  proposals         PropertyProposal[]
+  rentalProposals   PropertyRentalProposal[]
+  commercialEvents  CommercialEvent[]
+  irisConversations IrisConversation[]
 
   @@index([agentId])
   @@index([name])
@@ -586,9 +613,10 @@ model Agent {
 
   clients           Client[]
   visits            PropertyVisit[]
-  proposals          PropertyProposal[]
-  rentalProposals  PropertyRentalProposal[]
-  commercialEvents CommercialEvent[]
+  proposals         PropertyProposal[]
+  rentalProposals   PropertyRentalProposal[]
+  commercialEvents  CommercialEvent[]
+  irisConversations IrisConversation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -795,4 +823,71 @@ model NeighborhoodMapLocation {
   @@unique([state, city, normalizedName])
   @@index([state, city])
   @@index([active])
+}
+
+model IrisConversation {
+  id Int @id @default(autoincrement())
+
+  channel IrisConversationChannel
+
+  status IrisConversationStatus @default(IRIS_ATENDENDO)
+
+  clientId Int?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  agentId Int?
+  agent   Agent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
+  externalContactId String? @db.VarChar(120)
+
+  contactName  String? @db.VarChar(180)
+  contactPhone String? @db.VarChar(30)
+
+  summary String? @db.Text
+
+  searchProfile Json?
+
+  handoffReason String? @db.Text
+
+  startedAt      DateTime  @default(now())
+  lastMessageAt  DateTime  @default(now())
+  handedOffAt    DateTime?
+  agentAssumedAt DateTime?
+  closedAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages IrisMessage[]
+
+  @@index([clientId])
+  @@index([agentId])
+  @@index([channel])
+  @@index([status])
+  @@index([externalContactId])
+  @@index([contactPhone])
+  @@index([lastMessageAt])
+  @@index([createdAt])
+}
+
+model IrisMessage {
+  id Int @id @default(autoincrement())
+
+  conversationId Int
+  conversation   IrisConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  author IrisMessageAuthor
+
+  direction IrisMessageDirection
+
+  externalMessageId String? @unique @db.VarChar(255)
+
+  text String @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([author])
+  @@index([direction])
+  @@index([createdAt])
 }
