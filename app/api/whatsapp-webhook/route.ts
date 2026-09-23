@@ -16,6 +16,7 @@ import {
   Prisma,
 } from "../../../generated/prisma/client";
 
+import { interpretIrisMessage } from "../../../lib/iris/interpret";
 import { prisma } from "../../../lib/prisma";
 
 export const runtime = "nodejs";
@@ -69,6 +70,12 @@ type IncomingWhatsAppMessage = {
   contactName: string | null;
   phoneNumberId: string | null;
   text: string;
+};
+
+type PersistIncomingMessageResult = {
+  stored: boolean;
+  duplicate: boolean;
+  conversationId: number | null;
 };
 
 function getVerifyToken() {
@@ -251,15 +258,17 @@ function extractTextMessages(
 
 async function persistIncomingMessage(
   message: IncomingWhatsAppMessage,
-) {
+): Promise<PersistIncomingMessageResult> {
   const existingMessage =
     await prisma.irisMessage.findUnique({
       where: {
         externalMessageId:
           message.messageId,
       },
+
       select: {
         id: true,
+        conversationId: true,
       },
     });
 
@@ -267,6 +276,8 @@ async function persistIncomingMessage(
     return {
       stored: false,
       duplicate: true,
+      conversationId:
+        existingMessage.conversationId,
     };
   }
 
@@ -374,6 +385,8 @@ async function persistIncomingMessage(
     return {
       stored: true,
       duplicate: false,
+      conversationId:
+        conversation.id,
     };
   } catch (error) {
     if (
@@ -384,11 +397,37 @@ async function persistIncomingMessage(
       return {
         stored: false,
         duplicate: true,
+        conversationId:
+          conversation.id,
       };
     }
 
     throw error;
   }
+}
+
+async function interpretAndStoreSearchProfile(
+  conversationId: number,
+  text: string,
+) {
+  const interpreted =
+    await interpretIrisMessage(
+      text,
+    );
+
+  await prisma.irisConversation.update({
+    where: {
+      id:
+        conversationId,
+    },
+
+    data: {
+      searchProfile:
+        interpreted as Prisma.InputJsonValue,
+    },
+  });
+
+  return interpreted;
 }
 
 export async function GET(
@@ -561,6 +600,7 @@ export async function POST(
 
   let storedMessages = 0;
   let duplicateMessages = 0;
+  let interpretedMessages = 0;
 
   for (
     const message of messages
@@ -608,6 +648,42 @@ export async function POST(
               ),
           },
         );
+
+        if (
+          result.conversationId
+        ) {
+          try {
+            const interpreted =
+              await interpretAndStoreSearchProfile(
+                result.conversationId,
+                message.text,
+              );
+
+            interpretedMessages += 1;
+
+            console.info(
+              "Íris: mensagem interpretada e perfil atualizado.",
+              {
+                conversationId:
+                  result.conversationId,
+
+                purpose:
+                  interpreted.purpose,
+
+                propertyType:
+                  interpreted.propertyType,
+
+                region:
+                  interpreted.region,
+              },
+            );
+          } catch (error) {
+            console.error(
+              "Erro ao interpretar mensagem recebida pela Íris:",
+              error,
+            );
+          }
+        }
       }
 
       if (result.duplicate) {
@@ -626,14 +702,6 @@ export async function POST(
         "Erro ao armazenar mensagem recebida pela Íris:",
         error,
       );
-
-      /*
-       * O webhook continua respondendo 200 para a Meta.
-       * A Meta pode reenviar eventos quando recebe erros.
-       * O erro fica registrado para diagnóstico,
-       * enquanto a deduplicação por externalMessageId
-       * protege contra processamento repetido.
-       */
     }
   }
 
@@ -645,10 +713,10 @@ export async function POST(
    * - a conversa da Íris é localizada ou criada;
    * - a mensagem integral é armazenada no banco;
    * - externalMessageId protege contra duplicidade;
-   * - remetente e contexto técnico são preservados;
+   * - a mensagem é interpretada pelo mesmo cérebro da Íris usado pelo portal;
+   * - o perfil estruturado é salvo em IrisConversation.searchProfile;
    *
    * Ainda não:
-   * - acionamos a interpretação da Íris;
    * - pesquisamos imóveis;
    * - enviamos resposta automática;
    * - criamos/atribuímos Client automaticamente;
@@ -665,6 +733,8 @@ export async function POST(
       storedMessages,
 
       duplicateMessages,
+
+      interpretedMessages,
     },
     {
       status: 200,
