@@ -308,8 +308,8 @@ export default function WhatsAppEmbeddedSignup() {
       </button>
 
       <p className="mt-3 max-w-2xl text-xs leading-6 text-zinc-500">
-        Este bot\u00e3o inicia exclusivamente o Embedded Signup configurado para
-        coexist\u00eancia entre o WhatsApp Business App e a Cloud API.
+        Este botão inicia exclusivamente o Embedded Signup configurado para
+        coexistência entre o WhatsApp Business App e a Cloud API.
       </p>
 
       {message ? (
