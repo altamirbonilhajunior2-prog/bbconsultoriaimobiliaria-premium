@@ -84,9 +84,14 @@ export async function POST(
   const appSecret =
     process.env.WHATSAPP_META_APP_SECRET?.trim();
 
+
+  const configuredWabaId =
+    process.env.WHATSAPP_WABA_ID?.trim();
   if (
     !appId ||
-    !appSecret
+    !appSecret ||
+    !configuredWabaId ||
+    !/^\d+$/.test(configuredWabaId)
   ) {
     return NextResponse.json(
       {
@@ -122,25 +127,44 @@ export async function POST(
   const code =
     body.code?.trim();
 
-  const wabaId =
+  const requestedWabaId =
     body.wabaId?.trim();
 
   if (
     !code ||
-    !wabaId ||
-    !/^\d+$/.test(wabaId)
+    (requestedWabaId &&
+      !/^\d+$/.test(requestedWabaId))
   ) {
     return NextResponse.json(
       {
         success: false,
         message:
-          "Código de autorização ou WABA inválidos.",
+          "C\u00f3digo de autoriza\u00e7\u00e3o ou WABA inv\u00e1lidos.",
       },
       {
         status: 400,
       },
     );
   }
+
+  if (
+    requestedWabaId &&
+    requestedWabaId !== configuredWabaId
+  ) {
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          "A conta do WhatsApp informada n\u00e3o corresponde \u00e0 conta comercial configurada.",
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+
+  const wabaId =
+    requestedWabaId ?? configuredWabaId;
 
   try {
     const tokenUrl =
