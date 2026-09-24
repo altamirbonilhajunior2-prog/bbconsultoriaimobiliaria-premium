@@ -43,6 +43,7 @@ type WhatsAppSignupEventData = {
 
 type WhatsAppSignupEvent = {
   event?: string;
+  type?: string;
   data?: WhatsAppSignupEventData;
 };
 
@@ -65,6 +66,12 @@ const META_APP_ID =
 
 const META_CONFIG_ID =
   process.env.NEXT_PUBLIC_META_CONFIG_ID;
+
+const ALLOWED_META_ORIGINS =
+  new Set([
+    "https://www.facebook.com",
+    "https://web.facebook.com",
+  ]);
 
 export default function WhatsAppEmbeddedSignup() {
   const [sdkReady, setSdkReady] =
@@ -181,8 +188,9 @@ export default function WhatsAppEmbeddedSignup() {
     const handleMessage =
       (event: MessageEvent) => {
         if (
-          event.origin !==
-          "https://www.facebook.com"
+          !ALLOWED_META_ORIGINS.has(
+            event.origin,
+          )
         ) {
           return;
         }
@@ -210,25 +218,29 @@ export default function WhatsAppEmbeddedSignup() {
           return;
         }
 
-        if (
+        const isFinishEvent =
           payload.event ===
             "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING" ||
           payload.event ===
-            "FINISH"
+            "FINISH" ||
+          payload.type ===
+            "WA_EMBEDDED_SIGNUP";
+
+        const wabaId =
+          payload.data?.waba_id;
+
+        if (
+          isFinishEvent &&
+          wabaId
         ) {
-          const wabaId =
-            payload.data?.waba_id;
+          wabaIdRef.current =
+            wabaId;
 
-          if (wabaId) {
-            wabaIdRef.current =
-              wabaId;
+          setMessage(
+            "Conta do WhatsApp identificada. Concluindo a conexão...",
+          );
 
-            setMessage(
-              "Conta do WhatsApp identificada. Concluindo a conexão...",
-            );
-
-            void finishConnection();
-          }
+          void finishConnection();
         }
       };
 
