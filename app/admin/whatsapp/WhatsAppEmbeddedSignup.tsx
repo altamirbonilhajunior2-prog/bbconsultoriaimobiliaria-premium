@@ -54,6 +54,13 @@ type MetaDiagnosticEntry = {
   wabaId: string | null;
   phoneNumberId: string | null;
   parsed: boolean;
+  rawType: string;
+  stringLength: number | null;
+  startsWithBrace: boolean;
+  containsEmbeddedSignup: boolean;
+  containsFinish: boolean;
+  containsWabaId: boolean;
+  containsPhoneNumberId: boolean;
 };
 
 type WhatsAppSignupEvent = {
@@ -234,6 +241,38 @@ export default function WhatsAppEmbeddedSignup() {
 
         let parsed = false;
 
+        const rawType =
+          Array.isArray(event.data)
+            ? "array"
+            : event.data === null
+              ? "null"
+              : typeof event.data;
+
+        const rawString =
+          typeof event.data === "string"
+            ? event.data
+            : "";
+
+        const stringLength =
+          typeof event.data === "string"
+            ? event.data.length
+            : null;
+
+        const startsWithBrace =
+          rawString.trimStart().startsWith("{");
+
+        const containsEmbeddedSignup =
+          rawString.includes("WA_EMBEDDED_SIGNUP");
+
+        const containsFinish =
+          rawString.includes("FINISH");
+
+        const containsWabaId =
+          rawString.includes("waba_id");
+
+        const containsPhoneNumberId =
+          rawString.includes("phone_number_id");
+
         try {
           const rawPayload =
             typeof event.data ===
@@ -307,6 +346,13 @@ export default function WhatsAppEmbeddedSignup() {
                 : null,
 
             parsed,
+            rawType,
+            stringLength,
+            startsWithBrace,
+            containsEmbeddedSignup,
+            containsFinish,
+            containsWabaId,
+            containsPhoneNumberId,
           };
 
         setDiagnostics(
@@ -587,7 +633,32 @@ export default function WhatsAppEmbeddedSignup() {
                   <strong>Payload:</strong>{" "}
                   {entry.parsed
                     ? "interpretado"
-                    : "n?o interpretado"}
+                    : "nao interpretado"}
+                </div>
+                <div><strong>Raw type:</strong> {entry.rawType}</div>
+                <div>
+                  <strong>String length:</strong>{" "}
+                  {entry.stringLength ?? "(nao se aplica)"}
+                </div>
+                <div>
+                  <strong>Starts with brace:</strong>{" "}
+                  {entry.startsWithBrace ? "sim" : "nao"}
+                </div>
+                <div>
+                  <strong>Contains WA_EMBEDDED_SIGNUP:</strong>{" "}
+                  {entry.containsEmbeddedSignup ? "sim" : "nao"}
+                </div>
+                <div>
+                  <strong>Contains FINISH:</strong>{" "}
+                  {entry.containsFinish ? "sim" : "nao"}
+                </div>
+                <div>
+                  <strong>Contains waba_id:</strong>{" "}
+                  {entry.containsWabaId ? "sim" : "nao"}
+                </div>
+                <div>
+                  <strong>Contains phone_number_id:</strong>{" "}
+                  {entry.containsPhoneNumberId ? "sim" : "nao"}
                 </div>
               </div>
             ))}
