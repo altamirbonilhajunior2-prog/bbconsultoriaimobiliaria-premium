@@ -85,7 +85,7 @@ export default function WhatsAppEmbeddedSignup() {
       ) {
         setMessage(
           data.message ||
-            "N?o foi poss?vel concluir a conex?o com a Meta.",
+            "N\u00e3o foi poss\u00edvel concluir a conex\u00e3o com a Meta.",
         );
 
         return;
@@ -97,17 +97,17 @@ export default function WhatsAppEmbeddedSignup() {
 
       setMessage(
         number
-          ? `Coexist?ncia conectada com sucesso. N?mero identificado: ${number}.`
-          : "Coexist?ncia conectada com sucesso ? conta do WhatsApp Business.",
+          ? `Coexist\u00eancia conectada com sucesso. N\u00famero identificado: ${number}.`
+          : "Coexist\u00eancia conectada com sucesso \u00e0 conta do WhatsApp Business.",
       );
     } catch (error) {
       console.error(
-        "Erro ao finalizar coexist?ncia:",
+        "Erro ao finalizar coexist\u00eancia:",
         error,
       );
 
       setMessage(
-        "A autoriza??o foi recebida, mas n?o foi poss?vel concluir a conex?o agora.",
+        "A autoriza\u00e7\u00e3o foi recebida, mas n\u00e3o foi poss\u00edvel concluir a conex\u00e3o agora.",
       );
     } finally {
       setFinishing(false);
@@ -162,7 +162,7 @@ export default function WhatsAppEmbeddedSignup() {
 
       setMessage(
         errorDescription ||
-          "A autoriza??o da Meta n?o foi conclu?da.",
+          "A autoriza\u00e7\u00e3o da Meta n\u00e3o foi conclu\u00edda.",
       );
 
       return;
@@ -185,7 +185,7 @@ export default function WhatsAppEmbeddedSignup() {
       );
 
       setMessage(
-        "N?o foi poss?vel validar o retorno da Meta. Inicie a conex?o novamente.",
+        "N\u00e3o foi poss\u00edvel validar o retorno da Meta. Inicie a conex\u00e3o novamente.",
       );
 
       return;
@@ -201,7 +201,7 @@ export default function WhatsAppEmbeddedSignup() {
     cleanUrl();
 
     setMessage(
-      "Autoriza??o conclu?da pela Meta. Concluindo a conex?o...",
+      "Autoriza\u00e7\u00e3o conclu\u00edda pela Meta. Concluindo a conex\u00e3o...",
     );
 
     void finishConnection();
@@ -210,7 +210,7 @@ export default function WhatsAppEmbeddedSignup() {
   function startSignup() {
     if (!META_APP_ID) {
       setMessage(
-        "NEXT_PUBLIC_META_APP_ID n?o est? configurado.",
+        "NEXT_PUBLIC_META_APP_ID n\u00e3o est\u00e1 configurado.",
       );
 
       return;
@@ -218,7 +218,7 @@ export default function WhatsAppEmbeddedSignup() {
 
     if (!META_CONFIG_ID) {
       setMessage(
-        "NEXT_PUBLIC_META_CONFIG_ID n?o est? configurado.",
+        "NEXT_PUBLIC_META_CONFIG_ID n\u00e3o est\u00e1 configurado.",
       );
 
       return;
@@ -301,15 +301,15 @@ export default function WhatsAppEmbeddedSignup() {
         className="inline-flex min-h-12 items-center justify-center bg-emerald-500 px-6 text-sm font-bold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
       >
         {finishing
-          ? "Concluindo conex?o..."
+          ? "Concluindo conex\u00e3o..."
           : opening
             ? "Abrindo Meta..."
-            : "Conectar WhatsApp em modo Coexist?ncia"}
+            : "Conectar WhatsApp em modo Coexist\u00eancia"}
       </button>
 
       <p className="mt-3 max-w-2xl text-xs leading-6 text-zinc-500">
-        Este bot?o inicia exclusivamente o Embedded Signup configurado para
-        coexist?ncia entre o WhatsApp Business App e a Cloud API.
+        Este bot\u00e3o inicia exclusivamente o Embedded Signup configurado para
+        coexist\u00eancia entre o WhatsApp Business App e a Cloud API.
       </p>
 
       {message ? (
