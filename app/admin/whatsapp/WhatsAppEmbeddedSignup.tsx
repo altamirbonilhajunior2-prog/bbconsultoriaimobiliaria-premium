@@ -2,18 +2,58 @@
 
 import { useEffect, useRef, useState } from "react";
 
-type CoexistenceApiResponse = {
-  success?: boolean;
-  message?: string;
-  wabaId?: string;
-  subscribed?: boolean;
-  phoneNumbers?: Array<{
-    id: string | null;
-    displayPhoneNumber: string | null;
-    verifiedName: string | null;
-    status: string | null;
-    qualityRating: string | null;
-  }>;
+declare global {
+  interface Window {
+    fbAsyncInit?: () => void;
+
+    FB?: {
+      init: (options: {
+        appId: string;
+        cookie?: boolean;
+        xfbml?: boolean;
+        version: string;
+      }) => void;
+
+      login: (
+        callback: (
+          response: FacebookLoginResponse,
+        ) => void,
+        options: FacebookLoginOptions,
+      ) => void;
+    };
+  }
+}
+
+type FacebookLoginResponse = {
+  authResponse?: {
+    code?: string;
+  };
+
+  status?: string;
+};
+
+type FacebookLoginOptions = {
+  config_id: string;
+  response_type: "code";
+  override_default_response_type: true;
+
+  extras: {
+    setup: Record<string, never>;
+    featureType:
+      "whatsapp_business_app_onboarding";
+    sessionInfoVersion: "3";
+  };
+};
+
+type WhatsAppSignupEvent = {
+  type?: string;
+  event?: string;
+
+  data?: {
+    waba_id?: string;
+    phone_number_id?: string;
+    [key: string]: unknown;
+  };
 };
 
 const META_APP_ID =
@@ -22,270 +62,294 @@ const META_APP_ID =
 const META_CONFIG_ID =
   process.env.NEXT_PUBLIC_META_CONFIG_ID;
 
-const META_REDIRECT_URI =
-  "https://www.bbconsultoriaimoveis.com.br/admin/whatsapp";
+function isMetaOrigin(
+  origin: string,
+) {
+  try {
+    const hostname =
+      new URL(origin)
+        .hostname
+        .toLowerCase();
+
+    return (
+      hostname === "facebook.com" ||
+      hostname.endsWith(".facebook.com") ||
+      hostname === "facebook.net" ||
+      hostname.endsWith(".facebook.net")
+    );
+  } catch {
+    return false;
+  }
+}
 
 export default function WhatsAppEmbeddedSignup() {
-  const [opening, setOpening] =
+  const [sdkReady, setSdkReady] =
     useState(false);
 
-  const [finishing, setFinishing] =
+  const [opening, setOpening] =
     useState(false);
 
   const [message, setMessage] =
     useState<string | null>(null);
 
-  const authorizationCodeRef =
+  const wabaIdRef =
     useRef<string | null>(null);
 
-  const finishingRef =
-    useRef(false);
-
-  async function finishConnection() {
-    if (finishingRef.current) {
-      return;
-    }
-
-    const code =
-      authorizationCodeRef.current;
-
-    if (!code) {
-      return;
-    }
-
-    finishingRef.current = true;
-    setFinishing(true);
-
-    try {
-      const response =
-        await fetch(
-          "/api/admin/whatsapp/coexistence",
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json",
-            },
-
-            body:
-              JSON.stringify({
-                code,
-              }),
-          },
-        );
-
-      const data =
-        await response.json() as
-          CoexistenceApiResponse;
-
-      if (
-        !response.ok ||
-        !data.success
-      ) {
-        setMessage(
-          data.message ||
-            "N\u00e3o foi poss\u00edvel concluir a conex\u00e3o com a Meta.",
-        );
-
-        return;
-      }
-
-      const number =
-        data.phoneNumbers?.[0]
-          ?.displayPhoneNumber;
-
-      setMessage(
-        number
-          ? `Coexist\u00eancia conectada com sucesso. N\u00famero identificado: ${number}.`
-          : "Coexist\u00eancia conectada com sucesso \u00e0 conta do WhatsApp Business.",
-      );
-    } catch (error) {
-      console.error(
-        "Erro ao finalizar coexist\u00eancia:",
-        error,
-      );
-
-      setMessage(
-        "A autoriza\u00e7\u00e3o foi recebida, mas n\u00e3o foi poss\u00edvel concluir a conex\u00e3o agora.",
-      );
-    } finally {
-      setFinishing(false);
-      finishingRef.current = false;
-    }
-  }
+  const phoneNumberIdRef =
+    useRef<string | null>(null);
 
   useEffect(() => {
-    const url =
-      new URL(window.location.href);
-
-    const code =
-      url.searchParams.get("code");
-
-    const returnedState =
-      url.searchParams.get("state");
-
-    const error =
-      url.searchParams.get("error");
-
-    const errorDescription =
-      url.searchParams.get(
-        "error_description",
+    if (!META_APP_ID) {
+      setMessage(
+        "NEXT_PUBLIC_META_APP_ID n?o est? configurado.",
       );
 
-    if (!code && !error) {
       return;
     }
 
-    const cleanUrl = () => {
-      [
-        "code",
-        "state",
-        "error",
-        "error_reason",
-        "error_description",
-      ].forEach((key) => {
-        url.searchParams.delete(key);
+    const handleMessage =
+      (event: MessageEvent) => {
+        if (!isMetaOrigin(event.origin)) {
+          return;
+        }
+
+        let payload:
+          WhatsAppSignupEvent | null =
+            null;
+
+        try {
+          const raw =
+            typeof event.data ===
+            "string"
+              ? JSON.parse(event.data)
+              : event.data;
+
+          if (
+            raw &&
+            typeof raw ===
+              "object"
+          ) {
+            payload =
+              raw as WhatsAppSignupEvent;
+          }
+        } catch {
+          return;
+        }
+
+        if (!payload) {
+          return;
+        }
+
+        const isFinish =
+          payload.event ===
+            "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING" ||
+          payload.event ===
+            "FINISH" ||
+          (
+            payload.type ===
+              "WA_EMBEDDED_SIGNUP" &&
+            payload.event ===
+              "FINISH"
+          );
+
+        const isCancel =
+          payload.event ===
+            "CANCEL" ||
+          payload.event ===
+            "CANCEL_WHATSAPP_BUSINESS_APP_ONBOARDING";
+
+        if (isCancel) {
+          setOpening(false);
+
+          setMessage(
+            "O onboarding de coexist?ncia foi cancelado antes da conclus?o.",
+          );
+
+          return;
+        }
+
+        if (!isFinish) {
+          return;
+        }
+
+        const wabaId =
+          payload.data?.waba_id;
+
+        const phoneNumberId =
+          payload.data?.phone_number_id;
+
+        if (wabaId) {
+          wabaIdRef.current =
+            wabaId;
+        }
+
+        if (phoneNumberId) {
+          phoneNumberIdRef.current =
+            phoneNumberId;
+        }
+
+        setOpening(false);
+
+        if (
+          wabaId ||
+          phoneNumberId
+        ) {
+          setMessage(
+            "Onboarding de coexist?ncia conclu?do pela Meta. A conta do WhatsApp foi identificada. Agora vamos validar o status do n?mero e o recebimento de mensagens.",
+          );
+        } else {
+          setMessage(
+            "A Meta informou a conclus?o do onboarding, mas n?o retornou os identificadores da conta. N?o considere a ativa??o conclu?da ainda.",
+          );
+        }
+      };
+
+    window.addEventListener(
+      "message",
+      handleMessage,
+    );
+
+    window.fbAsyncInit = () => {
+      window.FB?.init({
+        appId:
+          META_APP_ID,
+
+        cookie:
+          true,
+
+        xfbml:
+          false,
+
+        version:
+          "v26.0",
       });
 
-      window.history.replaceState(
-        {},
-        "",
-        url.pathname +
-          url.search +
-          url.hash,
-      );
+      setSdkReady(true);
     };
 
-    if (error) {
-      cleanUrl();
+    if (window.FB) {
+      window.fbAsyncInit();
+    } else {
+      const existing =
+        document.getElementById(
+          "facebook-jssdk",
+        );
 
-      setMessage(
-        errorDescription ||
-          "A autoriza\u00e7\u00e3o da Meta n\u00e3o foi conclu\u00edda.",
-      );
+      if (!existing) {
+        const script =
+          document.createElement(
+            "script",
+          );
 
-      return;
+        script.id =
+          "facebook-jssdk";
+
+        script.src =
+          "https://connect.facebook.net/pt_BR/sdk.js";
+
+        script.async =
+          true;
+
+        script.defer =
+          true;
+
+        script.crossOrigin =
+          "anonymous";
+
+        document.body.appendChild(
+          script,
+        );
+      }
     }
 
-    const expectedState =
-      window.sessionStorage.getItem(
-        "bb-whatsapp-oauth-state",
+    return () => {
+      window.removeEventListener(
+        "message",
+        handleMessage,
       );
-
-    if (
-      !returnedState ||
-      !expectedState ||
-      returnedState !== expectedState
-    ) {
-      cleanUrl();
-
-      window.sessionStorage.removeItem(
-        "bb-whatsapp-oauth-state",
-      );
-
-      setMessage(
-        "N\u00e3o foi poss\u00edvel validar o retorno da Meta. Inicie a conex\u00e3o novamente.",
-      );
-
-      return;
-    }
-
-    window.sessionStorage.removeItem(
-      "bb-whatsapp-oauth-state",
-    );
-
-    authorizationCodeRef.current =
-      code;
-
-    cleanUrl();
-
-    setMessage(
-      "Autoriza\u00e7\u00e3o conclu\u00edda pela Meta. Concluindo a conex\u00e3o...",
-    );
-
-    void finishConnection();
+    };
   }, []);
 
   function startSignup() {
-    if (!META_APP_ID) {
-      setMessage(
-        "NEXT_PUBLIC_META_APP_ID n\u00e3o est\u00e1 configurado.",
-      );
-
-      return;
-    }
-
     if (!META_CONFIG_ID) {
       setMessage(
-        "NEXT_PUBLIC_META_CONFIG_ID n\u00e3o est\u00e1 configurado.",
+        "NEXT_PUBLIC_META_CONFIG_ID n?o est? configurado.",
       );
 
       return;
     }
 
-    authorizationCodeRef.current =
+    if (
+      !window.FB ||
+      !sdkReady
+    ) {
+      setMessage(
+        "O SDK da Meta ainda est? carregando. Tente novamente em alguns segundos.",
+      );
+
+      return;
+    }
+
+    wabaIdRef.current =
+      null;
+
+    phoneNumberIdRef.current =
       null;
 
     setOpening(true);
-    setMessage(null);
 
-    const state =
-      window.crypto.randomUUID();
-
-    window.sessionStorage.setItem(
-      "bb-whatsapp-oauth-state",
-      state,
+    setMessage(
+      "Abrindo o onboarding oficial da Meta. Conclua todas as etapas, inclusive a conex?o do WhatsApp Business e o QR Code quando ele for apresentado.",
     );
 
-    const oauthUrl =
-      new URL(
-        "https://www.facebook.com/v26.0/dialog/oauth",
-      );
+    window.FB.login(
+      (response) => {
+        const code =
+          response.authResponse
+            ?.code;
 
-    oauthUrl.searchParams.set(
-      "client_id",
-      META_APP_ID,
-    );
+        if (!code) {
+          setOpening(false);
 
-    oauthUrl.searchParams.set(
-      "redirect_uri",
-      META_REDIRECT_URI,
-    );
+          setMessage(
+            "O fluxo da Meta foi encerrado antes da autoriza??o. Nenhuma altera??o foi feita.",
+          );
 
-    oauthUrl.searchParams.set(
-      "response_type",
-      "code",
-    );
+          return;
+        }
 
-    oauthUrl.searchParams.set(
-      "config_id",
-      META_CONFIG_ID,
-    );
+        /*
+         * Importante:
+         * receber o authorization code N?O significa
+         * que a coexist?ncia terminou.
+         *
+         * A conclus?o verdadeira ser? tratada pelo
+         * evento FINISH do Embedded Signup.
+         */
+        setMessage(
+          "Autoriza??o recebida pela Meta. Continue o onboarding at? concluir a etapa do WhatsApp Business. A conex?o s? ser? considerada conclu?da ap?s a finaliza??o do Embedded Signup.",
+        );
+      },
+      {
+        config_id:
+          META_CONFIG_ID,
 
-    oauthUrl.searchParams.set(
-      "override_default_response_type",
-      "true",
-    );
+        response_type:
+          "code",
 
-    oauthUrl.searchParams.set(
-      "state",
-      state,
-    );
+        override_default_response_type:
+          true,
 
-    oauthUrl.searchParams.set(
-      "extras",
-      JSON.stringify({
-        setup: {},
-        featureType:
-          "whatsapp_business_app_onboarding",
-        sessionInfoVersion:
-          "3",
-      }),
-    );
+        extras: {
+          setup: {},
 
-    window.location.assign(
-      oauthUrl.toString(),
+          featureType:
+            "whatsapp_business_app_onboarding",
+
+          sessionInfoVersion:
+            "3",
+        },
+      },
     );
   }
 
@@ -295,21 +359,21 @@ export default function WhatsAppEmbeddedSignup() {
         type="button"
         onClick={startSignup}
         disabled={
-          opening ||
-          finishing
+          !sdkReady ||
+          opening
         }
         className="inline-flex min-h-12 items-center justify-center bg-emerald-500 px-6 text-sm font-bold text-black transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
       >
-        {finishing
-          ? "Concluindo conex\u00e3o..."
-          : opening
-            ? "Abrindo Meta..."
-            : "Conectar WhatsApp em modo Coexist\u00eancia"}
+        {opening
+          ? "Onboarding em andamento..."
+          : sdkReady
+            ? "Conectar WhatsApp em modo Coexist?ncia"
+            : "Carregando Meta..."}
       </button>
 
       <p className="mt-3 max-w-2xl text-xs leading-6 text-zinc-500">
-        Este botão inicia exclusivamente o Embedded Signup configurado para
-        coexistência entre o WhatsApp Business App e a Cloud API.
+        Este bot?o inicia o Embedded Signup oficial da Meta para conectar o
+        WhatsApp Business App ? Cloud API em modo de coexist?ncia.
       </p>
 
       {message ? (
