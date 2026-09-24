@@ -32,6 +32,7 @@ type FacebookLoginOptions = {
   response_type: "code";
   override_default_response_type: true;
   extras: {
+    setup: Record<string, never>;
     featureType: "whatsapp_business_app_onboarding";
     sessionInfoVersion: "3";
   };
@@ -498,6 +499,7 @@ export default function WhatsAppEmbeddedSignup() {
           true,
 
         extras: {
+          setup: {},
           featureType:
             "whatsapp_business_app_onboarding",
 
