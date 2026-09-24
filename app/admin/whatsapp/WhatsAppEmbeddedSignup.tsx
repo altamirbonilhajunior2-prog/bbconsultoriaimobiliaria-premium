@@ -33,6 +33,7 @@ type FacebookLoginOptions = {
   override_default_response_type: true;
   extras: {
     featureType: "whatsapp_business_app_onboarding";
+    sessionInfoVersion: "3";
   };
 };
 
@@ -386,6 +387,9 @@ export default function WhatsAppEmbeddedSignup() {
         extras: {
           featureType:
             "whatsapp_business_app_onboarding",
+
+          sessionInfoVersion:
+            "3",
         },
       },
     );
