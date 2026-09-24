@@ -187,6 +187,11 @@ export async function POST(
       code,
     );
 
+    tokenUrl.searchParams.set(
+      "redirect_uri",
+      "",
+    );
+
     const tokenResponse =
       await fetch(
         tokenUrl,
