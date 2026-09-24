@@ -40,6 +40,19 @@ type FacebookLoginOptions = {
 type WhatsAppSignupEventData = {
   waba_id?: string;
   phone_number_id?: string;
+  [key: string]: unknown;
+};
+
+type MetaDiagnosticEntry = {
+  id: number;
+  time: string;
+  origin: string;
+  type: string | null;
+  event: string | null;
+  dataKeys: string[];
+  wabaId: string | null;
+  phoneNumberId: string | null;
+  parsed: boolean;
 };
 
 type WhatsAppSignupEvent = {
@@ -74,6 +87,22 @@ const ALLOWED_META_ORIGINS =
     "https://web.facebook.com",
   ]);
 
+function isMetaOrigin(origin: string) {
+  try {
+    const hostname =
+      new URL(origin).hostname.toLowerCase();
+
+    return (
+      hostname === "facebook.com" ||
+      hostname.endsWith(".facebook.com") ||
+      hostname === "facebook.net" ||
+      hostname.endsWith(".facebook.net")
+    );
+  } catch {
+    return false;
+  }
+}
+
 export default function WhatsAppEmbeddedSignup() {
   const [sdkReady, setSdkReady] =
     useState(false);
@@ -86,6 +115,12 @@ export default function WhatsAppEmbeddedSignup() {
 
   const [message, setMessage] =
     useState<string | null>(null);
+
+  const [diagnostics, setDiagnostics] =
+    useState<MetaDiagnosticEntry[]>([]);
+
+  const diagnosticCounterRef =
+    useRef(0);
 
   const authorizationCodeRef =
     useRef<string | null>(null);
@@ -188,6 +223,98 @@ export default function WhatsAppEmbeddedSignup() {
 
     const handleMessage =
       (event: MessageEvent) => {
+        if (!isMetaOrigin(event.origin)) {
+          return;
+        }
+
+        let payload:
+          WhatsAppSignupEvent | null =
+            null;
+
+        let parsed = false;
+
+        try {
+          const rawPayload =
+            typeof event.data ===
+            "string"
+              ? JSON.parse(event.data)
+              : event.data;
+
+          if (
+            rawPayload &&
+            typeof rawPayload ===
+              "object"
+          ) {
+            payload =
+              rawPayload as WhatsAppSignupEvent;
+
+            parsed = true;
+          }
+        } catch {
+          parsed = false;
+        }
+
+        const data =
+          payload?.data &&
+          typeof payload.data ===
+            "object"
+            ? payload.data
+            : undefined;
+
+        diagnosticCounterRef.current += 1;
+
+        const diagnosticEntry:
+          MetaDiagnosticEntry = {
+            id:
+              diagnosticCounterRef.current,
+
+            time:
+              new Date().toLocaleTimeString(
+                "pt-BR",
+              ),
+
+            origin:
+              event.origin,
+
+            type:
+              typeof payload?.type ===
+              "string"
+                ? payload.type
+                : null,
+
+            event:
+              typeof payload?.event ===
+              "string"
+                ? payload.event
+                : null,
+
+            dataKeys:
+              data
+                ? Object.keys(data)
+                : [],
+
+            wabaId:
+              typeof data?.waba_id ===
+              "string"
+                ? data.waba_id
+                : null,
+
+            phoneNumberId:
+              typeof data?.phone_number_id ===
+              "string"
+                ? data.phone_number_id
+                : null,
+
+            parsed,
+          };
+
+        setDiagnostics(
+          (current) => [
+            diagnosticEntry,
+            ...current,
+          ].slice(0, 20),
+        );
+
         if (
           !ALLOWED_META_ORIGINS.has(
             event.origin,
@@ -196,26 +323,7 @@ export default function WhatsAppEmbeddedSignup() {
           return;
         }
 
-        let payload:
-          WhatsAppSignupEvent;
-
-        try {
-          payload =
-            typeof event.data ===
-            "string"
-              ? JSON.parse(
-                  event.data,
-                ) as WhatsAppSignupEvent
-              : event.data as WhatsAppSignupEvent;
-        } catch {
-          return;
-        }
-
-        if (
-          !payload ||
-          typeof payload !==
-            "object"
-        ) {
+        if (!payload) {
           return;
         }
 
@@ -339,6 +447,11 @@ export default function WhatsAppEmbeddedSignup() {
     wabaIdRef.current =
       null;
 
+    diagnosticCounterRef.current =
+      0;
+
+    setDiagnostics([]);
+
     setOpening(
       true,
     );
@@ -431,6 +544,54 @@ export default function WhatsAppEmbeddedSignup() {
           {message}
         </div>
       ) : null}
+
+      <div className="mt-6 border border-amber-500/30 bg-amber-500/5 p-4">
+        <div className="text-sm font-bold text-amber-200">
+          Diagn?stico tempor?rio do Embedded Signup
+        </div>
+
+        <p className="mt-2 max-w-3xl text-xs leading-6 text-zinc-400">
+          Esta ?rea mostra somente metadados t?cnicos seguros recebidos da Meta.
+          Tokens, App Secret e authorization code n?o s?o exibidos.
+        </p>
+
+        {diagnostics.length === 0 ? (
+          <div className="mt-4 text-sm text-zinc-400">
+            Nenhum evento Meta postMessage foi recebido nesta tentativa.
+          </div>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {diagnostics.map((entry) => (
+              <div
+                key={entry.id}
+                className="border border-white/10 bg-black/30 p-3 text-xs leading-6 text-zinc-300"
+              >
+                <div><strong>Hor?rio:</strong> {entry.time}</div>
+                <div><strong>Origin:</strong> {entry.origin}</div>
+                <div><strong>Type:</strong> {entry.type ?? "(ausente)"}</div>
+                <div><strong>Event:</strong> {entry.event ?? "(ausente)"}</div>
+                <div>
+                  <strong>Data keys:</strong>{" "}
+                  {entry.dataKeys.length
+                    ? entry.dataKeys.join(", ")
+                    : "(nenhuma)"}
+                </div>
+                <div><strong>WABA ID:</strong> {entry.wabaId ?? "(ausente)"}</div>
+                <div>
+                  <strong>Phone Number ID:</strong>{" "}
+                  {entry.phoneNumberId ?? "(ausente)"}
+                </div>
+                <div>
+                  <strong>Payload:</strong>{" "}
+                  {entry.parsed
+                    ? "interpretado"
+                    : "n?o interpretado"}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
