@@ -150,10 +150,7 @@ export default function WhatsAppEmbeddedSignup() {
     const wabaId =
       wabaIdRef.current;
 
-    if (
-      !code ||
-      !wabaId
-    ) {
+    if (!code) {
       return;
     }
 
