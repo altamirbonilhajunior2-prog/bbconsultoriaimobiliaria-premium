@@ -189,7 +189,7 @@ export async function POST(
 
     tokenUrl.searchParams.set(
       "redirect_uri",
-      "",
+      "https://www.bbconsultoriaimoveis.com.br/admin/whatsapp",
     );
 
     const tokenResponse =

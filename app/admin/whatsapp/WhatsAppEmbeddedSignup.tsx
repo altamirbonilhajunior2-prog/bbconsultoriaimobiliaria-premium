@@ -89,6 +89,9 @@ const META_APP_ID =
 const META_CONFIG_ID =
   process.env.NEXT_PUBLIC_META_CONFIG_ID;
 
+const META_REDIRECT_URI =
+  "https://www.bbconsultoriaimoveis.com.br/admin/whatsapp";
+
 const ALLOWED_META_ORIGINS =
   new Set([
     "https://www.facebook.com",
@@ -465,21 +468,111 @@ export default function WhatsAppEmbeddedSignup() {
     };
   }, []);
 
-  function startSignup() {
-    if (!META_CONFIG_ID) {
+
+  useEffect(() => {
+    const url =
+      new URL(window.location.href);
+
+    const code =
+      url.searchParams.get("code");
+
+    const returnedState =
+      url.searchParams.get("state");
+
+    const error =
+      url.searchParams.get("error");
+
+    const errorDescription =
+      url.searchParams.get(
+        "error_description",
+      );
+
+    if (!code && !error) {
+      return;
+    }
+
+    const cleanUrl = () => {
+      [
+        "code",
+        "state",
+        "error",
+        "error_reason",
+        "error_description",
+      ].forEach((key) => {
+        url.searchParams.delete(key);
+      });
+
+      window.history.replaceState(
+        {},
+        "",
+        url.pathname +
+          url.search +
+          url.hash,
+      );
+    };
+
+    if (error) {
+      cleanUrl();
+
       setMessage(
-        "NEXT_PUBLIC_META_CONFIG_ID não está configurado.",
+        errorDescription ||
+          "A autorizacao da Meta nao foi concluida.",
       );
 
       return;
     }
 
+    const expectedState =
+      window.sessionStorage.getItem(
+        "bb-whatsapp-oauth-state",
+      );
+
     if (
-      !window.FB ||
-      !sdkReady
+      !returnedState ||
+      !expectedState ||
+      returnedState !== expectedState
     ) {
+      cleanUrl();
+
+      window.sessionStorage.removeItem(
+        "bb-whatsapp-oauth-state",
+      );
+
       setMessage(
-        "O SDK da Meta ainda está carregando. Tente novamente.",
+        "Nao foi possivel validar o retorno da Meta. Inicie a conexao novamente.",
+      );
+
+      return;
+    }
+
+    window.sessionStorage.removeItem(
+      "bb-whatsapp-oauth-state",
+    );
+
+    authorizationCodeRef.current =
+      code;
+
+    cleanUrl();
+
+    setMessage(
+      "Autorizacao concluida pela Meta. Concluindo a conexao...",
+    );
+
+    void finishConnection();
+  }, []);
+
+  function startSignup() {
+    if (!META_APP_ID) {
+      setMessage(
+        "NEXT_PUBLIC_META_APP_ID nao esta configurado.",
+      );
+
+      return;
+    }
+
+    if (!META_CONFIG_ID) {
+      setMessage(
+        "NEXT_PUBLIC_META_CONFIG_ID nao esta configurado.",
       );
 
       return;
@@ -495,65 +588,70 @@ export default function WhatsAppEmbeddedSignup() {
       0;
 
     setDiagnostics([]);
+    setOpening(true);
+    setMessage(null);
 
-    setOpening(
-      true,
+    const state =
+      window.crypto.randomUUID();
+
+    window.sessionStorage.setItem(
+      "bb-whatsapp-oauth-state",
+      state,
     );
 
-    setMessage(
-      null,
+    const oauthUrl =
+      new URL(
+        "https://www.facebook.com/v26.0/dialog/oauth",
+      );
+
+    oauthUrl.searchParams.set(
+      "client_id",
+      META_APP_ID,
     );
 
-    window.FB.login(
-      (response) => {
-        setOpening(
-          false,
-        );
+    oauthUrl.searchParams.set(
+      "redirect_uri",
+      META_REDIRECT_URI,
+    );
 
-        const code =
-          response.authResponse
-            ?.code;
+    oauthUrl.searchParams.set(
+      "response_type",
+      "code",
+    );
 
-        if (code) {
-          authorizationCodeRef.current =
-            code;
+    oauthUrl.searchParams.set(
+      "config_id",
+      META_CONFIG_ID,
+    );
 
-          setMessage(
-            "Autorização concluída pela Meta. Aguardando os dados da conta do WhatsApp...",
-          );
+    oauthUrl.searchParams.set(
+      "override_default_response_type",
+      "true",
+    );
 
-          void finishConnection();
+    oauthUrl.searchParams.set(
+      "state",
+      state,
+    );
 
-          return;
-        }
+    oauthUrl.searchParams.set(
+      "extras",
+      JSON.stringify({
+        setup: {},
+        featureType:
+          "whatsapp_business_app_onboarding",
+        sessionInfoVersion:
+          "3",
+      }),
+    );
 
-        setMessage(
-          "A configuração não foi concluída. Nenhuma alteração foi feita no WhatsApp.",
-        );
-      },
-      {
-        config_id:
-          META_CONFIG_ID,
-
-        response_type:
-          "code",
-
-        override_default_response_type:
-          true,
-
-        extras: {
-          setup: {},
-          featureType:
-            "whatsapp_business_app_onboarding",
-
-          sessionInfoVersion:
-            "3",
-        },
-      },
+    window.location.assign(
+      oauthUrl.toString(),
     );
   }
 
   return (
+
     <div className="mt-7">
       <button
         type="button"
