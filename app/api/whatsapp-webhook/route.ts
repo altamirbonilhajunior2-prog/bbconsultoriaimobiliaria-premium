@@ -21,6 +21,10 @@ import {
   mergeIrisProfile,
 } from "../../../lib/iris/conversation";
 
+import type {
+  IrisConversationProfile,
+} from "../../../lib/iris/conversation";
+import { buildIrisHandoffMessage } from "../../../lib/iris/handoff";
 import { interpretIrisMessage } from "../../../lib/iris/interpret";
 import { prisma } from "../../../lib/prisma";
 import { sendWhatsAppText } from "../../../lib/whatsapp/send";
@@ -82,6 +86,7 @@ type PersistIncomingMessageResult = {
   stored: boolean;
   duplicate: boolean;
   conversationId: number | null;
+  shouldProcess: boolean;
 };
 
 function getVerifyToken() {
@@ -176,6 +181,193 @@ function maskPhone(
       value.length - 4,
     ),
   )}${value.slice(-4)}`;
+}
+
+function extractPropertyCodes(
+  value: string,
+) {
+  const matches =
+    value.match(
+      /\b[A-Z]{2,6}\d{3,6}\b/gi,
+    ) ?? [];
+
+  return [
+    ...new Set(
+      matches.map(
+        (item) =>
+          item.toUpperCase(),
+      ),
+    ),
+  ].slice(0, 5);
+}
+
+async function resolvePropertyIdFromText(
+  value: string,
+) {
+  const codes =
+    extractPropertyCodes(
+      value,
+    );
+
+  for (const code of codes) {
+    const property =
+      await prisma.property.findUnique({
+        where: {
+          code,
+        },
+
+        select: {
+          id: true,
+        },
+      });
+
+    if (property) {
+      return property.id;
+    }
+  }
+
+  return null;
+}
+
+function normalizeWhatsAppRecipient(
+  value: string | null,
+) {
+  if (!value) {
+    return null;
+  }
+
+  const digits =
+    value.replace(
+      /\D/g,
+      "",
+    );
+
+  if (
+    digits.length === 10 ||
+    digits.length === 11
+  ) {
+    return `55${digits}`;
+  }
+
+  if (
+    (
+      digits.length === 12 ||
+      digits.length === 13
+    ) &&
+    digits.startsWith("55")
+  ) {
+    return digits;
+  }
+
+  return null;
+}
+
+function splitWhatsAppText(
+  value: string,
+  maximumLength = 3500,
+) {
+  const chunks: string[] = [];
+
+  let remaining =
+    value.trim();
+
+  while (
+    remaining.length >
+    maximumLength
+  ) {
+    let cut =
+      remaining.lastIndexOf(
+        "\n",
+        maximumLength,
+      );
+
+    if (
+      cut <
+      maximumLength * 0.6
+    ) {
+      cut =
+        maximumLength;
+    }
+
+    chunks.push(
+      remaining
+        .slice(
+          0,
+          cut,
+        )
+        .trim(),
+    );
+
+    remaining =
+      remaining
+        .slice(
+          cut,
+        )
+        .trim();
+  }
+
+  if (remaining) {
+    chunks.push(
+      remaining,
+    );
+  }
+
+  return chunks;
+}
+
+function normalizeIrisProfile(
+  value: unknown,
+): IrisConversationProfile {
+  const profile =
+    value &&
+    typeof value === "object"
+      ? value as Partial<IrisConversationProfile>
+      : {};
+
+  return {
+    purpose:
+      typeof profile.purpose === "string"
+        ? profile.purpose
+        : "",
+
+    propertyType:
+      typeof profile.propertyType === "string"
+        ? profile.propertyType
+        : "",
+
+    region:
+      typeof profile.region === "string"
+        ? profile.region
+        : "",
+
+    value:
+      typeof profile.value === "string"
+        ? profile.value
+        : "",
+
+    bedrooms:
+      typeof profile.bedrooms === "string"
+        ? profile.bedrooms
+        : "",
+
+    objective:
+      typeof profile.objective === "string"
+        ? profile.objective
+        : "",
+
+    details:
+      typeof profile.details === "string"
+        ? profile.details
+        : "",
+
+    timeline:
+      typeof profile.timeline === "string"
+        ? profile.timeline
+        : "",
+
+    finalDetailsAsked:
+      profile.finalDetailsAsked === true,
+  };
 }
 
 function extractTextMessages(
@@ -273,7 +465,6 @@ async function persistIncomingMessage(
       },
 
       select: {
-        id: true,
         conversationId: true,
       },
     });
@@ -284,8 +475,14 @@ async function persistIncomingMessage(
       duplicate: true,
       conversationId:
         existingMessage.conversationId,
+      shouldProcess: false,
     };
   }
+
+  const resolvedPropertyId =
+    await resolvePropertyIdFromText(
+      message.text,
+    );
 
   let conversation =
     await prisma.irisConversation.findFirst({
@@ -301,6 +498,7 @@ async function persistIncomingMessage(
             IrisConversationStatus.IRIS_ATENDENDO,
             IrisConversationStatus.AGUARDANDO_CLIENTE,
             IrisConversationStatus.HANDOFF,
+            IrisConversationStatus.CORRETOR_ASSUMIU,
           ],
         },
       },
@@ -312,6 +510,8 @@ async function persistIncomingMessage(
 
       select: {
         id: true,
+        status: true,
+        propertyId: true,
       },
     });
 
@@ -333,13 +533,24 @@ async function persistIncomingMessage(
 
           contactPhone:
             message.from,
+
+          propertyId:
+            resolvedPropertyId,
         },
 
         select: {
           id: true,
+          status: true,
+          propertyId: true,
         },
       });
   }
+
+  const alreadyHandedOff =
+    conversation.status ===
+      IrisConversationStatus.HANDOFF ||
+    conversation.status ===
+      IrisConversationStatus.CORRETOR_ASSUMIU;
 
   try {
     await prisma.$transaction([
@@ -379,11 +590,18 @@ async function persistIncomingMessage(
           externalContactId:
             message.from,
 
+          propertyId:
+            conversation.propertyId ??
+            resolvedPropertyId ??
+            undefined,
+
           lastMessageAt:
             new Date(),
 
           status:
-            IrisConversationStatus.IRIS_ATENDENDO,
+            alreadyHandedOff
+              ? conversation.status
+              : IrisConversationStatus.IRIS_ATENDENDO,
         },
       }),
     ]);
@@ -393,6 +611,8 @@ async function persistIncomingMessage(
       duplicate: false,
       conversationId:
         conversation.id,
+      shouldProcess:
+        !alreadyHandedOff,
     };
   } catch (error) {
     if (
@@ -405,6 +625,7 @@ async function persistIncomingMessage(
         duplicate: true,
         conversationId:
           conversation.id,
+        shouldProcess: false,
       };
     }
 
@@ -445,9 +666,7 @@ async function processIrisConversation(
     );
 
   const nextStatus =
-    decision.readyForHandoff
-      ? IrisConversationStatus.HANDOFF
-      : IrisConversationStatus.AGUARDANDO_CLIENTE;
+    IrisConversationStatus.AGUARDANDO_CLIENTE;
 
   let irisMessageId:
     number | null =
@@ -470,13 +689,6 @@ async function processIrisConversation(
 
           lastMessageAt:
             new Date(),
-
-          ...(decision.readyForHandoff
-            ? {
-                handedOffAt:
-                  new Date(),
-              }
-            : {}),
         },
       });
 
@@ -568,6 +780,279 @@ async function sendIrisQuestion(
         sent.externalMessageId,
     },
   );
+}
+
+async function handoffIrisConversation(
+  params: {
+    conversationId: number;
+    phoneNumberId: string;
+  },
+) {
+  const conversation =
+    await prisma.irisConversation.findUnique({
+      where: {
+        id:
+          params.conversationId,
+      },
+
+      select: {
+        id: true,
+        contactName: true,
+        contactPhone: true,
+        searchProfile: true,
+        handoffReason: true,
+
+        property: {
+          select: {
+            code: true,
+            title: true,
+
+            captor: {
+              select: {
+                id: true,
+                name: true,
+                phone: true,
+                active: true,
+              },
+            },
+          },
+        },
+
+        messages: {
+          orderBy: {
+            createdAt:
+              "asc",
+          },
+
+          select: {
+            author: true,
+            text: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
+
+  if (!conversation) {
+    return {
+      sent: false,
+      reason:
+        "conversation_not_found",
+    };
+  }
+
+  if (
+    conversation.handoffReason
+      ?.startsWith(
+        "ENVIADO_CAPTADOR:",
+      )
+  ) {
+    return {
+      sent: false,
+      reason:
+        "already_sent",
+    };
+  }
+
+  const property =
+    conversation.property;
+
+  if (!property) {
+    console.warn(
+      "Iris: handoff nao enviado porque o imovel nao foi identificado.",
+      {
+        conversationId:
+          conversation.id,
+      },
+    );
+
+    return {
+      sent: false,
+      reason:
+        "property_not_identified",
+    };
+  }
+
+  const captor =
+    property.captor;
+
+  if (
+    !captor ||
+    !captor.active
+  ) {
+    console.warn(
+      "Iris: handoff nao enviado porque o imovel nao possui captador ativo.",
+      {
+        conversationId:
+          conversation.id,
+
+        propertyCode:
+          property.code,
+      },
+    );
+
+    return {
+      sent: false,
+      reason:
+        "captor_not_available",
+    };
+  }
+
+  const captorPhone =
+    normalizeWhatsAppRecipient(
+      captor.phone,
+    );
+
+  if (!captorPhone) {
+    console.warn(
+      "Iris: handoff nao enviado porque o captador nao possui WhatsApp valido.",
+      {
+        conversationId:
+          conversation.id,
+
+        propertyCode:
+          property.code,
+
+        captorId:
+          captor.id,
+      },
+    );
+
+    return {
+      sent: false,
+      reason:
+        "captor_phone_invalid",
+    };
+  }
+
+  const handoffMessage =
+    buildIrisHandoffMessage({
+      clientName:
+        conversation.contactName,
+
+      clientPhone:
+        conversation.contactPhone,
+
+      propertyCode:
+        property.code,
+
+      propertyTitle:
+        property.title,
+
+      profile:
+        normalizeIrisProfile(
+          conversation.searchProfile,
+        ),
+
+      messages:
+        conversation.messages.map(
+          (message) => ({
+            author:
+              message.author,
+
+            text:
+              message.text,
+
+            createdAt:
+              message.createdAt,
+          }),
+        ),
+    });
+
+  const chunks =
+    splitWhatsAppText(
+      handoffMessage,
+    );
+
+  for (
+    let index = 0;
+    index < chunks.length;
+    index += 1
+  ) {
+    const chunk =
+      chunks[index];
+
+    await sendWhatsAppText({
+      phoneNumberId:
+        params.phoneNumberId,
+
+      to:
+        captorPhone,
+
+      text:
+        chunks.length > 1
+          ? `Parte ${index + 1}/${chunks.length}\n\n${chunk}`
+          : chunk,
+    });
+  }
+
+  const sentAt =
+    new Date();
+
+  await prisma.$transaction([
+    prisma.irisConversation.update({
+      where: {
+        id:
+          conversation.id,
+      },
+
+      data: {
+        agentId:
+          captor.id,
+
+        summary:
+          handoffMessage,
+
+        handoffReason:
+          `ENVIADO_CAPTADOR:${captor.id}:${sentAt.toISOString()}`,
+
+        status:
+          IrisConversationStatus.HANDOFF,
+
+        handedOffAt:
+          sentAt,
+      },
+    }),
+
+    prisma.irisMessage.create({
+      data: {
+        conversationId:
+          conversation.id,
+
+        author:
+          IrisMessageAuthor.SISTEMA,
+
+        direction:
+          IrisMessageDirection.INTERNA,
+
+        text:
+          `Atendimento encaminhado exclusivamente ao captador ${captor.name} do imovel ${property.code}.`,
+      },
+    }),
+  ]);
+
+  console.info(
+    "Iris: atendimento encaminhado ao captador do imovel.",
+    {
+      conversationId:
+        conversation.id,
+
+      propertyCode:
+        property.code,
+
+      captorId:
+        captor.id,
+
+      parts:
+        chunks.length,
+    },
+  );
+
+  return {
+    sent: true,
+    reason:
+      "sent",
+  };
 }
 
 export async function GET(
@@ -744,6 +1229,7 @@ export async function POST(
   let generatedQuestions = 0;
   let sentMessages = 0;
   let handoffs = 0;
+  let handoffsSent = 0;
 
   for (
     const message of messages
@@ -793,7 +1279,8 @@ export async function POST(
         );
 
         if (
-          result.conversationId
+          result.conversationId &&
+          result.shouldProcess
         ) {
           try {
             const {
@@ -875,6 +1362,34 @@ export async function POST(
                 );
               }
             }
+
+
+            if (
+              decision.readyForHandoff &&
+              message.phoneNumberId
+            ) {
+              try {
+                const handoffResult =
+                  await handoffIrisConversation({
+                    conversationId:
+                      result.conversationId,
+
+                    phoneNumberId:
+                      message.phoneNumberId,
+                  });
+
+                if (
+                  handoffResult.sent
+                ) {
+                  handoffsSent += 1;
+                }
+              } catch (error) {
+                console.error(
+                  "Erro ao encaminhar atendimento da Iris ao captador:",
+                  error,
+                );
+              }
+            }
           } catch (error) {
             console.error(
               "Erro ao processar conversa da Íris:",
@@ -921,6 +1436,7 @@ export async function POST(
       sentMessages,
 
       handoffs,
+      handoffsSent,
     },
     {
       status: 200,

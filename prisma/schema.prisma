@@ -146,6 +146,7 @@ model Property {
   images                    PropertyImage[]
   portalLeads               PortalLead[]
   whatsAppLeadIntents       WhatsAppLeadIntent[]
+  irisConversations         IrisConversation[]
   visits                    PropertyVisit[]
   proposals                 PropertyProposal[]
   rentalProposals           PropertyRentalProposal[]
@@ -838,6 +839,9 @@ model IrisConversation {
   agentId Int?
   agent   Agent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
 
+  propertyId Int?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
   externalContactId String? @db.VarChar(120)
 
   contactName  String? @db.VarChar(180)
@@ -862,6 +866,7 @@ model IrisConversation {
 
   @@index([clientId])
   @@index([agentId])
+  @@index([propertyId])
   @@index([channel])
   @@index([status])
   @@index([externalContactId])

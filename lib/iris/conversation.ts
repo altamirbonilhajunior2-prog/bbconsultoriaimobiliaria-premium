@@ -210,6 +210,7 @@ export function decideNextIrisQuestion(
   return {
     readyForHandoff: true,
     profile,
-    nextQuestion: null,
+    nextQuestion:
+      "Perfeito. J\u00e1 tenho as informa\u00e7\u00f5es necess\u00e1rias. Vou encaminhar seu atendimento ao consultor respons\u00e1vel por este im\u00f3vel para que ele d\u00ea continuidade com voc\u00ea.",
   };
 }
