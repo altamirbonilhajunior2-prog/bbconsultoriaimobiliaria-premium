@@ -1,4 +1,4 @@
-﻿-- Vincula opcionalmente a conversa da Íris ao imóvel de origem sem alterar dados existentes.
+-- Vincula opcionalmente a conversa da Íris ao imóvel de origem sem alterar dados existentes.
 
 ALTER TABLE "IrisConversation"
 ADD COLUMN "propertyId" INTEGER;
