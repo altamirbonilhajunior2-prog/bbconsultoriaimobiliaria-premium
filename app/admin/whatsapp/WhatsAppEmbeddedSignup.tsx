@@ -56,6 +56,22 @@ type WhatsAppSignupEvent = {
   };
 };
 
+type CoexistencePhoneNumber = {
+  id?: string | null;
+  displayPhoneNumber?: string | null;
+  verifiedName?: string | null;
+  status?: string | null;
+  qualityRating?: string | null;
+};
+
+type CoexistenceResponse = {
+  success?: boolean;
+  message?: string;
+  wabaId?: string;
+  subscribed?: boolean;
+  phoneNumbers?: CoexistencePhoneNumber[];
+};
+
 const META_APP_ID =
   process.env.NEXT_PUBLIC_META_APP_ID;
 
@@ -92,16 +108,144 @@ export default function WhatsAppEmbeddedSignup() {
   const [message, setMessage] =
     useState<string | null>(null);
 
+  const codeRef =
+    useRef<string | null>(null);
+
   const wabaIdRef =
     useRef<string | null>(null);
 
   const phoneNumberIdRef =
     useRef<string | null>(null);
 
+  const finishingRef =
+    useRef(false);
+
+  async function finishConnection() {
+    const code =
+      codeRef.current;
+
+    const wabaId =
+      wabaIdRef.current;
+
+    if (
+      !code ||
+      !wabaId ||
+      finishingRef.current
+    ) {
+      return;
+    }
+
+    finishingRef.current =
+      true;
+
+    setOpening(true);
+
+    setMessage(
+      "Conta do WhatsApp identificada. Concluindo a conexão com a Cloud API...",
+    );
+
+    try {
+      const response =
+        await fetch(
+          "/api/admin/whatsapp/coexistence",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            credentials:
+              "same-origin",
+
+            body: JSON.stringify({
+              code,
+              wabaId,
+            }),
+          },
+        );
+
+      let data:
+        CoexistenceResponse = {};
+
+      try {
+        data =
+          (await response.json()) as CoexistenceResponse;
+      } catch {
+        data = {};
+      }
+
+      if (
+        !response.ok ||
+        data.success !== true
+      ) {
+        setOpening(false);
+
+        setMessage(
+          data.message ||
+            "A Meta concluiu o onboarding, mas não foi possível finalizar a conexão com a Cloud API.",
+        );
+
+        return;
+      }
+
+      const phoneNumbers =
+        data.phoneNumbers ?? [];
+
+      const matchedPhone =
+        phoneNumbers.find(
+          (phone) =>
+            phone.id ===
+            phoneNumberIdRef.current,
+        ) ??
+        phoneNumbers[0];
+
+      const displayPhoneNumber =
+        matchedPhone
+          ?.displayPhoneNumber;
+
+      const status =
+        matchedPhone?.status;
+
+      const details: string[] =
+        [];
+
+      if (displayPhoneNumber) {
+        details.push(
+          `Número: ${displayPhoneNumber}`,
+        );
+      }
+
+      if (status) {
+        details.push(
+          `Status: ${status}`,
+        );
+      }
+
+      const suffix =
+        details.length > 0
+          ? ` ${details.join(" | ")}.`
+          : "";
+
+      setOpening(false);
+
+      setMessage(
+        `Coexistência conectada com sucesso. A WABA foi vinculada ao app e os números associados foram consultados.${suffix}`,
+      );
+    } catch {
+      setOpening(false);
+
+      setMessage(
+        "Não foi possível concluir a conexão com o WhatsApp agora. Nenhuma nova tentativa deve ser feita até verificarmos o erro.",
+      );
+    }
+  }
+
   useEffect(() => {
     if (!META_APP_ID) {
       setMessage(
-        "NEXT_PUBLIC_META_APP_ID n?o est? configurado.",
+        "NEXT_PUBLIC_META_APP_ID não está configurado.",
       );
 
       return;
@@ -162,7 +306,7 @@ export default function WhatsAppEmbeddedSignup() {
           setOpening(false);
 
           setMessage(
-            "O onboarding de coexist?ncia foi cancelado antes da conclus?o.",
+            "O onboarding de coexistência foi cancelado antes da conclusão.",
           );
 
           return;
@@ -188,20 +332,25 @@ export default function WhatsAppEmbeddedSignup() {
             phoneNumberId;
         }
 
-        setOpening(false);
+        if (!wabaId) {
+          setOpening(false);
 
-        if (
-          wabaId ||
-          phoneNumberId
-        ) {
           setMessage(
-            "Onboarding de coexist?ncia conclu?do pela Meta. A conta do WhatsApp foi identificada. Agora vamos validar o status do n?mero e o recebimento de mensagens.",
+            "A Meta informou a conclusão do onboarding, mas não retornou o identificador da conta do WhatsApp. Não considere a ativação concluída ainda.",
           );
-        } else {
-          setMessage(
-            "A Meta informou a conclus?o do onboarding, mas n?o retornou os identificadores da conta. N?o considere a ativa??o conclu?da ainda.",
-          );
+
+          return;
         }
+
+        if (!codeRef.current) {
+          setMessage(
+            "Conta do WhatsApp identificada. Aguardando a conclusão da autorização da Meta...",
+          );
+
+          return;
+        }
+
+        void finishConnection();
       };
 
     window.addEventListener(
@@ -273,7 +422,7 @@ export default function WhatsAppEmbeddedSignup() {
   function startSignup() {
     if (!META_CONFIG_ID) {
       setMessage(
-        "NEXT_PUBLIC_META_CONFIG_ID n?o est? configurado.",
+        "NEXT_PUBLIC_META_CONFIG_ID não está configurado.",
       );
 
       return;
@@ -284,11 +433,14 @@ export default function WhatsAppEmbeddedSignup() {
       !sdkReady
     ) {
       setMessage(
-        "O SDK da Meta ainda est? carregando. Tente novamente em alguns segundos.",
+        "O SDK da Meta ainda está carregando. Tente novamente em alguns segundos.",
       );
 
       return;
     }
+
+    codeRef.current =
+      null;
 
     wabaIdRef.current =
       null;
@@ -296,10 +448,13 @@ export default function WhatsAppEmbeddedSignup() {
     phoneNumberIdRef.current =
       null;
 
+    finishingRef.current =
+      false;
+
     setOpening(true);
 
     setMessage(
-      "Abrindo o onboarding oficial da Meta. Conclua todas as etapas, inclusive a conex?o do WhatsApp Business e o QR Code quando ele for apresentado.",
+      "Abrindo o onboarding oficial da Meta. Conclua todas as etapas, inclusive a conexão do WhatsApp Business e o QR Code quando ele for apresentado.",
     );
 
     window.FB.login(
@@ -312,22 +467,34 @@ export default function WhatsAppEmbeddedSignup() {
           setOpening(false);
 
           setMessage(
-            "O fluxo da Meta foi encerrado antes da autoriza??o. Nenhuma altera??o foi feita.",
+            "O fluxo da Meta foi encerrado antes da autorização. Nenhuma alteração foi feita.",
           );
 
           return;
         }
 
+        codeRef.current =
+          code;
+
         /*
-         * Importante:
-         * receber o authorization code N?O significa
-         * que a coexist?ncia terminou.
+         * Receber o authorization code não significa
+         * que a coexistência terminou.
          *
-         * A conclus?o verdadeira ser? tratada pelo
-         * evento FINISH do Embedded Signup.
+         * A conclusão depende também do evento FINISH
+         * do Embedded Signup, que informa a WABA.
+         *
+         * Como code e FINISH podem chegar em ordens
+         * diferentes, tentamos finalizar sempre que
+         * uma das duas partes é recebida.
          */
+        if (wabaIdRef.current) {
+          void finishConnection();
+
+          return;
+        }
+
         setMessage(
-          "Autoriza??o recebida pela Meta. Continue o onboarding at? concluir a etapa do WhatsApp Business. A conex?o s? ser? considerada conclu?da ap?s a finaliza??o do Embedded Signup.",
+          "Autorização recebida pela Meta. Continue o onboarding até concluir a etapa do WhatsApp Business. A conexão só será considerada concluída após a finalização do Embedded Signup.",
         );
       },
       {
@@ -367,13 +534,13 @@ export default function WhatsAppEmbeddedSignup() {
         {opening
           ? "Onboarding em andamento..."
           : sdkReady
-            ? "Conectar WhatsApp em modo Coexist?ncia"
+            ? "Conectar WhatsApp em modo Coexistência"
             : "Carregando Meta..."}
       </button>
 
       <p className="mt-3 max-w-2xl text-xs leading-6 text-zinc-500">
-        Este bot?o inicia o Embedded Signup oficial da Meta para conectar o
-        WhatsApp Business App ? Cloud API em modo de coexist?ncia.
+        Este botão inicia o Embedded Signup oficial da Meta para conectar o
+        WhatsApp Business App à Cloud API em modo de coexistência.
       </p>
 
       {message ? (

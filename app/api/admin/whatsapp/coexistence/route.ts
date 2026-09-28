@@ -84,12 +84,16 @@ export async function POST(
   const appSecret =
     process.env.WHATSAPP_META_APP_SECRET?.trim();
 
+  const redirectUri =
+    process.env.WHATSAPP_META_REDIRECT_URI?.trim();
 
   const configuredWabaId =
     process.env.WHATSAPP_WABA_ID?.trim();
+
   if (
     !appId ||
     !appSecret ||
+    !redirectUri ||
     !configuredWabaId ||
     !/^\d+$/.test(configuredWabaId)
   ) {
@@ -139,7 +143,7 @@ export async function POST(
       {
         success: false,
         message:
-          "C\u00f3digo de autoriza\u00e7\u00e3o ou WABA inv\u00e1lidos.",
+          "Código de autorização ou WABA inválidos.",
       },
       {
         status: 400,
@@ -155,7 +159,7 @@ export async function POST(
       {
         success: false,
         message:
-          "A conta do WhatsApp informada n\u00e3o corresponde \u00e0 conta comercial configurada.",
+          "A conta do WhatsApp informada não corresponde à conta comercial configurada.",
       },
       {
         status: 400,
@@ -189,7 +193,7 @@ export async function POST(
 
     tokenUrl.searchParams.set(
       "redirect_uri",
-      "https://www.bbconsultoriaimoveis.com.br/admin/whatsapp",
+      redirectUri,
     );
 
     const tokenResponse =
