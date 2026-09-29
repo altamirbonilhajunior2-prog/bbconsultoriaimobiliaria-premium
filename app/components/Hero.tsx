@@ -307,20 +307,39 @@ export default function Hero({
         alt="Imóveis de alto padrão em São José dos Campos e região"
         fill
         priority
-        sizes="100vw"
-        className="object-cover object-center"
+        sizes="(min-width: 640px) 100vw, 0px"
+        className="hidden object-cover object-center sm:block"
         style={{
           filter:
             "brightness(1.16) saturate(1.08) contrast(1.02)",
         }}
       />
 
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.62)_0%,rgba(0,0,0,0.48)_24%,rgba(0,0,0,0.25)_42%,rgba(0,0,0,0.06)_58%,rgba(0,0,0,0)_72%)]" />
+      <div className="absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(0,0,0,0.62)_0%,rgba(0,0,0,0.48)_24%,rgba(0,0,0,0.25)_42%,rgba(0,0,0,0.06)_58%,rgba(0,0,0,0)_72%)] sm:block" />
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
+      <div className="absolute inset-0 hidden bg-gradient-to-t from-black/20 via-transparent to-transparent sm:block" />
+
+      <div className="relative sm:contents">
+        <Image
+          src="/hero-mobile.png"
+          alt="Imóveis de alto padrão em São José dos Campos e região"
+          fill
+          priority
+          sizes="(max-width: 639px) 100vw, 0px"
+          className="object-cover object-right sm:hidden"
+          style={{
+            objectPosition: "right 68%",
+            filter:
+              "brightness(1.16) saturate(1.08) contrast(1.02)",
+          }}
+        />
+
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.58)_0%,rgba(0,0,0,0.40)_35%,rgba(0,0,0,0.12)_70%,rgba(0,0,0,0)_100%)] sm:hidden" />
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent sm:hidden" />
 
       <div className="relative z-10">
-        <div className="mx-auto flex min-h-[540px] max-w-[1720px] flex-col justify-center px-5 py-12 sm:min-h-[580px] sm:px-6 sm:py-14 lg:min-h-[600px] lg:px-10 lg:py-14 xl:px-12">
+          <div className="mx-auto flex min-h-[760px] max-w-[1720px] flex-col justify-center px-5 py-12 sm:min-h-[580px] sm:px-6 sm:py-14 lg:min-h-[600px] lg:px-10 lg:py-14 xl:px-12">
           <div className="max-w-[650px]">
             <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-amber-400 sm:text-xs">
               Conexões que constroem patrimônio.
@@ -403,7 +422,10 @@ export default function Hero({
             </div>
           </div>
         </div>
+        </div>
+      </div>
 
+      <div className="relative z-10">
         <div className="pb-8">
           <div className="mx-auto max-w-[1180px] px-4 sm:px-6">
             <div className="rounded-lg border border-[#d5a85a]/45 bg-[#080808]/95 p-3.5 shadow-[0_22px_60px_rgba(0,0,0,0.62)] backdrop-blur-xl sm:p-4">
