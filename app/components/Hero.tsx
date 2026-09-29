@@ -309,11 +309,15 @@ export default function Hero({
         priority
         sizes="100vw"
         className="object-cover object-center"
+        style={{
+          filter:
+            "brightness(1.16) saturate(1.08) contrast(1.02)",
+        }}
       />
 
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.65)_38%,rgba(0,0,0,0.08)_75%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.62)_0%,rgba(0,0,0,0.48)_24%,rgba(0,0,0,0.25)_42%,rgba(0,0,0,0.06)_58%,rgba(0,0,0,0)_72%)]" />
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/15" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
 
       <div className="relative z-10">
         <div className="mx-auto flex min-h-[540px] max-w-[1720px] flex-col justify-center px-5 py-12 sm:min-h-[580px] sm:px-6 sm:py-14 lg:min-h-[600px] lg:px-10 lg:py-14 xl:px-12">
@@ -322,17 +326,17 @@ export default function Hero({
               Conexões que constroem patrimônio.
             </p>
 
-            <h1 className="mt-4 font-serif text-[36px] font-normal leading-[1.02] tracking-[-0.03em] text-white sm:mt-5 sm:text-[50px] sm:leading-[0.98] lg:text-[68px]">
+            <h1 className="mt-4 font-serif text-[36px] font-normal leading-[1.02] tracking-[-0.03em] text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.72)] sm:mt-5 sm:text-[50px] sm:leading-[0.98] lg:text-[68px]">
               Imóveis em São José dos Campos e região.
 
-              <span className="mt-2 block text-[#d5a85a]">
+              <span className="mt-2 block text-[#e2b967] drop-shadow-[0_2px_5px_rgba(0,0,0,0.72)]">
                 Estratégia para
                 <br />
                 grandes decisões.
               </span>
             </h1>
 
-            <p className="mt-5 max-w-[560px] text-sm leading-7 text-zinc-200 sm:mt-6 sm:text-lg sm:leading-8">
+            <p className="mt-5 max-w-[560px] text-sm leading-7 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] sm:mt-6 sm:text-lg sm:leading-8">
               Curadoria imobiliária, conhecimento de mercado e atendimento
               consultivo para comprar, vender ou alugar imóveis em São José dos
               Campos e região com mais segurança.
@@ -372,7 +376,7 @@ export default function Hero({
                 href="https://wa.me/5512978140636?text=Ol%C3%A1%2C%20gostaria%20de%20falar%20com%20a%20B%26B%20Consultoria%20Imobili%C3%A1ria."
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-[62px] min-w-[240px] items-center justify-center gap-3 rounded-sm border-2 border-[#d5a85a] bg-[#d5a85a]/15 px-10 text-[13px] font-bold uppercase tracking-[0.14em] text-white shadow-[0_14px_38px_rgba(213,168,90,0.18)] backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#d5a85a] hover:text-black hover:shadow-[0_18px_46px_rgba(213,168,90,0.3)]"
+                className="inline-flex min-h-[62px] min-w-[240px] items-center justify-center gap-3 rounded-sm border-2 border-[#d5a85a] bg-black/25 px-10 text-[13px] font-bold uppercase tracking-[0.14em] text-white shadow-[0_14px_38px_rgba(213,168,90,0.18)] backdrop-blur-sm transition duration-200 hover:-translate-y-0.5 hover:bg-[#d5a85a] hover:text-black hover:shadow-[0_18px_46px_rgba(213,168,90,0.3)]"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -446,73 +450,43 @@ export default function Hero({
                     }
                     className="mt-0.5 h-6 w-full bg-transparent text-[13px] text-zinc-300 outline-none"
                   >
-                    <option
-                      value="Todos os tipos"
-                      className="bg-zinc-950"
-                    >
+                    <option value="Todos os tipos" className="bg-zinc-950">
                       Todos os tipos
                     </option>
 
-                    <option
-                      value="Casa"
-                      className="bg-zinc-950"
-                    >
+                    <option value="Casa" className="bg-zinc-950">
                       Casa
                     </option>
 
-                    <option
-                      value="Apartamento"
-                      className="bg-zinc-950"
-                    >
+                    <option value="Apartamento" className="bg-zinc-950">
                       Apartamento
                     </option>
 
-                    <option
-                      value="Cobertura"
-                      className="bg-zinc-950"
-                    >
+                    <option value="Cobertura" className="bg-zinc-950">
                       Cobertura
                     </option>
 
-                    <option
-                      value="Terreno"
-                      className="bg-zinc-950"
-                    >
+                    <option value="Terreno" className="bg-zinc-950">
                       Terreno
                     </option>
 
-                    <option
-                      value="Comercial"
-                      className="bg-zinc-950"
-                    >
+                    <option value="Comercial" className="bg-zinc-950">
                       Comercial
                     </option>
 
-                    <option
-                      value="Chácara"
-                      className="bg-zinc-950"
-                    >
+                    <option value="Chácara" className="bg-zinc-950">
                       Chácara
                     </option>
 
-                    <option
-                      value="Fazenda"
-                      className="bg-zinc-950"
-                    >
+                    <option value="Fazenda" className="bg-zinc-950">
                       Fazenda
                     </option>
 
-                    <option
-                      value="Sítio"
-                      className="bg-zinc-950"
-                    >
+                    <option value="Sítio" className="bg-zinc-950">
                       Sítio
                     </option>
 
-                    <option
-                      value="Área Rural"
-                      className="bg-zinc-950"
-                    >
+                    <option value="Área Rural" className="bg-zinc-950">
                       Área Rural
                     </option>
                   </select>
@@ -533,10 +507,7 @@ export default function Hero({
                     }
                     className="mt-0.5 h-6 w-full bg-transparent text-[13px] text-zinc-300 outline-none"
                   >
-                    <option
-                      value=""
-                      className="bg-zinc-950"
-                    >
+                    <option value="" className="bg-zinc-950">
                       Todas as cidades
                     </option>
 
@@ -568,38 +539,23 @@ export default function Hero({
                     }
                     className="mt-0.5 h-6 w-full bg-transparent text-[13px] text-zinc-300 outline-none"
                   >
-                    <option
-                      value="Qualquer valor"
-                      className="bg-zinc-950"
-                    >
+                    <option value="Qualquer valor" className="bg-zinc-950">
                       Qualquer valor
                     </option>
 
-                    <option
-                      value="Até R$ 1 milhão"
-                      className="bg-zinc-950"
-                    >
+                    <option value="Até R$ 1 milhão" className="bg-zinc-950">
                       Até R$ 1 milhão
                     </option>
 
-                    <option
-                      value="Até R$ 2 milhões"
-                      className="bg-zinc-950"
-                    >
+                    <option value="Até R$ 2 milhões" className="bg-zinc-950">
                       Até R$ 2 milhões
                     </option>
 
-                    <option
-                      value="Até R$ 3 milhões"
-                      className="bg-zinc-950"
-                    >
+                    <option value="Até R$ 3 milhões" className="bg-zinc-950">
                       Até R$ 3 milhões
                     </option>
 
-                    <option
-                      value="Acima de R$ 3 milhões"
-                      className="bg-zinc-950"
-                    >
+                    <option value="Acima de R$ 3 milhões" className="bg-zinc-950">
                       Acima de R$ 3 milhões
                     </option>
                   </select>
