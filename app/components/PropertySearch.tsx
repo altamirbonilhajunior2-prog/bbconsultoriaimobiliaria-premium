@@ -9,9 +9,7 @@ import {
   useState,
 } from "react";
 import { trackWhatsAppClick } from "./whatsappTracking";
-import { getBuildings } from "../data/location/buildings";
 import { getCities } from "../data/location/cities";
-import { getCondominiums } from "../data/location/condominiums";
 import { getNeighborhoods } from "../data/location/neighborhoods";
 import {
   propertyTypes,
@@ -213,6 +211,11 @@ export default function PropertySearch({
     setDynamicCitiesByState,
   ] = useState<DynamicCitiesByState>({});
 
+  const [
+    developments,
+    setDevelopments,
+  ] = useState<string[]>([]);
+
   const cities = useMemo(() => {
     const baseCities = [
       ...getCities(
@@ -298,34 +301,66 @@ export default function PropertySearch({
         : "Área Rural"
       : propertyType;
 
-  const developments =
-    useMemo(() => {
-      if (
-        neighborhood ===
+  useEffect(() => {
+    let cancelled = false;
+
+    if (
+      !city ||
+      neighborhood ===
         allNeighborhoodsLabel
-      ) {
-        return [];
+    ) {
+      setDevelopments([]);
+      return;
+    }
+
+    async function loadDevelopments() {
+      try {
+        const query =
+          new URLSearchParams({
+            estado: state,
+            cidade: city,
+            bairro: neighborhood,
+          });
+
+        const response = await fetch(
+          `/api/search-developments?${query.toString()}`,
+          {
+            cache: "no-store",
+          },
+        );
+
+        if (!response.ok) {
+          if (!cancelled) {
+            setDevelopments([]);
+          }
+
+          return;
+        }
+
+        const data =
+          (await response.json()) as
+            string[];
+
+        if (!cancelled) {
+          setDevelopments(data);
+        }
+      } catch {
+        if (!cancelled) {
+          setDevelopments([]);
+        }
       }
+    }
 
-      const condominiums = [
-        ...getCondominiums(
-          neighborhood,
-        ),
-      ];
+    void loadDevelopments();
 
-      const buildings = [
-        ...getBuildings(
-          neighborhood,
-        ),
-      ];
-
-      return Array.from(
-        new Set([
-          ...condominiums,
-          ...buildings,
-        ]),
-      );
-    }, [neighborhood]);
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    state,
+    city,
+    neighborhood,
+  ]);
 
   const shouldShowBedrooms =
     propertyType ===

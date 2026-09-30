@@ -711,20 +711,13 @@ export default function NovoImovelPage() {
               <PropertyAddressFields
                 inputClass={inputClass}
                 labelClass={labelTitleClass}
+                canCreateDevelopment={
+                  accessData?.isAdmin ??
+                  false
+                }
               />
 
-              <label className="flex flex-col gap-2">
-                <span className={labelTitleClass}>
-                  Condomínio ou edifício
-                </span>
 
-                <input
-                  name="development"
-                  type="text"
-                  placeholder="Ex.: Alphaville II"
-                  className={inputClass}
-                />
-              </label>
 
               <label className="flex flex-col gap-2 md:col-span-2 xl:col-span-4">
                 <span className={labelTitleClass}>

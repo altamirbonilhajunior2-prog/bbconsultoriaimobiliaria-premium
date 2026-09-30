@@ -896,3 +896,31 @@ model IrisMessage {
   @@index([direction])
   @@index([createdAt])
 }
+
+enum DevelopmentType {
+  CONDOMINIO
+  EDIFICIO
+}
+
+model Development {
+  id Int @id @default(autoincrement())
+
+  type           DevelopmentType
+  name           String          @db.VarChar(180)
+  normalizedName String          @db.VarChar(180)
+
+  state        String @default("SP") @db.VarChar(2)
+  city         String @db.VarChar(120)
+  neighborhood String @db.VarChar(150)
+
+  active Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([state, city, neighborhood, normalizedName])
+  @@index([state, city])
+  @@index([neighborhood])
+  @@index([type])
+  @@index([active])
+}

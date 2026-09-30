@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useState,
   type ChangeEvent,
 } from "react";
@@ -43,6 +44,8 @@ type PropertyAddressFieldsProps = {
   defaultNeighborhood?: string;
   defaultAddress?: string;
   defaultZipCode?: string;
+  defaultDevelopment?: string;
+  canCreateDevelopment?: boolean;
 };
 
 export default function PropertyAddressFields({
@@ -54,6 +57,8 @@ export default function PropertyAddressFields({
   defaultNeighborhood = "",
   defaultAddress = "",
   defaultZipCode = "",
+  defaultDevelopment = "",
+  canCreateDevelopment = false,
 }: PropertyAddressFieldsProps) {
   const [
     state,
@@ -121,6 +126,39 @@ export default function PropertyAddressFields({
   ] = useState<
     AddressSearchResult[]
   >([]);
+
+  const [developments, setDevelopments] =
+    useState<string[]>([]);
+
+  const [development, setDevelopment] =
+    useState(defaultDevelopment);
+
+  const [
+    showDevelopmentForm,
+    setShowDevelopmentForm,
+  ] = useState(false);
+
+  const [
+    newDevelopmentType,
+    setNewDevelopmentType,
+  ] = useState<"CONDOMINIO" | "EDIFICIO">(
+    "CONDOMINIO",
+  );
+
+  const [
+    newDevelopmentName,
+    setNewDevelopmentName,
+  ] = useState("");
+
+  const [
+    creatingDevelopment,
+    setCreatingDevelopment,
+  ] = useState(false);
+
+  const [
+    developmentMessage,
+    setDevelopmentMessage,
+  ] = useState<string | null>(null);
 
   function clearSearchResults() {
     setAddressResults(
@@ -473,6 +511,169 @@ export default function PropertyAddressFields({
     clearSearchResults();
   }
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDevelopments() {
+      if (!city.trim() || !neighborhood.trim()) {
+        setDevelopments(
+          defaultDevelopment
+            ? [defaultDevelopment]
+            : [],
+        );
+        return;
+      }
+
+      try {
+        const query = new URLSearchParams({
+          estado: state.trim(),
+          cidade: city.trim(),
+          bairro: neighborhood.trim(),
+        });
+
+        const response = await fetch(
+          `/api/search-developments?${query.toString()}`,
+          {
+            cache: "no-store",
+          },
+        );
+
+        if (!response.ok || cancelled) {
+          return;
+        }
+
+        const data =
+          (await response.json()) as string[];
+
+        const options =
+          defaultDevelopment &&
+          !data.includes(defaultDevelopment)
+            ? [defaultDevelopment, ...data]
+            : data;
+
+        if (!cancelled) {
+          setDevelopments(
+            Array.from(
+              new Set(options),
+            ).sort((a, b) =>
+              a.localeCompare(b, "pt-BR"),
+            ),
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setDevelopments(
+            defaultDevelopment
+              ? [defaultDevelopment]
+              : [],
+          );
+        }
+      }
+    }
+
+    void loadDevelopments();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    state,
+    city,
+    neighborhood,
+    defaultDevelopment,
+  ]);
+
+  async function createDevelopmentInline() {
+    const name =
+      newDevelopmentName.trim();
+
+    if (!name) {
+      setDevelopmentMessage(
+        "Informe o nome do condom?nio ou edif?cio.",
+      );
+      return;
+    }
+
+    if (!city.trim() || !neighborhood.trim()) {
+      setDevelopmentMessage(
+        "Informe cidade e bairro antes do cadastro.",
+      );
+      return;
+    }
+
+    setCreatingDevelopment(true);
+    setDevelopmentMessage(null);
+
+    try {
+      const response = await fetch(
+        "/api/admin/developments",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            type: newDevelopmentType,
+            name,
+            state: state.trim(),
+            city: city.trim(),
+            neighborhood:
+              neighborhood.trim(),
+          }),
+        },
+      );
+
+      const payload =
+        (await response.json()) as {
+          success?: boolean;
+          error?: string;
+          development?: {
+            name?: string;
+          };
+        };
+
+      if (
+        !response.ok ||
+        !payload.success ||
+        !payload.development?.name
+      ) {
+        setDevelopmentMessage(
+          payload.error ??
+            "N?o foi poss?vel cadastrar.",
+        );
+        return;
+      }
+
+      const createdName =
+        payload.development.name;
+
+      setDevelopments((current) =>
+        Array.from(
+          new Set([
+            ...current,
+            createdName,
+          ]),
+        ).sort((a, b) =>
+          a.localeCompare(b, "pt-BR"),
+        ),
+      );
+
+      setDevelopment(createdName);
+      setNewDevelopmentName("");
+      setShowDevelopmentForm(false);
+
+      setDevelopmentMessage(
+        "Empreendimento cadastrado e selecionado.",
+      );
+    } catch {
+      setDevelopmentMessage(
+        "N?o foi poss?vel cadastrar agora.",
+      );
+    } finally {
+      setCreatingDevelopment(false);
+    }
+  }
+
   return (
     <>
       <label className="flex flex-col gap-2">
@@ -548,6 +749,111 @@ export default function PropertyAddressFields({
           labelClass
         }
       />
+
+      <label className="flex flex-col gap-2">
+        <span className={labelClass}>
+          Condomínio ou edifício
+        </span>
+
+        <select
+          name="development"
+          value={development}
+          onChange={(event) =>
+            setDevelopment(
+              event.target.value,
+            )
+          }
+          className={inputClass}
+        >
+          <option value="">
+            Sem condomínio / edifício
+          </option>
+
+          {developments.map((item) => (
+            <option
+              key={item}
+              value={item}
+            >
+              {item}
+            </option>
+          ))}
+        </select>
+
+        {canCreateDevelopment ? (
+          <button
+            type="button"
+            onClick={() => {
+              setShowDevelopmentForm(
+                (current) => !current,
+              );
+              setDevelopmentMessage(null);
+            }}
+            className="min-h-10 border border-amber-500/50 px-4 text-[10px] font-bold uppercase tracking-[0.14em] text-amber-400 transition hover:border-amber-400"
+          >
+            {showDevelopmentForm
+              ? "Cancelar novo cadastro"
+              : "Cadastrar novo"}
+          </button>
+        ) : null}
+      </label>
+
+      {canCreateDevelopment &&
+      showDevelopmentForm ? (
+        <div className="border border-amber-500/20 bg-amber-500/5 p-5 md:col-span-2 xl:col-span-4">
+          <div className="grid gap-4 md:grid-cols-[180px_1fr_auto]">
+            <select
+              value={newDevelopmentType}
+              onChange={(event) =>
+                setNewDevelopmentType(
+                  event.target.value as
+                    | "CONDOMINIO"
+                    | "EDIFICIO",
+                )
+              }
+              className={inputClass}
+            >
+              <option value="CONDOMINIO">
+                Condomínio
+              </option>
+
+              <option value="EDIFICIO">
+                Edifício
+              </option>
+            </select>
+
+            <input
+              type="text"
+              value={newDevelopmentName}
+              onChange={(event) =>
+                setNewDevelopmentName(
+                  event.target.value,
+                )
+              }
+              placeholder="Nome do condom?nio ou edif?cio"
+              className={inputClass}
+            />
+
+            <button
+              type="button"
+              onClick={() => {
+                void createDevelopmentInline();
+              }}
+              disabled={creatingDevelopment}
+              className="min-h-12 bg-amber-500 px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-black transition hover:bg-amber-400 disabled:opacity-50"
+            >
+              {creatingDevelopment
+                ? "Cadastrando..."
+                : "Cadastrar"}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {developmentMessage ? (
+        <p className="text-xs leading-5 text-amber-300 md:col-span-2 xl:col-span-4">
+          {developmentMessage}
+        </p>
+      ) : null}
 
       <label className="flex flex-col gap-2">
         <span

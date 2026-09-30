@@ -1446,6 +1446,14 @@ export default function EditPropertyForm({
 
               defaultZipCode={property.zipCode ?? ""}
 
+
+              defaultDevelopment={
+                property.development ??
+                ""
+              }
+              canCreateDevelopment={
+                isAdmin
+              }
             />
 
 
@@ -1508,25 +1516,7 @@ export default function EditPropertyForm({
 
 
 
-            <Field label="Condomínio ou edifício">
 
-              <input
-
-                name="development"
-
-                defaultValue={
-
-                  property.development ??
-
-                  ""
-
-                }
-
-                className={inputClass}
-
-              />
-
-            </Field>
 
 
 
