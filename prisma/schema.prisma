@@ -272,6 +272,10 @@ model PortalLead {
   property      Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   clientId      Int?
   client        Client?   @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
+  agentId Int?
+  agent   Agent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
   propertyCode  String    @db.VarChar(30)
   propertyTitle String    @db.VarChar(200)
 
@@ -307,6 +311,7 @@ model PortalLead {
   @@index([status])
   @@index([createdAt])
   @@index([clientId])
+  @@index([agentId])
 }
 
 model WhatsAppLeadIntent {
@@ -613,6 +618,7 @@ model Agent {
   coCapturedProperties Property[] @relation("PropertyCoCaptor")
 
   clients           Client[]
+  portalLeads       PortalLead[]
   visits            PropertyVisit[]
   proposals         PropertyProposal[]
   rentalProposals   PropertyRentalProposal[]

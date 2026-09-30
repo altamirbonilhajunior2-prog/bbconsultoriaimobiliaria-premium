@@ -10,23 +10,31 @@ export async function requireUser() {
     redirect("/login-admin");
   }
 
-  if (session.user.role === "CAPTADOR") {
-    const agentId = session.user.agentId;
+  const agentId = session.user.agentId;
 
-    if (!agentId) {
-      redirect("/login-admin");
-    }
+  if (
+    session.user.role === "CAPTADOR" &&
+    !agentId
+  ) {
+    redirect("/login-admin");
+  }
 
-    const agent = await prisma.agent.findUnique({
-      where: {
-        id: agentId,
-      },
-      select: {
-        active: true,
-      },
-    });
+  if (agentId) {
+    const agent =
+      await prisma.agent.findUnique({
+        where: {
+          id: agentId,
+        },
+        select: {
+          active: true,
+          role: true,
+        },
+      });
 
-    if (!agent?.active) {
+    if (
+      !agent?.active ||
+      agent.role !== session.user.role
+    ) {
       redirect("/login-admin");
     }
   }

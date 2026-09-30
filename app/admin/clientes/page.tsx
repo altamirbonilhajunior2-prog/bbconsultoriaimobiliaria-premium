@@ -106,18 +106,9 @@ export default async function ClientesPage() {
     access.isAdmin
       ? {}
       : {
-          OR: [
-            {
-              clientId: null,
-            },
-            {
-              client: {
-                agentId:
-                  access.agentId ??
-                  -1,
-              },
-            },
-          ],
+          agentId:
+            access.agentId ??
+            -1,
         };
 
   const [

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { prisma } from "../../../lib/prisma";
-import { getAccessContext } from "../../../lib/admin/access";
+import { getAccessContext, requireAdmin } from "../../../lib/admin/access";
 
 function text(
   formData: FormData,
@@ -389,6 +389,8 @@ async function ownerIsDuplicate({
 export async function createOwner(
   formData: FormData,
 ) {
+  await requireAdmin();
+
   const access =
     await getAccessContext();
 
@@ -576,6 +578,8 @@ export async function updateOwner(
   id: number,
   formData: FormData,
 ) {
+  await requireAdmin();
+
   const access =
     await getAccessContext();
 
@@ -784,6 +788,8 @@ export async function updateOwner(
 export async function deleteOwner(
   id: number,
 ) {
+  await requireAdmin();
+
   const access =
     await getAccessContext();
 

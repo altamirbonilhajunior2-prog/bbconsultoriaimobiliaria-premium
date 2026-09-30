@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { auth } from "../../../auth";
+import { requireAdmin } from "../../../lib/admin/access";
 import { prisma } from "../../../lib/prisma";
 
 export type ExternalAcquisitionOpportunityInput = {
@@ -280,15 +280,7 @@ function duplicateResult(
 export async function saveExternalAcquisitionOpportunity(
   input: ExternalAcquisitionOpportunityInput,
 ): Promise<SaveExternalOpportunityResult> {
-  const session = await auth();
-
-  if (!session?.user) {
-    return {
-      success: false,
-      message:
-        "Sessão expirada. Faça login novamente.",
-    };
-  }
+  await requireAdmin();
 
   const sourceUrl =
     textValue(input?.sourceUrl);
@@ -600,15 +592,7 @@ export async function saveExternalAcquisitionOpportunity(
 export async function deleteAcquisitionOpportunity(
   opportunityId: number,
 ) {
-  const session = await auth();
-
-  if (!session?.user) {
-    return {
-      success: false,
-      message:
-        "Sessão expirada. Faça login novamente.",
-    };
-  }
+  await requireAdmin();
 
   if (
     !Number.isInteger(

@@ -40,11 +40,11 @@ export default async function CaptadoresPage() {
             </p>
 
             <h1 className="mt-3 font-serif text-5xl">
-              Captadores / Angariadores
+              Equipe / Usuários
             </h1>
 
             <p className="mt-4 text-sm leading-7 text-zinc-400">
-              Gerencie os profissionais responsáveis pelas captações.
+              Gerencie administradores e Captadores / Corretores da B&B.
             </p>
           </div>
 
@@ -52,14 +52,14 @@ export default async function CaptadoresPage() {
             href="/admin/captadores/novo"
             className="inline-flex min-h-14 items-center justify-center bg-amber-500 px-7 text-xs font-bold uppercase tracking-[0.16em] text-black hover:bg-amber-400"
           >
-            Novo captador
+            Novo usuário
           </Link>
         </div>
 
         <div className="mt-10 space-y-4">
           {agents.length === 0 ? (
             <div className="border border-white/10 bg-[#0b0b0b] p-8 text-zinc-400">
-              Nenhum captador cadastrado.
+              Nenhum usuário cadastrado.
             </div>
           ) : (
             agents.map((agent) => {
@@ -84,6 +84,12 @@ export default async function CaptadoresPage() {
 
                     <p className="mt-1 text-xs text-zinc-500">
                       CRECI: {agent.creci || "Não informado"}
+                    </p>
+
+                    <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-amber-400">
+                      {agent.role === "ADMIN"
+                        ? "Administrador"
+                        : "Captador / Corretor"}
                     </p>
                   </div>
 

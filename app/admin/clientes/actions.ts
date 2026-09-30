@@ -74,6 +74,7 @@ export async function updatePortalLeadAction(
 
       select: {
         id: true,
+        agentId: true,
         clientId: true,
         propertyId: true,
         propertyCode: true,
@@ -97,12 +98,11 @@ export async function updatePortalLeadAction(
 
   if (
     !access.isAdmin &&
-    existingLead.client?.agentId !== null &&
-    existingLead.client?.agentId !==
+    existingLead.agentId !==
       access.agentId
   ) {
     throw new Error(
-      "Você não tem permissão para alterar o atendimento deste cliente.",
+      "Voc? n?o tem permiss?o para alterar este lead.",
     );
   }
 
@@ -117,7 +117,7 @@ export async function updatePortalLeadAction(
       if (
         existingLead.clientId &&
         existingLead.client?.agentId === null &&
-        access.agentId
+        existingLead.agentId
       ) {
         await tx.client.update({
           where: {
@@ -127,7 +127,7 @@ export async function updatePortalLeadAction(
 
           data: {
             agentId:
-              access.agentId,
+              existingLead.agentId,
           },
         });
       }
@@ -285,6 +285,7 @@ export async function convertPortalLeadToClientAction(
         id: true,
         name: true,
         phone: true,
+        agentId: true,
 
         clientId: true,
 
@@ -313,21 +314,19 @@ export async function convertPortalLeadToClientAction(
   }
 
   if (
-    lead.clientId &&
     !access.isAdmin &&
-    lead.client?.agentId !== null &&
-    lead.client?.agentId !==
+    lead.agentId !==
       access.agentId
   ) {
     throw new Error(
-      "Este lead já está vinculado à carteira de outro corretor.",
+      "Este lead n?o pertence ? sua carteira.",
     );
   }
 
   if (lead.clientId) {
     if (
       lead.client?.agentId === null &&
-      access.agentId
+      lead.agentId
     ) {
       await prisma.client.update({
         where: {
@@ -337,7 +336,7 @@ export async function convertPortalLeadToClientAction(
 
         data: {
           agentId:
-            access.agentId,
+            lead.agentId,
         },
       });
     }
@@ -404,7 +403,7 @@ export async function convertPortalLeadToClientAction(
                   lead.phone,
 
                 agentId:
-                  access.agentId ??
+                  lead.agentId ??
                   null,
               },
 
@@ -418,7 +417,7 @@ export async function convertPortalLeadToClientAction(
         } else if (
           existingClient &&
           existingClient.agentId === null &&
-          access.agentId
+          lead.agentId
         ) {
           await tx.client.update({
             where: {
@@ -428,7 +427,7 @@ export async function convertPortalLeadToClientAction(
 
             data: {
               agentId:
-                access.agentId,
+                lead.agentId,
             },
           });
         }

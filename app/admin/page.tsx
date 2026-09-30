@@ -20,9 +20,9 @@ const managementLinks = [
     href: "/admin/proprietarios",
   },
   {
-    title: "Captadores / Angariadores",
+    title: "Equipe / Usuários",
     description:
-      "Gerenciar profissionais responsáveis pelas captações.",
+      "Gerenciar administradores e Captadores / Corretores.",
     href: "/admin/captadores",
   },
   {
@@ -98,9 +98,23 @@ export default async function AdminPage() {
       ? managementLinks
       : managementLinks.filter(
           (item) =>
-            item.href !==
-            "/admin/captadores",
+            item.href ===
+              "/admin/imoveis" ||
+            item.href ===
+              "/admin/clientes",
         );
+
+  const dashboardLeadWhere = {
+    status: "NOVO" as const,
+
+    ...(access.isAdmin
+      ? {}
+      : {
+          agentId:
+            access.agentId ??
+            -1,
+        }),
+  };
 
   const [
     totalProperties,
@@ -155,15 +169,13 @@ export default async function AdminPage() {
     }),
 
     prisma.portalLead.count({
-      where: {
-        status: "NOVO",
-      },
+      where:
+        dashboardLeadWhere,
     }),
 
     prisma.portalLead.findMany({
-      where: {
-        status: "NOVO",
-      },
+      where:
+        dashboardLeadWhere,
 
       orderBy: {
         createdAt: "desc",

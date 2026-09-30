@@ -52,7 +52,7 @@ export default async function EditarCaptadorPage({
         </Link>
 
         <h1 className="mt-8 font-serif text-5xl">
-          Editar captador
+          Editar usu?rio
         </h1>
 
         <form
@@ -85,6 +85,27 @@ export default async function EditarCaptadorPage({
             name="creci"
             value={agent.creci}
           />
+
+          <label>
+            <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
+              Perfil *
+            </span>
+
+            <select
+              name="role"
+              required
+              defaultValue={agent.role}
+              className={fieldClass}
+            >
+              <option value="CAPTADOR">
+                Captador / Corretor
+              </option>
+
+              <option value="ADMIN">
+                Administrador
+              </option>
+            </select>
+          </label>
 
           <Field
             label="Nova senha"

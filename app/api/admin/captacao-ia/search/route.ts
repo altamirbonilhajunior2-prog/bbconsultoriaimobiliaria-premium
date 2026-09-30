@@ -330,6 +330,21 @@ export async function POST(
       );
     }
 
+    if (
+      session.user.role !== "ADMIN"
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Acesso restrito a administradores.",
+        },
+        {
+          status: 403,
+        },
+      );
+    }
+
     const apiKey =
       process.env.OPENAI_API_KEY;
 

@@ -383,78 +383,145 @@ export async function POST(
     );
 
   const lead =
-    await prisma.portalLead.create(
-      {
-        data: {
-          propertyId:
-            property?.id ??
-            null,
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.$queryRawUnsafe(
+          "SELECT pg_advisory_xact_lock(2026093001)",
+        );
 
-          propertyCode:
-            property?.code ??
-            GENERAL_LEAD_CODE,
+        const activeAgents =
+          await tx.agent.findMany({
+            where: {
+              role: "CAPTADOR",
+              active: true,
+            },
 
-          propertyTitle:
-            property?.title ??
-            GENERAL_LEAD_TITLE,
+            select: {
+              id: true,
 
-          name,
-          phone,
+              portalLeads: {
+                orderBy: {
+                  createdAt: "desc",
+                },
 
-          sourcePage,
+                take: 1,
 
-          referrer:
-            optionalText(
-              body.referrer,
-              MAX_SOURCE_LENGTH,
-            ),
+                select: {
+                  createdAt: true,
+                },
+              },
+            },
+          });
 
-          utmSource:
-            optionalText(
-              body.utmSource,
-              180,
-            ),
+        activeAgents.sort(
+          (agentA, agentB) => {
+            const lastLeadA =
+              agentA.portalLeads[0]
+                ?.createdAt.getTime() ??
+              0;
 
-          utmMedium:
-            optionalText(
-              body.utmMedium,
-              180,
-            ),
+            const lastLeadB =
+              agentB.portalLeads[0]
+                ?.createdAt.getTime() ??
+              0;
 
-          utmCampaign:
-            optionalText(
-              body.utmCampaign,
-              250,
-            ),
+            if (
+              lastLeadA !== lastLeadB
+            ) {
+              return (
+                lastLeadA -
+                lastLeadB
+              );
+            }
 
-          utmTerm:
-            optionalText(
-              body.utmTerm,
-              250,
-            ),
+            return (
+              agentA.id -
+              agentB.id
+            );
+          },
+        );
 
-          utmContent:
-            optionalText(
-              body.utmContent,
-              250,
-            ),
+        const assignedAgentId =
+          activeAgents[0]?.id ??
+          null;
 
-          gclid:
-            optionalText(
-              body.gclid,
-              255,
-            ),
+        return tx.portalLead.create(
+          {
+            data: {
+              propertyId:
+                property?.id ??
+                null,
 
-          consentVersion:
-            PORTAL_LEAD_CONSENT_VERSION,
+              agentId:
+                assignedAgentId,
 
-          consentText:
-            PORTAL_LEAD_CONSENT_TEXT,
-        },
+              propertyCode:
+                property?.code ??
+                GENERAL_LEAD_CODE,
 
-        select: {
-          id: true,
-        },
+              propertyTitle:
+                property?.title ??
+                GENERAL_LEAD_TITLE,
+
+              name,
+              phone,
+
+              sourcePage,
+
+              referrer:
+                optionalText(
+                  body.referrer,
+                  MAX_SOURCE_LENGTH,
+                ),
+
+              utmSource:
+                optionalText(
+                  body.utmSource,
+                  180,
+                ),
+
+              utmMedium:
+                optionalText(
+                  body.utmMedium,
+                  180,
+                ),
+
+              utmCampaign:
+                optionalText(
+                  body.utmCampaign,
+                  250,
+                ),
+
+              utmTerm:
+                optionalText(
+                  body.utmTerm,
+                  250,
+                ),
+
+              utmContent:
+                optionalText(
+                  body.utmContent,
+                  250,
+                ),
+
+              gclid:
+                optionalText(
+                  body.gclid,
+                  255,
+                ),
+
+              consentVersion:
+                PORTAL_LEAD_CONSENT_VERSION,
+
+              consentText:
+                PORTAL_LEAD_CONSENT_TEXT,
+            },
+
+            select: {
+              id: true,
+            },
+          },
+        );
       },
     );
 

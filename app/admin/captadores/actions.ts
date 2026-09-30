@@ -22,6 +22,23 @@ function text(formData: FormData, name: string) {
   return trimmed || null;
 }
 
+function agentRole(formData: FormData) {
+  const role = text(
+    formData,
+    "role",
+  );
+
+  if (role === "ADMIN") {
+    return "ADMIN" as const;
+  }
+
+  if (role === "CAPTADOR") {
+    return "CAPTADOR" as const;
+  }
+
+  return null;
+}
+
 async function createPassword(password: string) {
   const salt = randomBytes(32).toString("hex");
 
@@ -43,8 +60,9 @@ export async function createAgent(formData: FormData) {
   const name = text(formData, "name");
   const email = text(formData, "email")?.toLowerCase();
   const password = text(formData, "password");
+  const role = agentRole(formData);
 
-  if (!name || !email || !password) {
+  if (!name || !email || !password || !role) {
     throw new Error(
       "Nome, e-mail e senha são obrigatórios.",
     );
@@ -76,7 +94,7 @@ export async function createAgent(formData: FormData) {
       email,
       phone: text(formData, "phone"),
       creci: text(formData, "creci"),
-      role: "CAPTADOR",
+      role,
       active: true,
       passwordHash: credentials.hash,
       passwordSalt: credentials.salt,
@@ -97,8 +115,9 @@ export async function updateAgent(
   const name = text(formData, "name");
   const email = text(formData, "email")?.toLowerCase();
   const password = text(formData, "password");
+  const role = agentRole(formData);
 
-  if (!name || !email) {
+  if (!name || !email || !role) {
     throw new Error(
       "Nome e e-mail são obrigatórios.",
     );
@@ -133,6 +152,7 @@ export async function updateAgent(
       email,
       phone: text(formData, "phone"),
       creci: text(formData, "creci"),
+      role,
 
       ...(passwordData
         ? {

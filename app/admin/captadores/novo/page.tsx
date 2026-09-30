@@ -20,7 +20,7 @@ export default async function NovoCaptadorPage() {
         </Link>
 
         <h1 className="mt-8 font-serif text-5xl">
-          Novo captador
+          Novo usu?rio
         </h1>
 
         <form
@@ -31,6 +31,28 @@ export default async function NovoCaptadorPage() {
           <Field label="E-mail *" name="email" type="email" required />
           <Field label="Telefone / WhatsApp" name="phone" />
           <Field label="CRECI" name="creci" />
+
+          <label>
+            <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
+              Perfil *
+            </span>
+
+            <select
+              name="role"
+              required
+              defaultValue="CAPTADOR"
+              className={fieldClass}
+            >
+              <option value="CAPTADOR">
+                Captador / Corretor
+              </option>
+
+              <option value="ADMIN">
+                Administrador
+              </option>
+            </select>
+          </label>
+
           <Field label="Senha inicial *" name="password" type="password" required />
 
           <div className="md:col-span-2">
@@ -38,7 +60,7 @@ export default async function NovoCaptadorPage() {
               type="submit"
               className="min-h-14 bg-amber-500 px-8 text-xs font-bold uppercase tracking-[0.16em] text-black"
             >
-              Cadastrar captador
+              Cadastrar usu?rio
             </button>
           </div>
         </form>

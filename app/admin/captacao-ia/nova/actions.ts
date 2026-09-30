@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { auth } from "../../../../auth";
+import { requireAdmin } from "../../../../lib/admin/access";
 import { prisma } from "../../../../lib/prisma";
 
 export type AcquisitionFormState = {
@@ -208,15 +208,7 @@ export async function createAcquisitionAction(
   _previousState: AcquisitionFormState,
   formData: FormData,
 ): Promise<AcquisitionFormState> {
-  const session = await auth();
-
-  if (!session?.user) {
-    return {
-      success: false,
-      message:
-        "Sessão expirada. Faça login novamente.",
-    };
-  }
+  await requireAdmin();
 
   const source =
     mapSource(

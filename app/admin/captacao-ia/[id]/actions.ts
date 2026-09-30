@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { auth } from "../../../../auth";
+import { requireAdmin } from "../../../../lib/admin/access";
 import { prisma } from "../../../../lib/prisma";
 
 function getOpportunityId(
@@ -67,11 +67,7 @@ function revalidateOpportunity(
 export async function registerContactAction(
   formData: FormData,
 ) {
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect("/login-admin");
-  }
+  await requireAdmin();
 
   const opportunityId =
     getOpportunityId(formData);
@@ -125,11 +121,7 @@ export async function registerContactAction(
 export async function requestAuthorizationAction(
   formData: FormData,
 ) {
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect("/login-admin");
-  }
+  await requireAdmin();
 
   const opportunityId =
     getOpportunityId(formData);
@@ -202,11 +194,7 @@ export async function requestAuthorizationAction(
 export async function registerAuthorizationResponseAction(
   formData: FormData,
 ) {
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect("/login-admin");
-  }
+  await requireAdmin();
 
   const opportunityId =
     getOpportunityId(formData);
