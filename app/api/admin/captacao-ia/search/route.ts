@@ -29,6 +29,11 @@ type SearchOpportunity = {
 
   sourceName: string;
   sourceType: string;
+  advertiserType:
+    | "PROPRIETARIO"
+    | "IMOBILIARIA"
+    | "CORRETOR"
+    | "NAO_IDENTIFICADO";
   sourceUrl: string;
 
   city: string;
@@ -481,6 +486,12 @@ export async function POST(
               "- Procure trazer oportunidades de fontes diferentes sempre que houver opções compatíveis.",
               "- sourceName deve identificar corretamente o portal, imobiliária ou fonte original encontrada.",
               "- sourceType deve indicar de forma objetiva o tipo da fonte, por exemplo portal imobiliário, imobiliária local, imobiliária regional ou anúncio classificado.",
+              "- advertiserType deve identificar quem esta anunciando o imovel, e nao o tipo do site.",
+              "- Use PROPRIETARIO somente quando houver evidencia clara de particular, proprietario ou direto com proprietario.",
+              "- Use IMOBILIARIA somente quando o anuncio identificar uma imobiliaria ou empresa imobiliaria como anunciante.",
+              "- Use CORRETOR somente quando o anuncio identificar claramente um corretor ou profissional individual como anunciante.",
+              "- Se o anunciante nao estiver claramente identificado, use NAO_IDENTIFICADO.",
+              "- Nunca deduza advertiserType apenas porque a origem e OLX, ZAP Imoveis, Viva Real, Imovelweb ou outro portal.",
               "- sourceUrl deve apontar para a URL pública real do anúncio.",
               "- price deve ser numérico em reais quando for possível identificar.",
               "- Se um dado não estiver disponível, use null para números e string vazia para textos.",
@@ -500,6 +511,7 @@ export async function POST(
               "Inclua web geral, imobiliárias locais e grandes portais imobiliários.",
               "Para São José dos Campos, procure também I9 Vale, Pirâmide Imóveis, Riccio Imóveis, Nova Freitas, Rede São José e outras imobiliárias relevantes da cidade.",
               "Pesquise também OLX, ZAP Imóveis, Viva Real, Imovelweb e outros portais relevantes.",
+              "Nos portais, considere anuncios de proprietarios, imobiliarias e corretores. Identifique advertiserType somente quando houver evidencia no resultado ou na pagina do anuncio.",
               "Use buscas direcionadas por domínio quando forem úteis.",
               "Não concentre todos os resultados em uma única fonte se houver alternativas compatíveis.",
               "Retorne apenas oportunidades que possuam URL pública real e verificável.",
@@ -549,6 +561,17 @@ export async function POST(
 
                       sourceType: {
                         type: "string",
+                      },
+
+                      advertiserType: {
+                        type: "string",
+
+                        enum: [
+                          "PROPRIETARIO",
+                          "IMOBILIARIA",
+                          "CORRETOR",
+                          "NAO_IDENTIFICADO",
+                        ],
                       },
 
                       sourceUrl: {
@@ -655,6 +678,7 @@ export async function POST(
                       "title",
                       "sourceName",
                       "sourceType",
+                      "advertiserType",
                       "sourceUrl",
                       "city",
                       "neighborhood",

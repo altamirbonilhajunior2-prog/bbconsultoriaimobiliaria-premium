@@ -9,6 +9,11 @@ export type ExternalAcquisitionOpportunityInput = {
   title: string;
   sourceName: string;
   sourceType: string;
+  advertiserType:
+    | "PROPRIETARIO"
+    | "IMOBILIARIA"
+    | "CORRETOR"
+    | "NAO_IDENTIFICADO";
   sourceUrl: string;
 
   state: string;
@@ -152,31 +157,26 @@ function mapExternalSource(
 }
 
 function mapExternalOrigin(
-  sourceType: string,
+  advertiserType:
+    ExternalAcquisitionOpportunityInput["advertiserType"],
 ) {
-  const normalized =
-    normalizedLabel(sourceType);
-
   if (
-    normalized.includes(
-      "proprietario",
-    )
+    advertiserType ===
+    "PROPRIETARIO"
   ) {
     return "PROPRIETARIO" as const;
   }
 
   if (
-    normalized.includes(
-      "imobiliaria",
-    )
+    advertiserType ===
+    "IMOBILIARIA"
   ) {
     return "IMOBILIARIA" as const;
   }
 
   if (
-    normalized.includes(
-      "corretor",
-    )
+    advertiserType ===
+    "CORRETOR"
   ) {
     return "CORRETOR" as const;
   }
@@ -449,7 +449,7 @@ export async function saveExternalAcquisitionOpportunity(
 
           origin:
             mapExternalOrigin(
-              sourceType,
+              input.advertiserType,
             ),
 
           status: "ENCONTRADO",

@@ -14,6 +14,11 @@ type SearchOpportunity = {
   title: string;
   sourceName: string;
   sourceType: string;
+  advertiserType:
+    | "PROPRIETARIO"
+    | "IMOBILIARIA"
+    | "CORRETOR"
+    | "NAO_IDENTIFICADO";
   sourceUrl: string;
 
   city: string;
@@ -36,6 +41,24 @@ type SearchOpportunity = {
 
   notes: string;
 };
+
+function getAdvertiserTypeLabel(
+  value: SearchOpportunity["advertiserType"],
+) {
+  if (value === "PROPRIETARIO") {
+    return "Propriet\u00e1rio direto";
+  }
+
+  if (value === "IMOBILIARIA") {
+    return "Imobili\u00e1ria";
+  }
+
+  if (value === "CORRETOR") {
+    return "Corretor";
+  }
+
+  return "N\u00e3o identificado";
+}
 
 type SearchResponse = {
   success: boolean;
@@ -369,6 +392,9 @@ export default function ExternalSearchPanel() {
 
           sourceType:
             opportunity.sourceType,
+
+          advertiserType:
+            opportunity.advertiserType,
 
           sourceUrl,
 
@@ -931,6 +957,13 @@ export default function ExternalSearchPanel() {
                             {
                               opportunity.sourceName
                             }
+                          </span>
+
+                          <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-400">
+                            Anunciante:{" "}
+                            {getAdvertiserTypeLabel(
+                              opportunity.advertiserType,
+                            )}
                           </span>
                         </div>
 
