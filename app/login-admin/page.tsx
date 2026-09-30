@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { auth } from "../../auth";
+import { prisma } from "../../lib/prisma";
 import LoginForm from "./LoginForm";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,35 @@ export default async function LoginAdminPage() {
   const session = await auth();
 
   if (session?.user) {
-    redirect("/admin");
+    const agentId =
+      session.user.agentId;
+
+    if (!agentId) {
+      if (
+        session.user.role === "ADMIN"
+      ) {
+        redirect("/admin");
+      }
+    } else {
+      const agent =
+        await prisma.agent.findUnique({
+          where: {
+            id: agentId,
+          },
+          select: {
+            active: true,
+            role: true,
+          },
+        });
+
+      if (
+        agent?.active &&
+        agent.role ===
+          session.user.role
+      ) {
+        redirect("/admin");
+      }
+    }
   }
 
   return (

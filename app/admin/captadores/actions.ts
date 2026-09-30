@@ -172,19 +172,55 @@ export async function updateAgent(
 export async function toggleAgent(
   id: number,
 ) {
-  await requireAdmin();
+  const currentUser =
+    await requireAdmin();
 
-  const agent = await prisma.agent.findUnique({
-    where: {
-      id,
-    },
-    select: {
-      active: true,
-    },
-  });
+  const agent =
+    await prisma.agent.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        active: true,
+        role: true,
+        email: true,
+      },
+    });
 
   if (!agent) {
-    throw new Error("Captador não encontrado.");
+    throw new Error(
+      "Usuario nao encontrado.",
+    );
+  }
+
+  if (
+    agent.active &&
+    currentUser.email &&
+    agent.email.toLowerCase() ===
+      currentUser.email.toLowerCase()
+  ) {
+    throw new Error(
+      "Voce nao pode desativar o proprio acesso.",
+    );
+  }
+
+  if (
+    agent.active &&
+    agent.role === "ADMIN"
+  ) {
+    const activeAdmins =
+      await prisma.agent.count({
+        where: {
+          role: "ADMIN",
+          active: true,
+        },
+      });
+
+    if (activeAdmins <= 1) {
+      throw new Error(
+        "O sistema precisa manter pelo menos um Administrador ativo.",
+      );
+    }
   }
 
   await prisma.agent.update({
@@ -196,5 +232,7 @@ export async function toggleAgent(
     },
   });
 
-  revalidatePath("/admin/captadores");
+  revalidatePath(
+    "/admin/captadores",
+  );
 }
