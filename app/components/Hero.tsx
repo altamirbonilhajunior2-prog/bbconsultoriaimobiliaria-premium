@@ -341,14 +341,14 @@ export default function Hero({
       <div className="relative z-10">
           <div className="mx-auto flex min-h-[760px] max-w-[1720px] flex-col justify-center px-5 py-12 sm:min-h-[580px] sm:px-6 sm:py-14 lg:min-h-[600px] lg:px-10 lg:py-14 xl:px-12">
           <div className="max-w-[650px]">
-            <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-amber-400 sm:text-xs">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400 sm:text-xs sm:tracking-[0.24em]">
               Conexões que constroem patrimônio.
             </p>
 
-            <h1 className="mt-4 font-serif text-[36px] font-normal leading-[1.02] tracking-[-0.03em] text-white drop-shadow-[0_2px_5px_rgba(0,0,0,0.72)] sm:mt-5 sm:text-[50px] sm:leading-[0.98] lg:text-[68px]">
+            <h1 className="mt-4 bg-gradient-to-r from-white via-amber-100 to-amber-400 bg-clip-text font-serif text-[36px] font-normal leading-[1.02] tracking-[-0.03em] text-transparent drop-shadow-[0_2px_5px_rgba(0,0,0,0.72)] sm:mt-5 sm:bg-none sm:text-[50px] sm:leading-[0.98] sm:text-white lg:text-[68px]">
               Imóveis em São José dos Campos e região.
 
-              <span className="mt-2 block text-[#e2b967] drop-shadow-[0_2px_5px_rgba(0,0,0,0.72)]">
+              <span className="mt-2 block text-transparent drop-shadow-[0_2px_5px_rgba(0,0,0,0.72)] sm:text-[#e2b967]">
                 Estratégia para
                 <br />
                 grandes decisões.
