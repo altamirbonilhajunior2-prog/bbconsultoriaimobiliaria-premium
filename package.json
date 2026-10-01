@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && tsx scripts/importar-localizacoes-bairros.ts && tsx scripts/importar-referencia-jardim-das-colinas.ts && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "data:import-neighborhoods": "tsx scripts/importar-localizacoes-bairros.ts"
+    "data:import-neighborhoods": "tsx scripts/importar-localizacoes-bairros.ts",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "data:import-market-reference": "tsx scripts/importar-referencia-jardim-das-colinas.ts"
   },
   "dependencies": {
     "@next/third-parties": "^16.3.1",
