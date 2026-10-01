@@ -52,7 +52,7 @@ export default async function EditarCaptadorPage({
         </Link>
 
         <h1 className="mt-8 font-serif text-5xl">
-          Editar usu?rio
+          Editar usuário
         </h1>
 
         <form
@@ -111,11 +111,10 @@ export default async function EditarCaptadorPage({
             label="Nova senha"
             name="password"
             type="password"
+            minLength={12}
+            autoComplete="new-password"
+            description="Deixe em branco para manter a senha atual. Para trocar: mínimo de 12 caracteres, com letra maiúscula, letra minúscula, número e caractere especial."
           />
-
-          <div className="md:col-span-2 text-xs text-zinc-500">
-            Deixe a nova senha em branco para manter a senha atual.
-          </div>
 
           <div className="md:col-span-2">
             <button
@@ -137,12 +136,18 @@ function Field({
   value,
   type = "text",
   required = false,
+  minLength,
+  autoComplete,
+  description,
 }: {
   label: string;
   name: string;
   value?: string | null;
   type?: string;
   required?: boolean;
+  minLength?: number;
+  autoComplete?: string;
+  description?: string;
 }) {
   return (
     <label>
@@ -155,8 +160,16 @@ function Field({
         type={type}
         defaultValue={value || ""}
         required={required}
+        minLength={minLength}
+        autoComplete={autoComplete}
         className={fieldClass}
       />
+
+      {description ? (
+        <span className="mt-2 block text-xs leading-5 text-zinc-500">
+          {description}
+        </span>
+      ) : null}
     </label>
   );
 }
