@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { auth } from "../../../../auth";
 import { interpretIrisMessage } from "../../../../lib/iris/interpret";
 
 type IrisInterpretRequest = {
@@ -9,6 +10,21 @@ type IrisInterpretRequest = {
 export async function POST(
   request: Request,
 ) {
+  const session = await auth();
+
+  if (!session?.user) {
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          "Não autorizado.",
+      },
+      {
+        status: 401,
+      },
+    );
+  }
+
   try {
     const body =
       (await request.json()) as IrisInterpretRequest;
