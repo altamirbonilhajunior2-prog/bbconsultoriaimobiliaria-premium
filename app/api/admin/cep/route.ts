@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 
+import { auth } from "../../../../auth";
+
 type ViaCepResponse = {
   cep?: string;
   logradouro?: string;
@@ -90,6 +92,21 @@ async function fetchViaCep(
 export async function GET(
   request: Request,
 ) {
+  const session = await auth();
+
+  if (!session?.user) {
+    return NextResponse.json(
+      {
+        found: false,
+        error:
+          "Não autorizado.",
+      },
+      {
+        status: 401,
+      },
+    );
+  }
+
   const { searchParams } =
     new URL(request.url);
 
