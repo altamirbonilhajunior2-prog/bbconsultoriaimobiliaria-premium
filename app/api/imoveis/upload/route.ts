@@ -63,13 +63,7 @@ export async function POST(
               ? session.user.agentId
               : null;
 
-          if (!isAdmin) {
-            if (agentId === null) {
-              throw new Error(
-                "Acesso não autorizado.",
-              );
-            }
-
+          if (agentId !== null) {
             const currentAgent =
               await prisma.agent.findUnique({
                 where: {
@@ -90,6 +84,10 @@ export async function POST(
                 "Acesso não autorizado.",
               );
             }
+          } else if (!isAdmin) {
+            throw new Error(
+              "Acesso não autorizado.",
+            );
           }
 
           let payload: UploadPayload = {};
