@@ -54,6 +54,44 @@ export async function POST(
             );
           }
 
+          const isAdmin =
+            session.user.role === "ADMIN";
+
+          const agentId =
+            typeof session.user.agentId ===
+            "number"
+              ? session.user.agentId
+              : null;
+
+          if (!isAdmin) {
+            if (agentId === null) {
+              throw new Error(
+                "Acesso não autorizado.",
+              );
+            }
+
+            const currentAgent =
+              await prisma.agent.findUnique({
+                where: {
+                  id: agentId,
+                },
+                select: {
+                  active: true,
+                  role: true,
+                },
+              });
+
+            if (
+              !currentAgent?.active ||
+              currentAgent.role !==
+                session.user.role
+            ) {
+              throw new Error(
+                "Acesso não autorizado.",
+              );
+            }
+          }
+
           let payload: UploadPayload = {};
 
           if (clientPayload) {
@@ -85,12 +123,31 @@ export async function POST(
               },
               select: {
                 id: true,
+                captorId: true,
+                coCaptorId: true,
               },
             });
 
           if (!property) {
             throw new Error(
               "Imóvel não encontrado.",
+            );
+          }
+
+          if (
+            !isAdmin &&
+            (
+              agentId === null ||
+              (
+                property.captorId !==
+                  agentId &&
+                property.coCaptorId !==
+                  agentId
+              )
+            )
+          ) {
+            throw new Error(
+              "Você não tem permissão para enviar imagens para este imóvel.",
             );
           }
 
