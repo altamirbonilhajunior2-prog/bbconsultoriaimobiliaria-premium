@@ -54,6 +54,38 @@ async function createPassword(password: string) {
   };
 }
 
+function validatePassword(password: string) {
+  if (password.length < 12) {
+    throw new Error(
+      "A senha deve ter pelo menos 12 caracteres.",
+    );
+  }
+
+  if (!/[a-z]/.test(password)) {
+    throw new Error(
+      "A senha deve conter pelo menos uma letra minúscula.",
+    );
+  }
+
+  if (!/[A-Z]/.test(password)) {
+    throw new Error(
+      "A senha deve conter pelo menos uma letra maiúscula.",
+    );
+  }
+
+  if (!/[0-9]/.test(password)) {
+    throw new Error(
+      "A senha deve conter pelo menos um número.",
+    );
+  }
+
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    throw new Error(
+      "A senha deve conter pelo menos um caractere especial.",
+    );
+  }
+}
+
 export async function createAgent(formData: FormData) {
   await requireAdmin();
 
@@ -68,11 +100,7 @@ export async function createAgent(formData: FormData) {
     );
   }
 
-  if (password.length < 8) {
-    throw new Error(
-      "A senha deve ter pelo menos 8 caracteres.",
-    );
-  }
+  validatePassword(password);
 
   const existing = await prisma.agent.findUnique({
     where: {
@@ -136,6 +164,10 @@ export async function updateAgent(
     throw new Error(
       "Já existe outro captador com este e-mail.",
     );
+  }
+
+  if (password !== null) {
+    validatePassword(password);
   }
 
   const passwordData =

@@ -20,17 +20,35 @@ export default async function NovoCaptadorPage() {
         </Link>
 
         <h1 className="mt-8 font-serif text-5xl">
-          Novo usu?rio
+          Novo usuário
         </h1>
 
         <form
           action={createAgent}
           className="mt-10 grid gap-5 md:grid-cols-2"
         >
-          <Field label="Nome *" name="name" required />
-          <Field label="E-mail *" name="email" type="email" required />
-          <Field label="Telefone / WhatsApp" name="phone" />
-          <Field label="CRECI" name="creci" />
+          <Field
+            label="Nome *"
+            name="name"
+            required
+          />
+
+          <Field
+            label="E-mail *"
+            name="email"
+            type="email"
+            required
+          />
+
+          <Field
+            label="Telefone / WhatsApp"
+            name="phone"
+          />
+
+          <Field
+            label="CRECI"
+            name="creci"
+          />
 
           <label>
             <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-amber-400">
@@ -53,14 +71,22 @@ export default async function NovoCaptadorPage() {
             </select>
           </label>
 
-          <Field label="Senha inicial *" name="password" type="password" required />
+          <Field
+            label="Senha inicial *"
+            name="password"
+            type="password"
+            required
+            minLength={12}
+            autoComplete="new-password"
+            description="Mínimo de 12 caracteres, com letra maiúscula, letra minúscula, número e caractere especial."
+          />
 
           <div className="md:col-span-2">
             <button
               type="submit"
               className="min-h-14 bg-amber-500 px-8 text-xs font-bold uppercase tracking-[0.16em] text-black"
             >
-              Cadastrar usu?rio
+              Cadastrar usuário
             </button>
           </div>
         </form>
@@ -74,11 +100,17 @@ function Field({
   name,
   type = "text",
   required = false,
+  minLength,
+  autoComplete,
+  description,
 }: {
   label: string;
   name: string;
   type?: string;
   required?: boolean;
+  minLength?: number;
+  autoComplete?: string;
+  description?: string;
 }) {
   return (
     <label>
@@ -90,8 +122,16 @@ function Field({
         name={name}
         type={type}
         required={required}
+        minLength={minLength}
+        autoComplete={autoComplete}
         className={fieldClass}
       />
+
+      {description ? (
+        <span className="mt-2 block text-xs leading-5 text-zinc-500">
+          {description}
+        </span>
+      ) : null}
     </label>
   );
 }
