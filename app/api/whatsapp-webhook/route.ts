@@ -34,6 +34,7 @@ export const runtime = "nodejs";
 type WhatsAppTextMessage = {
   id?: string;
   from?: string;
+  to?: string;
   timestamp?: string;
   type?: string;
   text?: {
@@ -59,6 +60,8 @@ type WhatsAppWebhookValue = {
   contacts?: WhatsAppContact[];
 
   messages?: WhatsAppTextMessage[];
+
+  message_echoes?: WhatsAppTextMessage[];
 };
 
 type WhatsAppWebhookPayload = {
@@ -80,6 +83,20 @@ type IncomingWhatsAppMessage = {
   contactName: string | null;
   phoneNumberId: string | null;
   text: string;
+};
+
+type AppSentWhatsAppMessage = {
+  messageId: string;
+  to: string;
+  phoneNumberId: string | null;
+  text: string;
+};
+
+type PersistAppSentMessageResult = {
+  stored: boolean;
+  duplicate: boolean;
+  matched: boolean;
+  conversationId: number | null;
 };
 
 type PersistIncomingMessageResult = {
@@ -452,6 +469,216 @@ function extractTextMessages(
   }
 
   return extracted;
+}
+
+function extractAppSentTextMessages(
+  payload: WhatsAppWebhookPayload,
+): AppSentWhatsAppMessage[] {
+  const extracted:
+    AppSentWhatsAppMessage[] =
+    [];
+
+  for (
+    const entry of
+      payload.entry ?? []
+  ) {
+    for (
+      const change of
+        entry.changes ?? []
+    ) {
+      if (
+        change.field !==
+        "smb_message_echoes"
+      ) {
+        continue;
+      }
+
+      const value =
+        change.value;
+
+      if (!value) {
+        continue;
+      }
+
+      const phoneNumberId =
+        value.metadata
+          ?.phone_number_id
+          ?.trim() ||
+        null;
+
+      for (
+        const message of
+          value.message_echoes ?? []
+      ) {
+        if (
+          message.type !==
+          "text"
+        ) {
+          continue;
+        }
+
+        const text =
+          message.text?.body?.trim();
+
+        const to =
+          message.to?.trim();
+
+        const messageId =
+          message.id?.trim();
+
+        if (
+          !text ||
+          !to ||
+          !messageId
+        ) {
+          continue;
+        }
+
+        extracted.push({
+          messageId,
+          to,
+          phoneNumberId,
+          text,
+        });
+      }
+    }
+  }
+
+  return extracted;
+}
+
+async function persistAppSentMessage(
+  message: AppSentWhatsAppMessage,
+): Promise<PersistAppSentMessageResult> {
+  const existingMessage =
+    await prisma.irisMessage.findUnique({
+      where: {
+        externalMessageId:
+          message.messageId,
+      },
+
+      select: {
+        conversationId: true,
+      },
+    });
+
+  if (existingMessage) {
+    return {
+      stored: false,
+      duplicate: true,
+      matched: true,
+      conversationId:
+        existingMessage.conversationId,
+    };
+  }
+
+  const conversation =
+    await prisma.irisConversation.findFirst({
+      where: {
+        channel:
+          IrisConversationChannel.WHATSAPP,
+
+        externalContactId:
+          message.to,
+
+        status: {
+          in: [
+            IrisConversationStatus.IRIS_ATENDENDO,
+            IrisConversationStatus.AGUARDANDO_CLIENTE,
+            IrisConversationStatus.HANDOFF,
+            IrisConversationStatus.CORRETOR_ASSUMIU,
+          ],
+        },
+      },
+
+      orderBy: {
+        lastMessageAt:
+          "desc",
+      },
+
+      select: {
+        id: true,
+        agentAssumedAt: true,
+      },
+    });
+
+  if (!conversation) {
+    return {
+      stored: false,
+      duplicate: false,
+      matched: false,
+      conversationId: null,
+    };
+  }
+
+  const assumedAt =
+    conversation.agentAssumedAt ??
+    new Date();
+
+  try {
+    await prisma.$transaction([
+      prisma.irisMessage.create({
+        data: {
+          conversationId:
+            conversation.id,
+
+          author:
+            IrisMessageAuthor.CORRETOR,
+
+          direction:
+            IrisMessageDirection.SAIDA,
+
+          externalMessageId:
+            message.messageId,
+
+          text:
+            message.text,
+        },
+      }),
+
+      prisma.irisConversation.update({
+        where: {
+          id:
+            conversation.id,
+        },
+
+        data: {
+          status:
+            IrisConversationStatus.CORRETOR_ASSUMIU,
+
+          agentAssumedAt:
+            assumedAt,
+
+          lastMessageAt:
+            new Date(),
+        },
+      }),
+    ]);
+
+    return {
+      stored: true,
+      duplicate: false,
+      matched: true,
+      conversationId:
+        conversation.id,
+    };
+  } catch (error) {
+    if (
+      error instanceof
+        Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return {
+        stored: false,
+        duplicate: true,
+        matched: true,
+        conversationId:
+          conversation.id,
+      };
+    }
+
+    throw error;
+  }
 }
 
 async function persistIncomingMessage(
@@ -1218,11 +1445,19 @@ export async function POST(
     );
   }
 
+  const appSentMessages =
+    extractAppSentTextMessages(
+      body,
+    );
+
   const messages =
     extractTextMessages(
       body,
     );
 
+  let storedAppSentMessages = 0;
+  let duplicateAppSentMessages = 0;
+  let unmatchedAppSentMessages = 0;
   let storedMessages = 0;
   let duplicateMessages = 0;
   let interpretedMessages = 0;
@@ -1230,6 +1465,91 @@ export async function POST(
   let sentMessages = 0;
   let handoffs = 0;
   let handoffsSent = 0;
+
+  for (
+    const message of
+      appSentMessages
+  ) {
+    console.info(
+      "WhatsApp: mensagem enviada pelo app recebida via coexistência.",
+      {
+        messageId:
+          message.messageId,
+
+        to:
+          maskPhone(
+            message.to,
+          ),
+
+        phoneNumberId:
+          message.phoneNumberId,
+
+        textLength:
+          message.text.length,
+      },
+    );
+
+    try {
+      const result =
+        await persistAppSentMessage(
+          message,
+        );
+
+      if (result.stored) {
+        storedAppSentMessages += 1;
+
+        console.info(
+          "Íris: mensagem enviada pelo app armazenada e atendimento humano assumido.",
+          {
+            messageId:
+              message.messageId,
+
+            conversationId:
+              result.conversationId,
+
+            to:
+              maskPhone(
+                message.to,
+              ),
+          },
+        );
+      }
+
+      if (result.duplicate) {
+        duplicateAppSentMessages += 1;
+
+        console.info(
+          "Íris: mensagem enviada pelo app duplicada ignorada.",
+          {
+            messageId:
+              message.messageId,
+          },
+        );
+      }
+
+      if (!result.matched) {
+        unmatchedAppSentMessages += 1;
+
+        console.info(
+          "Íris: mensagem enviada pelo app sem conversa ativa correspondente; nenhuma conversa foi criada.",
+          {
+            messageId:
+              message.messageId,
+
+            to:
+              maskPhone(
+                message.to,
+              ),
+          },
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Erro ao armazenar mensagem enviada pelo WhatsApp Business App:",
+        error,
+      );
+    }
+  }
 
   for (
     const message of messages
@@ -1421,6 +1741,15 @@ export async function POST(
   return NextResponse.json(
     {
       received: true,
+
+      appSentTextMessages:
+        appSentMessages.length,
+
+      storedAppSentMessages,
+
+      duplicateAppSentMessages,
+
+      unmatchedAppSentMessages,
 
       textMessages:
         messages.length,
