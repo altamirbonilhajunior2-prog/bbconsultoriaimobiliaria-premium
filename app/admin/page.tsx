@@ -22,7 +22,7 @@ const managementLinks = [
   {
     title: "Equipe / Usuários",
     description:
-      "Gerenciar administradores e Captadores / Corretores.",
+      "Gerenciar Administradores e Corretores da B&B.",
     href: "/admin/captadores",
   },
   {
