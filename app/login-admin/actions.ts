@@ -11,27 +11,44 @@ export async function loginAction(
   _previousState: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
-  const email = String(formData.get("email") || "").trim();
-  const password = String(formData.get("password") || "");
+  const email = String(
+    formData.get("email") || "",
+  ).trim();
+
+  const password = String(
+    formData.get("password") || "",
+  );
+
+  const otp = String(
+    formData.get("otp") || "",
+  ).trim();
 
   if (!email || !password) {
     return {
-      error: "Preencha o e-mail e a senha.",
+      error:
+        "Preencha o e-mail e a senha.",
     };
   }
 
   try {
-    await signIn("credentials", {
-      email,
-      password,
-      redirectTo: "/admin",
-    });
+    await signIn(
+      "credentials",
+      {
+        email,
+        password,
+        otp,
+        redirectTo: "/admin",
+      },
+    );
 
     return {};
   } catch (error) {
-    if (error instanceof AuthError) {
+    if (
+      error instanceof AuthError
+    ) {
       return {
-        error: "E-mail ou senha inválidos.",
+        error:
+          "E-mail, senha ou código de autenticação inválidos.",
       };
     }
 

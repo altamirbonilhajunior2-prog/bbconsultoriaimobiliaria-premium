@@ -1,18 +1,28 @@
 "use client";
 
 import { useActionState } from "react";
-import { loginAction, type LoginState } from "./actions";
+import {
+  loginAction,
+  type LoginState,
+} from "./actions";
 
 const initialState: LoginState = {};
 
 export default function LoginForm() {
-  const [state, formAction, isPending] = useActionState(
+  const [
+    state,
+    formAction,
+    isPending,
+  ] = useActionState(
     loginAction,
     initialState,
   );
 
   return (
-    <form action={formAction} className="mt-10 space-y-6">
+    <form
+      action={formAction}
+      className="mt-10 space-y-6"
+    >
       <div>
         <label
           htmlFor="email"
@@ -51,6 +61,34 @@ export default function LoginForm() {
         />
       </div>
 
+      <div>
+        <label
+          htmlFor="otp"
+          className="mb-2 block text-[10px] font-bold uppercase tracking-[0.17em] text-zinc-400"
+        >
+          Código 2FA
+          <span className="ml-2 font-normal normal-case tracking-normal text-zinc-600">
+            somente administradores
+          </span>
+        </label>
+
+        <input
+          id="otp"
+          name="otp"
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={6}
+          pattern="[0-9]{6}"
+          className="min-h-14 w-full border border-white/15 bg-[#111] px-4 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-amber-500"
+          placeholder="000000"
+        />
+
+        <p className="mt-2 text-xs leading-5 text-zinc-600">
+          Captadores podem deixar este campo em branco.
+        </p>
+      </div>
+
       {state.error ? (
         <p
           role="alert"
@@ -65,7 +103,9 @@ export default function LoginForm() {
         disabled={isPending}
         className="inline-flex min-h-14 w-full items-center justify-center bg-amber-500 px-7 text-xs font-bold uppercase tracking-[0.16em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isPending ? "Entrando..." : "Entrar no painel"}
+        {isPending
+          ? "Entrando..."
+          : "Entrar no painel"}
       </button>
     </form>
   );
