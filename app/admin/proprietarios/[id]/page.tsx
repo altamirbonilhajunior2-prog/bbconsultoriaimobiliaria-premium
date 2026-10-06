@@ -349,29 +349,31 @@ export default async function EditarProprietarioPage({
           </button>
         </form>
 
-        <section className="mt-12 border-t border-white/10 pt-10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-red-400">
-            Zona de exclusão
-          </p>
+        {access.isAdmin ? (
+          <section className="mt-12 border-t border-white/10 pt-10">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-red-400">
+              Zona de exclusão
+            </p>
 
-          <h2 className="mt-3 font-serif text-3xl font-normal">
-            Excluir proprietário
-          </h2>
+            <h2 className="mt-3 font-serif text-3xl font-normal">
+              Excluir proprietário
+            </h2>
 
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
-            Utilize esta opção quando
-            desejar remover o cadastro
-            deste proprietário.
-          </p>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
+              Utilize esta opção quando
+              desejar remover o cadastro
+              deste proprietário.
+            </p>
 
-          <div className="mt-6">
-            <DeleteOwnerButton
-              action={
-                deleteAction
-              }
-            />
-          </div>
-        </section>
+            <div className="mt-6">
+              <DeleteOwnerButton
+                action={
+                  deleteAction
+                }
+              />
+            </div>
+          </section>
+        ) : null}
       </div>
     </main>
   );

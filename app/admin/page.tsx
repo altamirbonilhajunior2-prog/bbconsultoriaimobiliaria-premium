@@ -101,6 +101,8 @@ export default async function AdminPage() {
             item.href ===
               "/admin/imoveis" ||
             item.href ===
+              "/admin/proprietarios" ||
+            item.href ===
               "/admin/clientes",
         );
 

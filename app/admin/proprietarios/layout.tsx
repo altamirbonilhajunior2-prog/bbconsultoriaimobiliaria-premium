@@ -1,6 +1,6 @@
 ﻿import type { ReactNode } from "react";
 
-import { requireAdmin } from "../../../lib/admin/access";
+import { requireUser } from "../../../lib/admin/access";
 
 type ProprietariosLayoutProps = {
   children: ReactNode;
@@ -9,7 +9,7 @@ type ProprietariosLayoutProps = {
 export default async function ProprietariosLayout({
   children,
 }: ProprietariosLayoutProps) {
-  await requireAdmin();
+  await requireUser();
 
   return <>{children}</>;
 }
