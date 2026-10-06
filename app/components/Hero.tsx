@@ -348,7 +348,7 @@ export default function Hero({
             <h1 className="mt-4 bg-gradient-to-r from-white via-amber-100 to-amber-400 bg-clip-text font-serif text-[36px] font-normal leading-[1.02] tracking-[-0.03em] text-transparent drop-shadow-[0_2px_5px_rgba(0,0,0,0.72)] sm:mt-5 sm:bg-none sm:text-[50px] sm:leading-[0.98] sm:text-white lg:text-[68px]">
               Imóveis em São José dos Campos e região.
 
-              <span className="mt-2 block text-transparent drop-shadow-[0_2px_5px_rgba(0,0,0,0.72)] sm:text-[#e2b967]">
+              <span className="mt-2 block leading-[1.10] text-transparent drop-shadow-[0_2px_5px_rgba(0,0,0,0.72)] sm:leading-[0.98] sm:text-[#e2b967]">
                 Estratégia para
                 <br />
                 grandes decisões.
