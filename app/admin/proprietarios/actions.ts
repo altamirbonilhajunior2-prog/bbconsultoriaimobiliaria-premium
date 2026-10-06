@@ -389,8 +389,6 @@ async function ownerIsDuplicate({
 export async function createOwner(
   formData: FormData,
 ) {
-  await requireAdmin();
-
   const access =
     await getAccessContext();
 
@@ -578,8 +576,6 @@ export async function updateOwner(
   id: number,
   formData: FormData,
 ) {
-  await requireAdmin();
-
   const access =
     await getAccessContext();
 
