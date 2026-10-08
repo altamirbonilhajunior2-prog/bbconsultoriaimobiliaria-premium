@@ -60,6 +60,18 @@ function getSingleParam(
     : value;
 }
 
+function getParamList(
+  value: string | string[] | undefined,
+) {
+  if (!value) {
+    return [];
+  }
+
+  return Array.isArray(value)
+    ? value
+    : [value];
+}
+
 function normalizeText(
   value: string,
 ) {
@@ -115,6 +127,52 @@ function matchesNeighborhood(
     selectedValue.startsWith(
       propertyValue,
     )
+  );
+}
+
+function matchesPropertyTypeFilter(
+  propertyType:
+    keyof typeof propertyTypeLabels,
+  propertyCategory: string,
+  selectedType: string,
+) {
+  const normalizedType =
+    normalizeText(
+      selectedType,
+    );
+
+  if (
+    normalizedType === "rural"
+  ) {
+    return (
+      propertyType === "RURAL"
+    );
+  }
+
+  if (
+    [
+      "chacara",
+      "fazenda",
+      "sitio",
+      "area rural",
+    ].includes(
+      normalizedType,
+    )
+  ) {
+    return (
+      propertyType === "RURAL" &&
+      normalizeText(
+        propertyCategory,
+      ) === normalizedType
+    );
+  }
+
+  return (
+    normalizeText(
+      propertyTypeLabels[
+        propertyType
+      ],
+    ) === normalizedType
   );
 }
 
@@ -290,9 +348,18 @@ export default async function ComprarPage({
       params.perfil,
     );
 
-  const neighborhood =
-    getSingleParam(
+  const neighborhoods =
+    getParamList(
       params.bairro,
+    ).filter(
+      (item) =>
+        !isDefaultValue(
+          item,
+          [
+            "Todos os bairros",
+            "Bairro",
+          ],
+        ),
     );
 
   const development =
@@ -300,9 +367,19 @@ export default async function ComprarPage({
       params.empreendimento,
     );
 
-  const propertyType =
-    getSingleParam(
+  const selectedPropertyTypes =
+    getParamList(
       params.tipo,
+    ).filter(
+      (item) =>
+        !isDefaultValue(
+          item,
+          [
+            "Todos",
+            "Todos os tipos",
+            "Tipo",
+          ],
+        ),
     );
 
   const category =
@@ -357,13 +434,7 @@ export default async function ComprarPage({
     );
 
   const hasNeighborhoodFilter =
-    !isDefaultValue(
-      neighborhood,
-      [
-        "Todos os bairros",
-        "Bairro",
-      ],
-    );
+    neighborhoods.length > 0;
 
   const hasDevelopmentFilter =
     !isDefaultValue(
@@ -375,16 +446,12 @@ export default async function ComprarPage({
     );
 
   const hasPropertyTypeFilter =
-    !isDefaultValue(
-      propertyType,
-      [
-        "Todos",
-        "Todos os tipos",
-        "Tipo",
-      ],
-    );
+    selectedPropertyTypes.length >
+    0;
 
   const hasCategoryFilter =
+    selectedPropertyTypes.length <=
+      1 &&
     !isDefaultValue(
       category,
       [
@@ -554,10 +621,12 @@ export default async function ComprarPage({
 
         if (
           hasNeighborhoodFilter &&
-          neighborhood &&
-          !matchesNeighborhood(
-            property.neighborhood,
-            neighborhood,
+          !neighborhoods.some(
+            (neighborhood) =>
+              matchesNeighborhood(
+                property.neighborhood,
+                neighborhood,
+              ),
           )
         ) {
           return false;
@@ -579,15 +648,14 @@ export default async function ComprarPage({
 
         if (
           hasPropertyTypeFilter &&
-          propertyType &&
-          normalizeText(
-            propertyTypeLabels[
-              property.propertyType
-            ],
-          ) !==
-            normalizeText(
-              propertyType,
-            )
+          !selectedPropertyTypes.some(
+            (selectedType) =>
+              matchesPropertyTypeFilter(
+                property.propertyType,
+                property.category,
+                selectedType,
+              ),
+          )
         ) {
           return false;
         }

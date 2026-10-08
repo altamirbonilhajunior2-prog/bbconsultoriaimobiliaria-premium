@@ -18,10 +18,13 @@ export async function GET(request: NextRequest) {
       .get("cidade")
       ?.trim() ?? "";
 
-  const neighborhood =
+  const neighborhoods =
     searchParams
-      .get("bairro")
-      ?.trim() ?? "";
+      .getAll("bairro")
+      .map((item) =>
+        item.trim(),
+      )
+      .filter(Boolean);
 
   const where = {
     active: true,
@@ -45,12 +48,17 @@ export async function GET(request: NextRequest) {
         }
       : {}),
 
-    ...(neighborhood
+    ...(neighborhoods.length > 0
       ? {
-          neighborhood: {
-            equals: neighborhood,
-            mode: "insensitive" as const,
-          },
+          OR: neighborhoods.map(
+            (neighborhood) => ({
+              neighborhood: {
+                equals:
+                  neighborhood,
+                mode: "insensitive" as const,
+              },
+            }),
+          ),
         }
       : {}),
   };
@@ -69,9 +77,13 @@ export async function GET(request: NextRequest) {
     });
 
   return NextResponse.json(
-    developments.map(
-      (development) =>
-        development.name,
+    Array.from(
+      new Set(
+        developments.map(
+          (development) =>
+            development.name,
+        ),
+      ),
     ),
   );
 }

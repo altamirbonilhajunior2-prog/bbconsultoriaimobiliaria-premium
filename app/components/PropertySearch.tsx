@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import MultiSelectField from "./MultiSelectField";
 import { trackWhatsAppClick } from "./whatsappTracking";
 import { getCities } from "../data/location/cities";
 import { getNeighborhoods } from "../data/location/neighborhoods";
@@ -89,6 +90,16 @@ const ruralPropertyTypes = [
   "Área Rural",
 ] as const;
 
+const selectablePropertyTypes = [
+  ...Object.keys(
+    propertyTypes,
+  ).filter(
+    (type) =>
+      type !== "Rural",
+  ),
+  ...ruralPropertyTypes,
+];
+
 function isRuralPropertyType(
   value: string,
 ): value is (typeof ruralPropertyTypes)[number] {
@@ -122,9 +133,56 @@ export default function PropertySearch({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const initialType =
-    searchParams.get("tipo") ||
-    allPropertyTypesLabel;
+  const initialCategory =
+    searchParams.get("categoria") ||
+    allCategoriesLabel;
+
+  const initialTypeValues =
+    searchParams.getAll("tipo");
+
+  const initialPropertyTypes =
+    Array.from(
+      new Set(
+        initialTypeValues.flatMap(
+          (item) => {
+            if (item === "Rural") {
+              if (
+                isRuralPropertyType(
+                  initialCategory,
+                )
+              ) {
+                return [
+                  initialCategory,
+                ];
+              }
+
+              return [
+                ...ruralPropertyTypes,
+              ];
+            }
+
+            return isPropertyType(
+              item,
+            ) ||
+              isRuralPropertyType(
+                item,
+              )
+              ? [item]
+              : [];
+          },
+        ),
+      ),
+    );
+
+  const initialCategoryValue =
+    initialPropertyTypes.length === 1 &&
+    isPropertyType(
+      initialPropertyTypes[0],
+    ) &&
+    initialPropertyTypes[0] !==
+      "Rural"
+      ? initialCategory
+      : allCategoriesLabel;
 
   const initialPurpose =
     searchParams.get("finalidade") ||
@@ -156,11 +214,12 @@ export default function PropertySearch({
   );
 
   const [
-    neighborhood,
-    setNeighborhood,
-  ] = useState(
-    searchParams.get("bairro") ||
-      allNeighborhoodsLabel,
+    selectedNeighborhoods,
+    setSelectedNeighborhoods,
+  ] = useState<string[]>(
+    searchParams
+      .getAll("bairro")
+      .filter(Boolean),
   );
 
   const [
@@ -172,21 +231,15 @@ export default function PropertySearch({
   );
 
   const [
-    propertyType,
-    setPropertyType,
-  ] = useState<
-    PropertyType |
-      typeof allPropertyTypesLabel
-  >(
-    isPropertyType(initialType)
-      ? initialType
-      : allPropertyTypesLabel,
+    selectedPropertyTypes,
+    setSelectedPropertyTypes,
+  ] = useState<string[]>(
+    initialPropertyTypes,
   );
 
   const [category, setCategory] =
     useState(
-      searchParams.get("categoria") ||
-        allCategoriesLabel,
+      initialCategoryValue,
     );
 
   const [bedroom, setBedroom] =
@@ -253,8 +306,8 @@ export default function PropertySearch({
 
     setCity("");
 
-    setNeighborhood(
-      allNeighborhoodsLabel,
+    setSelectedNeighborhoods(
+      [],
     );
 
     setDevelopment(
@@ -278,36 +331,48 @@ export default function PropertySearch({
       [city],
     );
 
+  const singlePropertyType =
+    selectedPropertyTypes.length === 1
+      ? selectedPropertyTypes[0]
+      : null;
+
+  const categoryPropertyType =
+    singlePropertyType &&
+    isPropertyType(
+      singlePropertyType,
+    ) &&
+    singlePropertyType !== "Rural"
+      ? singlePropertyType
+      : null;
+
   const categories =
     useMemo(() => {
       if (
-        propertyType ===
-        allPropertyTypesLabel
+        !categoryPropertyType
       ) {
         return [];
       }
 
       return [
         ...propertyTypes[
-          propertyType
+          categoryPropertyType
         ],
       ];
-    }, [propertyType]);
+    }, [
+      categoryPropertyType,
+    ]);
 
-  const publicPropertyType =
-    propertyType === "Rural"
-      ? isRuralPropertyType(category)
-        ? category
-        : "Área Rural"
-      : propertyType;
+  const canFilterCategory =
+    selectedPropertyTypes.length === 1 &&
+    categoryPropertyType !== null;
 
   useEffect(() => {
     let cancelled = false;
 
     if (
       !city ||
-      neighborhood ===
-        allNeighborhoodsLabel
+      selectedNeighborhoods.length ===
+        0
     ) {
       setDevelopments([]);
       return;
@@ -319,8 +384,17 @@ export default function PropertySearch({
           new URLSearchParams({
             estado: state,
             cidade: city,
-            bairro: neighborhood,
           });
+
+        for (
+          const neighborhood of
+          selectedNeighborhoods
+        ) {
+          query.append(
+            "bairro",
+            neighborhood,
+          );
+        }
 
         const response = await fetch(
           `/api/search-developments?${query.toString()}`,
@@ -359,15 +433,17 @@ export default function PropertySearch({
   }, [
     state,
     city,
-    neighborhood,
+    selectedNeighborhoods,
   ]);
 
   const shouldShowBedrooms =
-    propertyType ===
-      allPropertyTypesLabel ||
-    propertyType === "Casa" ||
-    propertyType ===
-      "Apartamento";
+    selectedPropertyTypes.length ===
+      0 ||
+    selectedPropertyTypes.some(
+      (item) =>
+        item === "Casa" ||
+        item === "Apartamento",
+    );
 
   useEffect(() => {
     let cancelled = false;
@@ -445,8 +521,8 @@ export default function PropertySearch({
       searchState.propertyType ===
       "Cobertura"
     ) {
-      setPropertyType(
-        "Apartamento",
+      setSelectedPropertyTypes(
+        ["Apartamento"],
       );
 
       setCategory(
@@ -458,19 +534,21 @@ export default function PropertySearch({
       searchState.propertyType === "Sítio" ||
       searchState.propertyType === "Área Rural"
     ) {
-      setPropertyType(
-        "Rural",
+      setSelectedPropertyTypes(
+        [
+          searchState.propertyType,
+        ],
       );
 
       setCategory(
-        searchState.propertyType,
+        allCategoriesLabel,
       );
     } else if (
       searchState.propertyType ===
       allPropertyTypesLabel
     ) {
-      setPropertyType(
-        allPropertyTypesLabel,
+      setSelectedPropertyTypes(
+        [],
       );
 
       setCategory(
@@ -481,8 +559,10 @@ export default function PropertySearch({
         searchState.propertyType,
       )
     ) {
-      setPropertyType(
-        searchState.propertyType,
+      setSelectedPropertyTypes(
+        [
+          searchState.propertyType,
+        ],
       );
 
       setCategory(
@@ -491,15 +571,18 @@ export default function PropertySearch({
     }
 
     if (
+      !searchState.location ||
       searchState.location ===
-      "São José dos Campos"
+        "São José dos Campos"
     ) {
-      setNeighborhood(
-        allNeighborhoodsLabel,
+      setSelectedNeighborhoods(
+        [],
       );
     } else {
-      setNeighborhood(
-        searchState.location,
+      setSelectedNeighborhoods(
+        [
+          searchState.location,
+        ],
       );
     }
 
@@ -601,8 +684,8 @@ export default function PropertySearch({
 
     setCity("");
 
-    setNeighborhood(
-      allNeighborhoodsLabel,
+    setSelectedNeighborhoods(
+      [],
     );
 
     setDevelopment(
@@ -617,8 +700,8 @@ export default function PropertySearch({
       event.target.value,
     );
 
-    setNeighborhood(
-      allNeighborhoodsLabel,
+    setSelectedNeighborhoods(
+      [],
     );
 
     setDevelopment(
@@ -626,11 +709,17 @@ export default function PropertySearch({
     );
   }
 
-  function handleNeighborhoodChange(
-    event: ChangeEvent<HTMLSelectElement>,
+  function toggleNeighborhood(
+    item: string,
   ) {
-    setNeighborhood(
-      event.target.value,
+    setSelectedNeighborhoods(
+      (current) =>
+        current.includes(item)
+          ? current.filter(
+              (value) =>
+                value !== item,
+            )
+          : [...current, item],
     );
 
     setDevelopment(
@@ -638,56 +727,42 @@ export default function PropertySearch({
     );
   }
 
-  function handlePropertyTypeChange(
-    event: ChangeEvent<HTMLSelectElement>,
+  function clearNeighborhoods() {
+    setSelectedNeighborhoods(
+      [],
+    );
+
+    setDevelopment(
+      allDevelopmentsLabel,
+    );
+  }
+
+  function togglePropertyType(
+    item: string,
   ) {
-    const selectedType =
-      event.target.value;
+    setSelectedPropertyTypes(
+      (current) =>
+        current.includes(item)
+          ? current.filter(
+              (value) =>
+                value !== item,
+            )
+          : [...current, item],
+    );
 
-    if (
-      selectedType ===
-      allPropertyTypesLabel
-    ) {
-      setPropertyType(
-        allPropertyTypesLabel,
-      );
+    setCategory(
+      allCategoriesLabel,
+    );
+  }
 
-      setCategory(
-        allCategoriesLabel,
-      );
+  function clearPropertyTypes() {
+    setSelectedPropertyTypes(
+      [],
+    );
 
-      return;
-    }
-
-    if (
-      isRuralPropertyType(
-        selectedType,
-      )
-    ) {
-      setPropertyType(
-        "Rural",
-      );
-
-      setCategory(
-        selectedType,
-      );
-
-      return;
-    }
-
-    if (
-      isPropertyType(
-        selectedType,
-      )
-    ) {
-      setPropertyType(
-        selectedType,
-      );
-
-      setCategory(
-        allCategoriesLabel,
-      );
-    }
+    setCategory(
+      allCategoriesLabel,
+    );
   }
 
   function handlePurposeChange(
@@ -743,11 +818,11 @@ export default function PropertySearch({
       );
     }
 
-    if (
-      neighborhood !==
-      allNeighborhoodsLabel
+    for (
+      const neighborhood of
+      selectedNeighborhoods
     ) {
-      params.set(
+      params.append(
         "bairro",
         neighborhood,
       );
@@ -763,19 +838,18 @@ export default function PropertySearch({
       );
     }
 
-    if (
-      propertyType !==
-      allPropertyTypesLabel
+    for (
+      const propertyType of
+      selectedPropertyTypes
     ) {
-      params.set(
+      params.append(
         "tipo",
         propertyType,
       );
     }
 
     if (
-      propertyType !==
-        allPropertyTypesLabel &&
+      canFilterCategory &&
       category !==
         allCategoriesLabel
     ) {
@@ -1022,42 +1096,26 @@ export default function PropertySearch({
               </select>
             </label>
 
-            <label className="flex min-w-0 flex-col gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
-                Bairro
-              </span>
-
-              <select
-                value={
-                  neighborhood
-                }
-                onChange={
-                  handleNeighborhoodChange
-                }
-                className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
-              >
-                <option
-                  value={
-                    allNeighborhoodsLabel
-                  }
-                >
-                  {
-                    allNeighborhoodsLabel
-                  }
-                </option>
-
-                {neighborhoods.map(
-                  (item) => (
-                    <option
-                      key={item}
-                      value={item}
-                    >
-                      {item}
-                    </option>
-                  ),
-                )}
-              </select>
-            </label>
+            <MultiSelectField
+              label="Bairro"
+              options={
+                neighborhoods
+              }
+              selected={
+                selectedNeighborhoods
+              }
+              allLabel={
+                allNeighborhoodsLabel
+              }
+              onToggle={
+                toggleNeighborhood
+              }
+              onClear={
+                clearNeighborhoods
+              }
+              disabled={!city}
+              disabledLabel="Selecione a cidade primeiro"
+            />
 
             <label className="flex min-w-0 flex-col gap-2">
               <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
@@ -1074,8 +1132,8 @@ export default function PropertySearch({
                   )
                 }
                 disabled={
-                  neighborhood ===
-                  allNeighborhoodsLabel
+                  selectedNeighborhoods.length ===
+                  0
                 }
                 className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500 disabled:cursor-not-allowed disabled:text-zinc-600"
               >
@@ -1084,9 +1142,9 @@ export default function PropertySearch({
                     allDevelopmentsLabel
                   }
                 >
-                  {neighborhood ===
-                  allNeighborhoodsLabel
-                    ? "Selecione o bairro primeiro"
+                  {selectedNeighborhoods.length ===
+                  0
+                    ? "Selecione ao menos um bairro primeiro"
                     : allDevelopmentsLabel}
                 </option>
 
@@ -1103,50 +1161,24 @@ export default function PropertySearch({
               </select>
             </label>
 
-            <label className="flex min-w-0 flex-col gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
-                Tipo de imóvel
-              </span>
-
-              <select
-                value={
-                  publicPropertyType
-                }
-                onChange={
-                  handlePropertyTypeChange
-                }
-                className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
-              >
-                <option
-                  value={
-                    allPropertyTypesLabel
-                  }
-                >
-                  {
-                    allPropertyTypesLabel
-                  }
-                </option>
-
-                {[
-                  ...Object.keys(
-                    propertyTypes,
-                  ).filter(
-                    (type) =>
-                      type !== "Rural",
-                  ),
-                  ...ruralPropertyTypes,
-                ].map(
-                  (type) => (
-                    <option
-                      key={type}
-                      value={type}
-                    >
-                      {type}
-                    </option>
-                  ),
-                )}
-              </select>
-            </label>
+            <MultiSelectField
+              label="Tipo de imóvel"
+              options={
+                selectablePropertyTypes
+              }
+              selected={
+                selectedPropertyTypes
+              }
+              allLabel={
+                allPropertyTypesLabel
+              }
+              onToggle={
+                togglePropertyType
+              }
+              onClear={
+                clearPropertyTypes
+              }
+            />
 
             <label className="flex min-w-0 flex-col gap-2">
               <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
@@ -1163,19 +1195,26 @@ export default function PropertySearch({
                   )
                 }
                 disabled={
-                  propertyType ===
-                  allPropertyTypesLabel
+                  !canFilterCategory
                 }
                 className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500 disabled:cursor-not-allowed disabled:text-zinc-600"
               >
-                {propertyType ===
-                allPropertyTypesLabel ? (
+                {!canFilterCategory ? (
                   <option
                     value={
                       allCategoriesLabel
                     }
                   >
-                    Selecione o tipo primeiro
+                    {selectedPropertyTypes.length >
+                    1
+                      ? "Selecione um único tipo"
+                      : selectedPropertyTypes.length ===
+                            1 &&
+                          isRuralPropertyType(
+                            selectedPropertyTypes[0],
+                          )
+                        ? "Categoria definida pelo tipo"
+                        : "Selecione o tipo primeiro"}
                   </option>
                 ) : (
                   <>
