@@ -559,22 +559,11 @@ export default function PropertySearch({
         searchState.propertyType,
       )
     ) {
-      if (
-        searchState.propertyType ===
-        "Rural"
-      ) {
-        setSelectedPropertyTypes(
-          [
-            ...ruralPropertyTypes,
-          ],
-        );
-      } else {
-        setSelectedPropertyTypes(
-          [
-            searchState.propertyType,
-          ],
-        );
-      }
+      setSelectedPropertyTypes(
+        [
+          searchState.propertyType,
+        ],
+      );
 
       setCategory(
         allCategoriesLabel,
@@ -582,8 +571,9 @@ export default function PropertySearch({
     }
 
     if (
+      !searchState.location ||
       searchState.location ===
-      "São José dos Campos"
+        "São José dos Campos"
     ) {
       setSelectedNeighborhoods(
         [],
