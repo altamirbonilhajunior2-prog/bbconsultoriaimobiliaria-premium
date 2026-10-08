@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+
 type MultiSelectFieldProps = {
   label: string;
   options: readonly string[];
@@ -21,6 +23,11 @@ export default function MultiSelectField({
   disabled = false,
   disabledLabel,
 }: MultiSelectFieldProps) {
+  const detailsRef =
+    useRef<HTMLDetailsElement>(
+      null,
+    );
+
   const summary =
     disabled
       ? disabledLabel || allLabel
@@ -31,6 +38,27 @@ export default function MultiSelectField({
           : selected[0] +
             " +" +
             (selected.length - 1);
+
+  function closeMenu() {
+    if (
+      detailsRef.current
+    ) {
+      detailsRef.current.open =
+        false;
+    }
+  }
+
+  function handleClear() {
+    onClear();
+    closeMenu();
+  }
+
+  function handleToggle(
+    value: string,
+  ) {
+    onToggle(value);
+    closeMenu();
+  }
 
   return (
     <div className="flex min-w-0 flex-col gap-2">
@@ -48,7 +76,10 @@ export default function MultiSelectField({
           </span>
         </div>
       ) : (
-        <details className="group relative">
+        <details
+          ref={detailsRef}
+          className="group relative"
+        >
           <summary className="flex h-14 cursor-pointer list-none items-center justify-between gap-3 border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500 [&::-webkit-details-marker]:hidden">
             <span className="truncate">
               {summary}
@@ -65,7 +96,7 @@ export default function MultiSelectField({
           <div className="absolute left-0 right-0 z-40 mt-2 max-h-72 overflow-y-auto border border-white/10 bg-[#111111] p-2 shadow-2xl">
             <button
               type="button"
-              onClick={onClear}
+              onClick={handleClear}
               className="w-full px-3 py-2 text-left text-sm text-zinc-300 transition hover:bg-white/5 hover:text-white"
             >
               {allLabel}
@@ -83,7 +114,7 @@ export default function MultiSelectField({
                       option,
                     )}
                     onChange={() =>
-                      onToggle(
+                      handleToggle(
                         option,
                       )
                     }
