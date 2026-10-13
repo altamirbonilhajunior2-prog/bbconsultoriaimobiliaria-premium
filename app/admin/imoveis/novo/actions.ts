@@ -1,3 +1,4 @@
+
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -5,6 +6,10 @@ import { redirect } from "next/navigation";
 import { auth } from "../../../../auth";
 import { getAccessContext } from "../../../../lib/admin/access";
 import { confirmedNeighborhoodLocation } from "../../../../lib/location/confirmed-neighborhood";
+import {
+  DevelopmentSelectionError,
+  validatePropertyDevelopment,
+} from "../../../../lib/location/validate-development";
 import { prisma } from "../../../../lib/prisma";
 
 export type PropertyFormState = {
@@ -33,24 +38,15 @@ export type PropertyFormAccessData = {
   owners: PropertyFormOwner[];
 };
 
-function getText(
-  formData: FormData,
-  field: string,
-) {
-  return String(
-    formData.get(field) ?? "",
-  ).trim();
+function getText(formData: FormData, field: string) {
+  return String(formData.get(field) ?? "").trim();
 }
 
 function getOptionalText(
   formData: FormData,
   field: string,
 ) {
-  const value = getText(
-    formData,
-    field,
-  );
-
+  const value = getText(formData, field);
   return value || null;
 }
 
@@ -58,29 +54,18 @@ function getOptionalInteger(
   formData: FormData,
   field: string,
 ) {
-  const raw = getText(
-    formData,
-    field,
-  );
+  const raw = getText(formData, field);
 
   if (!raw) {
     return null;
   }
 
-  const parsed =
-    Number.parseInt(
-      raw,
-      10,
-    );
+  const parsed = Number.parseInt(raw, 10);
 
-  return Number.isInteger(parsed)
-    ? parsed
-    : null;
+  return Number.isInteger(parsed) ? parsed : null;
 }
 
-function parseDecimal(
-  value: string,
-) {
+function parseDecimal(value: string) {
   const raw = value.trim();
 
   if (!raw) {
@@ -103,107 +88,63 @@ function parseDecimal(
     const brazilianThousandsPattern =
       /^-?\d{1,3}(\.\d{3})+$/;
 
-    if (
-      brazilianThousandsPattern.test(
-        normalized,
-      )
-    ) {
-      normalized =
-        normalized.replace(
-          /\./g,
-          "",
-        );
+    if (brazilianThousandsPattern.test(normalized)) {
+      normalized = normalized.replace(/\./g, "");
     }
   }
 
-  const parsed = Number(
-    normalized,
-  );
+  const parsed = Number(normalized);
 
-  return Number.isFinite(parsed)
-    ? parsed
-    : null;
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
-function parseInteger(
-  value: string,
-) {
+function parseInteger(value: string) {
   const raw = value.trim();
 
   if (!raw) {
     return 0;
   }
 
-  const parsed =
-    Number.parseInt(
-      raw,
-      10,
-    );
+  const parsed = Number.parseInt(raw, 10);
 
-  return Number.isFinite(parsed)
-    ? parsed
-    : 0;
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function createSlug(
-  code: string,
-  title: string,
-) {
+function createSlug(code: string, title: string) {
   return `${code}-${title}`
     .normalize("NFD")
-    .replace(
-      /[\u0300-\u036f]/g,
-      "",
-    )
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(
-      /[^a-z0-9]+/g,
-      "-",
-    )
-    .replace(
-      /^-+|-+$/g,
-      "",
-    )
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
     .slice(0, 220);
 }
 
-function mapPurpose(
-  value: string,
-) {
+function mapPurpose(value: string) {
   switch (value) {
     case "Venda":
       return "VENDA" as const;
-
     case "Locação":
       return "LOCACAO" as const;
-
     case "Venda e locação":
       return "VENDA_E_LOCACAO" as const;
-
     default:
       return null;
   }
 }
 
-function mapPropertyType(
-  value: string,
-) {
+function mapPropertyType(value: string) {
   switch (value) {
     case "Casa":
       return "CASA" as const;
-
     case "Apartamento":
       return "APARTAMENTO" as const;
-
     case "Terreno":
       return "TERRENO" as const;
-
     case "Comercial":
       return "COMERCIAL" as const;
-
     case "Rural":
       return "RURAL" as const;
-
     default:
       return null;
   }
@@ -217,70 +158,53 @@ function getPropertyCodePrefix(
   switch (propertyType) {
     case "CASA":
       return "BBC";
-
     case "APARTAMENTO":
       return "BBA";
-
     case "TERRENO":
       return "BBT";
-
     case "COMERCIAL":
       return "BBM";
-
     case "RURAL":
       return "BBR";
   }
 }
 
-function mapStatus(
-  value: string,
-) {
+function mapStatus(value: string) {
   switch (value) {
     case "Disponível":
       return "DISPONIVEL" as const;
-
     case "Reservado":
       return "RESERVADO" as const;
-
     case "Vendido":
       return "VENDIDO" as const;
-
     case "Alugado":
       return "ALUGADO" as const;
-
     case "Em análise":
       return "EM_ANALISE" as const;
-
     default:
       return null;
   }
 }
 
-function mapOpportunityProfile(
-  value: string,
-) {
+function mapOpportunityProfile(value: string) {
   switch (value) {
     case "Moradia":
       return "MORADIA" as const;
-
     case "Investimento":
       return "INVESTIMENTO" as const;
-
     case "Renda":
       return "RENDA" as const;
-
     case "Valorização":
       return "VALORIZACAO" as const;
-
     case "Lançamento":
       return "LANCAMENTO" as const;
-
     default:
       return null;
   }
 }
 
-export async function getPropertyFormAccessAction(): Promise<PropertyFormAccessData> {
+export async function getPropertyFormAccessAction():
+  Promise<PropertyFormAccessData> {
   const session = await auth();
 
   if (!session?.user) {
@@ -293,52 +217,43 @@ export async function getPropertyFormAccessAction(): Promise<PropertyFormAccessD
     };
   }
 
-  const access =
-    await getAccessContext();
+  const access = await getAccessContext();
 
-  const [agents, owners] =
-    await Promise.all([
-      prisma.agent.findMany({
-        where: {
-          active: true,
-        },
-
-        orderBy: {
-          name: "asc",
-        },
-
-        select: {
-          id: true,
-          name: true,
-          role: true,
-        },
-      }),
-
-      prisma.owner.findMany({
-        where: access.isAdmin
-          ? {}
-          : {
-              capturedById:
-                access.agentId ?? -1,
-            },
-
-        orderBy: {
-          name: "asc",
-        },
-
-        select: {
-          id: true,
-          name: true,
-          cpf: true,
-        },
-      }),
-    ]);
+  const [agents, owners] = await Promise.all([
+    prisma.agent.findMany({
+      where: {
+        active: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+      },
+    }),
+    prisma.owner.findMany({
+      where: access.isAdmin
+        ? {}
+        : {
+            capturedById: access.agentId ?? -1,
+          },
+      orderBy: {
+        name: "asc",
+      },
+      select: {
+        id: true,
+        name: true,
+        cpf: true,
+      },
+    }),
+  ]);
 
   return {
     success: true,
     isAdmin: access.isAdmin,
-    agentId:
-      access.agentId ?? null,
+    agentId: access.agentId ?? null,
     agents,
     owners,
   };
@@ -353,18 +268,13 @@ export async function createPropertyAction(
   if (!session?.user) {
     return {
       success: false,
-      message:
-        "Sessão expirada. Faça login novamente.",
+      message: "Sessão expirada. Faça login novamente.",
     };
   }
 
-  const access =
-    await getAccessContext();
+  const access = await getAccessContext();
 
-  if (
-    !access.isAdmin &&
-    !access.agentId
-  ) {
+  if (!access.isAdmin && !access.agentId) {
     return {
       success: false,
       message:
@@ -372,41 +282,33 @@ export async function createPropertyAction(
     };
   }
 
-  const title = getText(
-    formData,
-    "title",
-  );
+  const title = getText(formData, "title");
 
-  const ownerId =
-    getOptionalInteger(
-      formData,
-      "ownerId",
-    );
+  const ownerId = getOptionalInteger(
+    formData,
+    "ownerId",
+  );
 
   if (!ownerId) {
     return {
       success: false,
-      message:
-        "Selecione o proprietário do imóvel.",
+      message: "Selecione o proprietário do imóvel.",
     };
   }
 
-  const requestedCaptorId =
-    getOptionalInteger(
-      formData,
-      "captorId",
-    );
+  const requestedCaptorId = getOptionalInteger(
+    formData,
+    "captorId",
+  );
 
-  const coCaptorId =
-    getOptionalInteger(
-      formData,
-      "coCaptorId",
-    );
+  const coCaptorId = getOptionalInteger(
+    formData,
+    "coCaptorId",
+  );
 
-  const captorId =
-    access.isAdmin
-      ? requestedCaptorId
-      : access.agentId;
+  const captorId = access.isAdmin
+    ? requestedCaptorId
+    : access.agentId;
 
   if (!captorId) {
     return {
@@ -427,51 +329,29 @@ export async function createPropertyAction(
     };
   }
 
-  const neighborhood =
-    getText(
-      formData,
-      "neighborhood",
-    );
+  const neighborhood = getText(
+    formData,
+    "neighborhood",
+  );
 
-  const category =
-    getText(
-      formData,
-      "category",
-    );
+  const category = getText(formData, "category");
 
-  const purpose =
-    mapPurpose(
-      getText(
-        formData,
-        "purpose",
-      ),
-    );
+  const purpose = mapPurpose(
+    getText(formData, "purpose"),
+  );
 
-  const propertyType =
-    mapPropertyType(
-      getText(
-        formData,
-        "propertyType",
-      ),
-    );
+  const propertyType = mapPropertyType(
+    getText(formData, "propertyType"),
+  );
 
-  const status =
-    mapStatus(
-      getText(
-        formData,
-        "status",
-      ),
-    );
+  const status = mapStatus(
+    getText(formData, "status"),
+  );
 
-  if (
-    !title ||
-    !neighborhood ||
-    !category
-  ) {
+  if (!title || !neighborhood || !category) {
     return {
       success: false,
-      message:
-        "Preencha título, bairro e categoria.",
+      message: "Preencha título, bairro e categoria.",
     };
   }
 
@@ -483,170 +363,108 @@ export async function createPropertyAction(
     };
   }
 
-  if (
-    !purpose ||
-    !propertyType ||
-    !status
-  ) {
+  if (!purpose || !propertyType || !status) {
     return {
       success: false,
-      message:
-        "Finalidade, tipo ou status inválido.",
+      message: "Finalidade, tipo ou status inválido.",
     };
   }
 
-  const internalNotes =
-    getOptionalText(
-      formData,
-      "internalNotes",
-    );
+  const internalNotes = getOptionalText(
+    formData,
+    "internalNotes",
+  );
 
-  const latitude =
-    parseDecimal(
-      getText(
-        formData,
-        "latitude",
-      ),
-    );
+  const latitude = parseDecimal(
+    getText(formData, "latitude"),
+  );
 
-  const longitude =
-    parseDecimal(
-      getText(
-        formData,
-        "longitude",
-      ),
-    );
+  const longitude = parseDecimal(
+    getText(formData, "longitude"),
+  );
 
   const mapEnabled =
-    formData.get("mapEnabled") ===
-    "on";
+    formData.get("mapEnabled") === "on";
 
   const requestedMapRadius =
-    getOptionalInteger(
-      formData,
-      "mapRadiusMeters",
-    ) ?? 700;
+    getOptionalInteger(formData, "mapRadiusMeters") ??
+    700;
 
-  const mapRadiusMeters =
-    Math.min(
-      Math.max(
-        requestedMapRadius,
-        300,
-      ),
-      2000,
-    );
+  const mapRadiusMeters = Math.min(
+    Math.max(requestedMapRadius, 300),
+    2000,
+  );
 
   if (
     latitude !== null &&
-    (
-      latitude < -90 ||
-      latitude > 90
-    )
+    (latitude < -90 || latitude > 90)
   ) {
     return {
       success: false,
-      message:
-        "A latitude informada é inválida.",
+      message: "A latitude informada é inválida.",
     };
   }
 
   if (
     longitude !== null &&
-    (
-      longitude < -180 ||
-      longitude > 180
-    )
+    (longitude < -180 || longitude > 180)
   ) {
     return {
       success: false,
-      message:
-        "A longitude informada é inválida.",
+      message: "A longitude informada é inválida.",
     };
   }
 
-  const opportunityProfiles =
-    formData
-      .getAll(
-        "opportunityProfile",
-      )
-      .map((value) =>
-        mapOpportunityProfile(
-          String(value),
-        ),
-      )
-      .filter(
-        (
-          value,
-        ): value is NonNullable<
-          ReturnType<
-            typeof mapOpportunityProfile
-          >
-        > => value !== null,
-      );
-
-  const features =
-    getText(
-      formData,
-      "features",
+  const opportunityProfiles = formData
+    .getAll("opportunityProfile")
+    .map((value) =>
+      mapOpportunityProfile(String(value)),
     )
-      .split(/\r?\n/)
-      .map((item) =>
-        item.trim(),
-      )
-      .filter(Boolean);
+    .filter(
+      (
+        value,
+      ): value is NonNullable<
+        ReturnType<typeof mapOpportunityProfile>
+      > => value !== null,
+    );
+
+  const features = getText(formData, "features")
+    .split(/\r?\n/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 
   const state =
-    getText(
-      formData,
-      "state",
-    ) || "SP";
+    getText(formData, "state") || "SP";
 
   const city =
-    getText(
-      formData,
-      "city",
-    ) ||
+    getText(formData, "city") ||
     "São José dos Campos";
 
-  const address =
-    getOptionalText(
-      formData,
-      "address",
-    );
+  const address = getOptionalText(
+    formData,
+    "address",
+  );
 
-  const zipCode =
-    getOptionalText(
-      formData,
-      "zipCode",
-    );
+  const zipCode = getOptionalText(
+    formData,
+    "zipCode",
+  );
 
-  const zipCodeDigits =
-    zipCode
-      ? zipCode.replace(
-          /\D/g,
-          "",
-        )
-      : "";
+  const zipCodeDigits = zipCode
+    ? zipCode.replace(/\D/g, "")
+    : "";
 
-  if (
-    !address &&
-    !zipCode
-  ) {
+  if (!address && !zipCode) {
     return {
       success: false,
-      message:
-        "Informe o endereço ou o CEP do imóvel.",
+      message: "Informe o endereço ou o CEP do imóvel.",
     };
   }
 
-  if (
-    zipCode &&
-    zipCodeDigits.length !== 8
-  ) {
+  if (zipCode && zipCodeDigits.length !== 8) {
     return {
       success: false,
-      message:
-        "Informe um CEP válido com 8 dígitos.",
+      message: "Informe um CEP válido com 8 dígitos.",
     };
   }
 
@@ -666,23 +484,19 @@ export async function createPropertyAction(
     | null = null;
 
   try {
-    const allowedOwner =
-      await prisma.owner.findFirst({
-        where: {
-          id: ownerId,
-
-          ...(access.isAdmin
-            ? {}
-            : {
-                capturedById:
-                  access.agentId ?? -1,
-              }),
-        },
-
-        select: {
-          id: true,
-        },
-      });
+    const allowedOwner = await prisma.owner.findFirst({
+      where: {
+        id: ownerId,
+        ...(access.isAdmin
+          ? {}
+          : {
+              capturedById: access.agentId ?? -1,
+            }),
+      },
+      select: {
+        id: true,
+      },
+    });
 
     if (!allowedOwner) {
       return {
@@ -692,38 +506,28 @@ export async function createPropertyAction(
       };
     }
 
-    const agents =
-      await prisma.agent.findMany({
-        where: {
-          id: {
-            in: [
-              captorId,
-              ...(coCaptorId !== null
-                ? [coCaptorId]
-                : []),
-            ],
-          },
-
-          active: true,
+    const agents = await prisma.agent.findMany({
+      where: {
+        id: {
+          in: [
+            captorId,
+            ...(coCaptorId !== null
+              ? [coCaptorId]
+              : []),
+          ],
         },
+        active: true,
+      },
+      select: {
+        id: true,
+      },
+    });
 
-        select: {
-          id: true,
-        },
-      });
+    const validAgentIds = new Set(
+      agents.map((agent) => agent.id),
+    );
 
-    const validAgentIds =
-      new Set(
-        agents.map(
-          (agent) => agent.id,
-        ),
-      );
-
-    if (
-      !validAgentIds.has(
-        captorId,
-      )
-    ) {
+    if (!validAgentIds.has(captorId)) {
       return {
         success: false,
         message:
@@ -733,9 +537,7 @@ export async function createPropertyAction(
 
     if (
       coCaptorId !== null &&
-      !validAgentIds.has(
-        coCaptorId,
-      )
+      !validAgentIds.has(coCaptorId)
     ) {
       return {
         success: false,
@@ -744,330 +546,261 @@ export async function createPropertyAction(
       };
     }
 
-    createdProperty =
-      await prisma.$transaction(
-        async (tx) => {
-          const prefix =
-            getPropertyCodePrefix(
-              propertyType,
-            );
-
-          const existingCodes =
-            await tx.property.findMany({
-              where: {
-                code: {
-                  startsWith:
-                    prefix,
-                },
-              },
-
-              select: {
-                code: true,
-              },
-            });
-
-          const highestNumber =
-            existingCodes.reduce(
-              (
-                highest,
-                property,
-              ) => {
-                const match =
-                  property.code.match(
-                    new RegExp(
-                      `^${prefix}(\\d+)$`,
-                      "i",
-                    ),
-                  );
-
-                if (!match) {
-                  return highest;
-                }
-
-                const number =
-                  Number.parseInt(
-                    match[1],
-                    10,
-                  );
-
-                if (
-                  !Number.isFinite(
-                    number,
-                  )
-                ) {
-                  return highest;
-                }
-
-                return Math.max(
-                  highest,
-                  number,
-                );
-              },
-              0,
-            );
-
-          const code =
-            `${prefix}${String(
-              highestNumber + 1,
-            ).padStart(3, "0")}`;
-
-          const confirmedLocation =
-            confirmedNeighborhoodLocation(
+    createdProperty = await prisma.$transaction(
+      async (tx) => {
+        // Confirma no servidor que o condomínio é válido
+        // para a localização do novo imóvel.
+        const validatedDevelopment =
+          await validatePropertyDevelopment({
+            requestedName: getOptionalText(
               formData,
-              {
-                state,
-                city,
-                neighborhood,
-              },
-            );
-
-          if (confirmedLocation) {
-            await tx.neighborhoodMapLocation.upsert({
-              where: {
-                state_city_normalizedName: {
-                  state:
-                    confirmedLocation.state,
-                  city:
-                    confirmedLocation.city,
-                  normalizedName:
-                    confirmedLocation.normalizedName,
+              "development",
+            ),
+            state,
+            city,
+            neighborhood,
+            lookup: ({
+              state: lookupState,
+              normalizedName,
+            }) =>
+              tx.development.findMany({
+                where: {
+                  state: lookupState,
+                  normalizedName,
                 },
+                select: {
+                  name: true,
+                  active: true,
+                  state: true,
+                  city: true,
+                  neighborhood: true,
+                },
+              }),
+          });
+
+        const prefix = getPropertyCodePrefix(
+          propertyType,
+        );
+
+        const existingCodes =
+          await tx.property.findMany({
+            where: {
+              code: {
+                startsWith: prefix,
               },
-
-              update: {
-                ...confirmedLocation,
-                active: true,
-                verifiedAt:
-                  new Date(),
-              },
-
-              create: {
-                ...confirmedLocation,
-                aliases: [],
-                active: true,
-                verifiedAt:
-                  new Date(),
-              },
-            });
-          }
-
-          return tx.property.create({
-            data: {
-              code,
-
-              title,
-
-              slug: createSlug(
-                code,
-                title,
-              ),
-
-              purpose,
-
-              opportunityProfiles,
-
-              propertyType,
-
-              category,
-
-              status,
-
-              highlight:
-                formData.get(
-                  "highlight",
-                ) === "on",
-
-              published: false,
-
-              internalNotes,
-
-              tag:
-                getOptionalText(
-                  formData,
-                  "tag",
-                ),
-
-              state:
-                state.toUpperCase(),
-
-              city,
-
-              neighborhood,
-
-              ownerId,
-
-              captorId,
-
-              coCaptorId,
-
-              development:
-                getOptionalText(
-                  formData,
-                  "development",
-                ),
-
-              location:
-                getOptionalText(
-                  formData,
-                  "location",
-                ),
-
-              address,
-
-              zipCode,
-
-              latitude,
-
-              longitude,
-
-              googleMapsUrl:
-                getOptionalText(
-                  formData,
-                  "googleMapsUrl",
-                ),
-
-              mapEnabled,
-
-              mapRadiusMeters,
-
-              price:
-                parseDecimal(
-                  getText(
-                    formData,
-                    "price",
-                  ),
-                ),
-
-              rentalPrice:
-                parseDecimal(
-                  getText(
-                    formData,
-                    "rentalPrice",
-                  ),
-                ),
-
-              condominium:
-                parseDecimal(
-                  getText(
-                    formData,
-                    "condominium",
-                  ),
-                ),
-
-              iptu:
-                parseDecimal(
-                  getText(
-                    formData,
-                    "iptu",
-                  ),
-                ),
-
-              area:
-                parseDecimal(
-                  getText(
-                    formData,
-                    "area",
-                  ),
-                ),
-
-              landArea:
-                parseDecimal(
-                  getText(
-                    formData,
-                    "landArea",
-                  ),
-                ),
-
-              bedrooms:
-                parseInteger(
-                  getText(
-                    formData,
-                    "bedrooms",
-                  ),
-                ),
-
-              suites:
-                parseInteger(
-                  getText(
-                    formData,
-                    "suites",
-                  ),
-                ),
-
-              bathrooms:
-                parseInteger(
-                  getText(
-                    formData,
-                    "bathrooms",
-                  ),
-                ),
-
-              parking:
-                parseInteger(
-                  getText(
-                    formData,
-                    "parking",
-                  ),
-                ),
-
-              description:
-                getOptionalText(
-                  formData,
-                  "description",
-                ),
-
-              features,
-
-              video:
-                getOptionalText(
-                  formData,
-                  "video",
-                ),
-
-              virtualTour:
-                getOptionalText(
-                  formData,
-                  "virtualTour",
-                ),
-
-              brochure:
-                getOptionalText(
-                  formData,
-                  "brochure",
-                ),
-
-              seoTitle:
-                getOptionalText(
-                  formData,
-                  "seoTitle",
-                ),
-
-              seoDescription:
-                getOptionalText(
-                  formData,
-                  "seoDescription",
-                ),
-
-              seoImage:
-                getOptionalText(
-                  formData,
-                  "seoImage",
-                ),
             },
-
             select: {
-              id: true,
               code: true,
             },
           });
-        },
 
-        {
-          isolationLevel:
-            "Serializable",
-        },
-      );
+        const highestNumber = existingCodes.reduce(
+          (highest, property) => {
+            const match = property.code.match(
+              new RegExp(`^${prefix}(\\d+)$`, "i"),
+            );
+
+            if (!match) {
+              return highest;
+            }
+
+            const number = Number.parseInt(
+              match[1],
+              10,
+            );
+
+            if (!Number.isFinite(number)) {
+              return highest;
+            }
+
+            return Math.max(highest, number);
+          },
+          0,
+        );
+
+        const code = `${prefix}${String(
+          highestNumber + 1,
+        ).padStart(3, "0")}`;
+
+        const confirmedLocation =
+          confirmedNeighborhoodLocation(
+            formData,
+            {
+              state,
+              city,
+              neighborhood,
+            },
+          );
+
+        if (confirmedLocation) {
+          await tx.neighborhoodMapLocation.upsert({
+            where: {
+              state_city_normalizedName: {
+                state: confirmedLocation.state,
+                city: confirmedLocation.city,
+                normalizedName:
+                  confirmedLocation.normalizedName,
+              },
+            },
+            update: {
+              ...confirmedLocation,
+              active: true,
+              verifiedAt: new Date(),
+            },
+            create: {
+              ...confirmedLocation,
+              aliases: [],
+              active: true,
+              verifiedAt: new Date(),
+            },
+          });
+        }
+
+        return tx.property.create({
+          data: {
+            code,
+            title,
+            slug: createSlug(code, title),
+            purpose,
+            opportunityProfiles,
+            propertyType,
+            category,
+            status,
+
+            highlight:
+              formData.get("highlight") === "on",
+
+            published: false,
+            internalNotes,
+
+            tag: getOptionalText(
+              formData,
+              "tag",
+            ),
+
+            state: state.toUpperCase(),
+            city,
+            neighborhood,
+
+            ownerId,
+            captorId,
+            coCaptorId,
+
+            development: validatedDevelopment,
+
+            location: getOptionalText(
+              formData,
+              "location",
+            ),
+
+            address,
+            zipCode,
+            latitude,
+            longitude,
+
+            googleMapsUrl: getOptionalText(
+              formData,
+              "googleMapsUrl",
+            ),
+
+            mapEnabled,
+            mapRadiusMeters,
+
+            price: parseDecimal(
+              getText(formData, "price"),
+            ),
+
+            rentalPrice: parseDecimal(
+              getText(formData, "rentalPrice"),
+            ),
+
+            condominium: parseDecimal(
+              getText(formData, "condominium"),
+            ),
+
+            iptu: parseDecimal(
+              getText(formData, "iptu"),
+            ),
+
+            area: parseDecimal(
+              getText(formData, "area"),
+            ),
+
+            landArea: parseDecimal(
+              getText(formData, "landArea"),
+            ),
+
+            bedrooms: parseInteger(
+              getText(formData, "bedrooms"),
+            ),
+
+            suites: parseInteger(
+              getText(formData, "suites"),
+            ),
+
+            bathrooms: parseInteger(
+              getText(formData, "bathrooms"),
+            ),
+
+            parking: parseInteger(
+              getText(formData, "parking"),
+            ),
+
+            description: getOptionalText(
+              formData,
+              "description",
+            ),
+
+            features,
+
+            video: getOptionalText(
+              formData,
+              "video",
+            ),
+
+            virtualTour: getOptionalText(
+              formData,
+              "virtualTour",
+            ),
+
+            brochure: getOptionalText(
+              formData,
+              "brochure",
+            ),
+
+            seoTitle: getOptionalText(
+              formData,
+              "seoTitle",
+            ),
+
+            seoDescription: getOptionalText(
+              formData,
+              "seoDescription",
+            ),
+
+            seoImage: getOptionalText(
+              formData,
+              "seoImage",
+            ),
+          },
+          select: {
+            id: true,
+            code: true,
+          },
+        });
+      },
+      {
+        isolationLevel: "Serializable",
+      },
+    );
   } catch (error) {
+    if (error instanceof DevelopmentSelectionError) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+
     console.error(
       "Erro ao cadastrar imóvel:",
       error,
@@ -1080,14 +813,8 @@ export async function createPropertyAction(
     };
   }
 
-  revalidatePath(
-    "/admin",
-  );
-
-  revalidatePath(
-    "/admin/imoveis",
-  );
-
+  revalidatePath("/admin");
+  revalidatePath("/admin/imoveis");
   revalidatePath(
     `/admin/imoveis/${createdProperty.code}`,
   );
