@@ -29,6 +29,10 @@ export default function PropertyCard({
   propertyType,
 }: PropertyCardProps) {
   const propertyUrl = `/imovel/${code.toLowerCase()}`;
+  const isBba002 = code.trim().toUpperCase() === "BBA002";
+  const displayedPrice = isBba002
+    ? "A partir de R$ 625.555,10 *"
+    : price;
 
   const isLand =
     propertyType === "TERRENO";
@@ -110,7 +114,8 @@ export default function PropertyCard({
             </span>
 
             <strong className="mt-1 block font-serif text-[22px] font-normal text-amber-400">
-              {price}
+              {displayedPrice}
+              {isBba002 ? <span className="mt-2 block text-[11px] text-zinc-400">* Consulte condições e disponibilidade.</span> : null}
             </strong>
           </div>
 
