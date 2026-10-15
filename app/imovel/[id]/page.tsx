@@ -2464,11 +2464,6 @@ export default async function PropertyPage({
                   }
 
                 </p>
-                {isBba002 ? (
-                  <p className="mt-2 text-sm text-zinc-400">
-                    * Consulte condições e disponibilidade.
-                  </p>
-                ) : null}
 
 
 
