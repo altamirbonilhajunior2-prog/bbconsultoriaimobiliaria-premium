@@ -1,130 +1,101 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Exclusão de Dados | B&B Consultoria Imobiliária",
+  title: "Política de Privacidade | B&B Consultoria Imobiliária",
   description:
-    "Instruções para solicitação de exclusão de dados pessoais na B&B Consultoria Imobiliária.",
+    "Como a B&B Consultoria Imobiliária trata dados de atendimento e oferece escolhas sobre publicidade.",
 };
 
-export default function ExclusaoDeDadosPage() {
+export default function PoliticaDePrivacidadePage() {
   return (
-    <main
-      style={{
-        maxWidth: "900px",
-        margin: "0 auto",
-        padding: "48px 24px 80px",
-        lineHeight: 1.7,
-      }}
-    >
-      <h1>Solicitação de Exclusão de Dados</h1>
-
-      <p>
-        Última atualização: 23 de setembro de 2026.
+    <main className="mx-auto w-full max-w-4xl px-6 py-12 text-zinc-200 lg:py-16">
+      <h1 className="font-serif text-3xl text-[#D5A85A]">Política de Privacidade</h1>
+      <p className="mt-6 leading-7">
+        A B&amp;B Consultoria Imobiliária usa informações fornecidas por você
+        para atender solicitações sobre imóveis e visitas. Esta página explica
+        o atendimento e suas escolhas sobre tecnologias publicitárias.
       </p>
 
-      <p>
-        A B&amp;B Consultoria Imobiliária permite que o
-        titular solicite a exclusão de seus dados pessoais,
-        observados os limites e hipóteses previstos na
-        legislação aplicável.
-      </p>
+      <section className="mt-10 space-y-3">
+        <h2 className="text-xl font-semibold text-white">Formulários e atendimento</h2>
+        <p className="leading-7">
+          Ao solicitar contato ou agendar uma visita, você informa dados como
+          nome, telefone e imóvel de interesse. Esses dados são usados para
+          registrar a solicitação no Portal, evitar registros duplicados e
+          encaminhar o atendimento. O formulário pede uma autorização própria
+          para contato pelo WhatsApp sobre o imóvel.
+        </p>
+        <p className="leading-7">
+          Essa autorização de contato é independente da escolha sobre
+          publicidade. Recusar publicidade não impede o envio do formulário
+          nem o atendimento solicitado.
+        </p>
+      </section>
 
-      <h2>Como solicitar</h2>
+      <section className="mt-10 space-y-3">
+        <h2 className="text-xl font-semibold text-white">WhatsApp e Íris</h2>
+        <p className="leading-7">
+          Links do Portal podem abrir o WhatsApp para iniciar uma conversa. O
+          Portal registra a intenção de contato, o imóvel relacionado quando
+          houver e a página pública de origem, para organizar o atendimento.
+          As mensagens trocadas pelo WhatsApp também seguem o funcionamento
+          desse serviço.
+        </p>
+        <p className="leading-7">
+          A Íris auxilia na busca de imóveis e no atendimento. As respostas
+          sobre preferências de busca e o histórico da conversa podem ser
+          usados para dar continuidade ao atendimento e encaminhá-lo a um
+          responsável quando necessário.
+        </p>
+      </section>
 
-      <p>
-        Para solicitar a exclusão de dados relacionados ao
-        seu atendimento, entre em contato com a B&amp;B
-        Consultoria Imobiliária pelo WhatsApp comercial:
-      </p>
+      <section className="mt-10 space-y-3">
+        <h2 className="text-xl font-semibold text-white">Publicidade e cookies</h2>
+        <p className="leading-7">
+          O Portal oferece uma escolha para tecnologias publicitárias do
+          Google Ads e do Pixel da Meta. Quando autorizadas e habilitadas,
+          elas podem usar cookies ou identificadores para medir campanhas e
+          apresentar publicidade. Sem autorização, essas tecnologias
+          publicitárias permanecem bloqueadas.
+        </p>
+        <p className="leading-7">
+          Tecnologias estritamente necessárias ao funcionamento do Portal e
+          ao registro da sua escolha são tratadas separadamente. Identificadores
+          e parâmetros de campanha não são registrados nos novos atendimentos
+          do Portal enquanto não houver validação confiável do consentimento
+          publicitário no servidor.
+        </p>
+      </section>
 
-      <p>
-        <strong>+55 12 97814-0636</strong>
-      </p>
+      <section id="preferencias" className="mt-10 scroll-mt-8 space-y-3">
+        <h2 className="text-xl font-semibold text-white">Suas preferências</h2>
+        <p className="leading-7">
+          O aviso permite aceitar ou recusar publicidade e abrir as
+          preferências. Você pode mudar de ideia a qualquer momento pelo
+          controle persistente “Preferências de privacidade”, exibido nas
+          páginas públicas. Ao revogar, novos carregamentos e eventos
+          publicitários devem ser interrompidos. A revogação não desfaz dados
+          transmitidos antes dela.
+        </p>
+        <p className="leading-7">
+          A escolha publicitária é guardada no navegador, separadamente do
+          consentimento de contato dos formulários. Se não houver escolha
+          válida, a publicidade permanece bloqueada.
+        </p>
+      </section>
 
-      <p>
-        Informe que deseja realizar uma
-        <strong> solicitação de exclusão de dados</strong>.
-      </p>
-
-      <h2>Informações necessárias</h2>
-
-      <p>
-        Para localizar corretamente os dados e evitar a
-        exclusão de informações pertencentes a outra pessoa,
-        poderemos solicitar informações suficientes para
-        confirmar a identidade do solicitante, como:
-      </p>
-
-      <ul>
-        <li>nome;</li>
-        <li>telefone utilizado no atendimento;</li>
-        <li>
-          e-mail, quando tiver sido anteriormente informado;
-        </li>
-        <li>
-          outras informações estritamente necessárias para
-          localizar o cadastro.
-        </li>
-      </ul>
-
-      <h2>Dados relacionados ao WhatsApp e à Íris</h2>
-
-      <p>
-        A solicitação poderá abranger, quando aplicável:
-      </p>
-
-      <ul>
-        <li>dados de identificação e contato;</li>
-        <li>perfil de busca imobiliária;</li>
-        <li>
-          histórico de mensagens mantidas durante o
-          atendimento da Íris;
-        </li>
-        <li>
-          informações associadas ao atendimento comercial;
-        </li>
-        <li>
-          outros dados pessoais vinculados ao solicitante.
-        </li>
-      </ul>
-
-      <h2>Limitações legais</h2>
-
-      <p>
-        A exclusão poderá não abranger informações que a
-        B&amp;B precise conservar para cumprimento de
-        obrigação legal ou regulatória, exercício regular de
-        direitos, prevenção de fraude, segurança ou outras
-        hipóteses autorizadas pela legislação.
-      </p>
-
-      <p>
-        Quando a exclusão integral não for juridicamente
-        possível, os dados serão tratados de acordo com a
-        finalidade legal aplicável e com medidas adequadas de
-        proteção.
-      </p>
-
-      <h2>Confirmação</h2>
-
-      <p>
-        Após a análise da solicitação, a B&amp;B informará ao
-        titular as providências adotadas, observados os prazos
-        e requisitos estabelecidos pela legislação aplicável.
-      </p>
-
-      <h2>Política de Privacidade</h2>
-
-      <p>
-        Para mais informações sobre o tratamento de dados
-        pessoais:
-      </p>
-
-      <p>
-        <a href="https://www.bbconsultoriaimoveis.com.br/politica-de-privacidade">
-          www.bbconsultoriaimoveis.com.br/politica-de-privacidade
-        </a>
-      </p>
+      <section className="mt-10 space-y-3">
+        <h2 className="text-xl font-semibold text-white">Seus dados e contato</h2>
+        <p className="leading-7">
+          Para solicitar informações ou a exclusão de dados relacionados ao
+          atendimento, consulte a{" "}
+          <Link href="/exclusao-de-dados" className="text-[#D5A85A] underline underline-offset-2">
+            página de exclusão de dados
+          </Link>
+          . O WhatsApp comercial informado pelo Portal é (12) 97814-0636.
+        </p>
+      </section>
     </main>
   );
 }

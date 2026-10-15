@@ -1589,9 +1589,21 @@ export default async function PropertyPage({
 
 
 
+  const isBba002 =
+
+    currentProperty.code.trim().toUpperCase() ===
+
+    "BBA002";
+
+
+
   const displayedSalePrice =
 
-    currentProperty.opportunityProfiles.includes(
+    isBba002
+
+      ? "A partir de R$ 625.555,10 *"
+
+      : currentProperty.opportunityProfiles.includes(
 
       "LANCAMENTO",
 
@@ -2452,6 +2464,18 @@ export default async function PropertyPage({
                   }
 
                 </p>
+
+
+
+                {isBba002 ? (
+
+                  <p className="mt-2 text-sm text-zinc-400">
+
+                    * Consulte condições e disponibilidade.
+
+                  </p>
+
+                ) : null}
 
               </div>
 

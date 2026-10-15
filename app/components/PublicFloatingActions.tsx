@@ -13,7 +13,7 @@ export default function PublicFloatingActions() {
     pathname.startsWith("/admin/") ||
     pathname === "/login-admin";
 
-  if (isAdminRoute) {
+  if (isAdminRoute || pathname === "/teste-consentimento") {
     return null;
   }
 

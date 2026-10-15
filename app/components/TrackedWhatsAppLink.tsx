@@ -1,5 +1,9 @@
 "use client";
 
+import { clientAttribution } from "../../lib/privacy/client-attribution";
+
+import { useRef } from "react";
+
 import type {
   ComponentPropsWithoutRef,
   MouseEvent,
@@ -43,11 +47,13 @@ export default function TrackedWhatsAppLink({
   href,
   ...props
 }: TrackedWhatsAppLinkProps) {
+  const interaction = useRef<{ id: string; at: number; href: string; sourcePage: string } | null>(null);
   function handleClick(
     event:
       MouseEvent<HTMLAnchorElement>,
   ) {
-    trackWhatsAppClick();
+    onClick?.(event);
+    if (event.defaultPrevented) return;
 
     if (
       typeof href ===
@@ -73,18 +79,35 @@ export default function TrackedWhatsAppLink({
             ).toUpperCase()
           : null;
 
-      const redirectParams =
-        new URLSearchParams();
+      const targetUrl = new URL(href);
+      for (const key of Array.from(targetUrl.searchParams.keys())) {
+        if (key !== "text" && key !== "phone") targetUrl.searchParams.delete(key);
+      }
+      targetUrl.hash = "";
+
+      const redirectParams = new URLSearchParams();
+      try {
+        const now = Date.now();
+        const repeated = interaction.current?.href === href &&
+          interaction.current.sourcePage === currentUrl.pathname && now - interaction.current.at < 1500;
+        if (!repeated) {
+          interaction.current = { id: crypto.randomUUID(), at: now, href, sourcePage: currentUrl.pathname };
+          trackWhatsAppClick();
+        }
+        redirectParams.set("interactionId", interaction.current!.id);
+      } catch { return; } // Keep the original operational link if crypto is unavailable.
 
       redirectParams.set(
         "target",
-        href,
+        targetUrl.toString(),
       );
 
       redirectParams.set(
         "sourcePage",
-        `${currentUrl.pathname}${currentUrl.search}`,
+        currentUrl.pathname,
       );
+
+      for (const [key, value] of Object.entries(clientAttribution())) redirectParams.set(key, value);
 
       if (propertyCode) {
         redirectParams.set(
@@ -93,64 +116,10 @@ export default function TrackedWhatsAppLink({
         );
       }
 
-      if (document.referrer) {
-        redirectParams.set(
-          "referrer",
-          document.referrer,
-        );
-      }
-
-      const campaignParams = [
-        [
-          "utm_source",
-          "utmSource",
-        ],
-        [
-          "utm_medium",
-          "utmMedium",
-        ],
-        [
-          "utm_campaign",
-          "utmCampaign",
-        ],
-        [
-          "utm_term",
-          "utmTerm",
-        ],
-        [
-          "utm_content",
-          "utmContent",
-        ],
-        [
-          "gclid",
-          "gclid",
-        ],
-      ] as const;
-
-      for (
-        const [
-          sourceKey,
-          destinationKey,
-        ] of campaignParams
-      ) {
-        const value =
-          currentUrl.searchParams.get(
-            sourceKey,
-          );
-
-        if (value) {
-          redirectParams.set(
-            destinationKey,
-            value,
-          );
-        }
-      }
-
       event.currentTarget.href =
         `/api/whatsapp-redirect?${redirectParams.toString()}`;
     }
 
-    onClick?.(event);
   }
 
   return (
@@ -159,6 +128,7 @@ export default function TrackedWhatsAppLink({
       rel="noreferrer"
       href={href}
       {...props}
+      referrerPolicy="no-referrer"
       onClick={handleClick}
     />
   );

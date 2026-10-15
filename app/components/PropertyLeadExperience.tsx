@@ -1,5 +1,7 @@
 "use client";
 
+import { clientAttribution } from "../../lib/privacy/client-attribution";
+
 import {
   FormEvent,
   useCallback,
@@ -8,6 +10,7 @@ import {
 } from "react";
 
 import { PORTAL_LEAD_CONSENT_TEXT } from "../../lib/leads/consent";
+import { trackAdvertisingEvent } from "../../lib/privacy/advertising";
 import PropertyGallery from "./PropertyGallery";
 import TrackedWhatsAppLink from "./TrackedWhatsAppLink";
 
@@ -150,17 +153,13 @@ export default function PropertyLeadExperience({
           "",
       ).trim();
 
-    const searchParams =
-      new URLSearchParams(
-        window.location.search,
-      );
-
     try {
       const response =
         await fetch(
           "/api/leads",
           {
             method: "POST",
+            referrerPolicy: "no-referrer",
 
             headers: {
               "Content-Type":
@@ -169,6 +168,7 @@ export default function PropertyLeadExperience({
 
             body:
               JSON.stringify({
+                ...clientAttribution(),
                 propertyCode,
 
                 name,
@@ -189,41 +189,7 @@ export default function PropertyLeadExperience({
                   ),
 
                 sourcePage:
-                  `${window.location.pathname}${window.location.search}`,
-
-                referrer:
-                  document.referrer ||
-                  null,
-
-                utmSource:
-                  searchParams.get(
-                    "utm_source",
-                  ),
-
-                utmMedium:
-                  searchParams.get(
-                    "utm_medium",
-                  ),
-
-                utmCampaign:
-                  searchParams.get(
-                    "utm_campaign",
-                  ),
-
-                utmTerm:
-                  searchParams.get(
-                    "utm_term",
-                  ),
-
-                utmContent:
-                  searchParams.get(
-                    "utm_content",
-                  ),
-
-                gclid:
-                  searchParams.get(
-                    "gclid",
-                  ),
+                  window.location.pathname,
               }),
           },
         );
@@ -250,27 +216,9 @@ export default function PropertyLeadExperience({
         "success",
       );
 
-      const trackedWindow =
-        window as typeof window & {
-          dataLayer?: Record<
-            string,
-            unknown
-          >[];
-        };
-
-      trackedWindow.dataLayer =
-        trackedWindow.dataLayer ||
-        [];
-
-      trackedWindow.dataLayer.push(
-        {
-          event:
-            "portal_lead_created",
-
-          property_code:
-            propertyCode,
-        },
-      );
+      trackAdvertisingEvent("portal_lead_created", {
+        property_code: propertyCode,
+      });
     } catch (error) {
       setSubmissionState(
         "error",

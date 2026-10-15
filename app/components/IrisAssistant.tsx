@@ -2181,7 +2181,7 @@ property.parking > 0 ? (                          <span>
 
         aria-label="Falar com a Íris, assistente virtual da B&B"
 
-        className="fixed bottom-6 right-28 z-[998] hidden min-h-16 items-center gap-4 rounded-full border border-[#d5a85a]/60 bg-[#090909]/95 px-5 pr-6 text-left shadow-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-[#d5a85a] hover:shadow-[0_16px_40px_rgba(213,168,90,0.22)] md:flex"
+        className="fixed bottom-[104px] right-28 z-[998] hidden min-h-16 items-center gap-4 rounded-full border border-[#d5a85a]/60 bg-[#090909]/95 px-5 pr-6 text-left shadow-2xl backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:border-[#d5a85a] hover:shadow-[0_16px_40px_rgba(213,168,90,0.22)] md:flex"
 
       >
 
@@ -2217,7 +2217,7 @@ property.parking > 0 ? (                          <span>
 
         aria-label="Falar com a Íris, assistente virtual da B&B"
 
-        className="fixed bottom-24 right-6 z-[998] flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-[#d5a85a] bg-[#090909] shadow-2xl transition-all duration-300 hover:scale-105 md:hidden"
+        className="fixed bottom-[176px] right-6 z-[998] flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-[#d5a85a] bg-[#090909] shadow-2xl transition-all duration-300 hover:scale-105 md:hidden"
 
       >
 

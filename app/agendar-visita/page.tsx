@@ -1,5 +1,7 @@
 "use client";
 
+import { clientAttribution } from "../../lib/privacy/client-attribution";
+
 import Link from "next/link";
 import {
   FormEvent,
@@ -12,6 +14,7 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 import { trackWhatsAppClick } from "../components/whatsappTracking";
 import { PORTAL_LEAD_CONSENT_TEXT } from "../../lib/leads/consent";
+import { trackAdvertisingEvent } from "../../lib/privacy/advertising";
 
 const whatsappNumber = "5512978140636";
 
@@ -286,17 +289,13 @@ export default function AgendarVisitaPage() {
       return;
     }
 
-    const searchParams =
-      new URLSearchParams(
-        window.location.search,
-      );
-
     try {
       const response =
         await fetch(
           "/api/leads",
           {
             method: "POST",
+            referrerPolicy: "no-referrer",
 
             headers: {
               "Content-Type":
@@ -305,6 +304,7 @@ export default function AgendarVisitaPage() {
 
             body:
               JSON.stringify({
+                ...clientAttribution(),
                 propertyCode:
                   propertyCode ||
                   null,
@@ -319,41 +319,7 @@ export default function AgendarVisitaPage() {
                   ),
 
                 sourcePage:
-                  `${window.location.pathname}${window.location.search}`,
-
-                referrer:
-                  document.referrer ||
-                  null,
-
-                utmSource:
-                  searchParams.get(
-                    "utm_source",
-                  ),
-
-                utmMedium:
-                  searchParams.get(
-                    "utm_medium",
-                  ),
-
-                utmCampaign:
-                  searchParams.get(
-                    "utm_campaign",
-                  ),
-
-                utmTerm:
-                  searchParams.get(
-                    "utm_term",
-                  ),
-
-                utmContent:
-                  searchParams.get(
-                    "utm_content",
-                  ),
-
-                gclid:
-                  searchParams.get(
-                    "gclid",
-                  ),
+                  window.location.pathname,
               }),
           },
         );
@@ -407,31 +373,10 @@ export default function AgendarVisitaPage() {
           message,
         )}`;
 
-      const trackedWindow =
-        window as typeof window & {
-          dataLayer?: Record<
-            string,
-            unknown
-          >[];
-        };
-
-      trackedWindow.dataLayer =
-        trackedWindow.dataLayer ||
-        [];
-
-      trackedWindow.dataLayer.push(
-        {
-          event:
-            "portal_lead_created",
-
-          property_code:
-            propertyCode ||
-            "GERAL",
-
-          lead_origin:
-            "agendar_visita",
-        },
-      );
+      trackAdvertisingEvent("portal_lead_created", {
+        property_code: propertyCode || "GERAL",
+        lead_origin: "agendar_visita",
+      });
 
       trackWhatsAppClick();
 

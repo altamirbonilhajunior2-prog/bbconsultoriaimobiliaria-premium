@@ -1,11 +1,11 @@
+import { attachAttribution } from "../../../lib/privacy/server-consent";
 import {
   NextRequest,
   NextResponse,
 } from "next/server";
 
-import { prisma } from "../../../lib/prisma";
-
-const MAX_SOURCE_LENGTH = 1000;
+import { interactionId, recordWhatsAppIntent } from "../../../lib/privacy/whatsapp-intent";
+import { operationalSource, sanitizeWhatsAppTarget } from "../../../lib/privacy/attribution";
 
 function optionalText(
   value: string | null,
@@ -26,41 +26,9 @@ function optionalText(
     : null;
 }
 
-function getSafeWhatsAppUrl(
-  value: string | null,
-) {
-  if (!value) {
-    return null;
-  }
-
-  try {
-    const url =
-      new URL(value);
-
-    if (
-      url.protocol !== "https:"
-    ) {
-      return null;
-    }
-
-    const allowedHosts =
-      new Set([
-        "wa.me",
-        "api.whatsapp.com",
-      ]);
-
-    if (
-      !allowedHosts.has(
-        url.hostname,
-      )
-    ) {
-      return null;
-    }
-
-    return url;
-  } catch {
-    return null;
-  }
+function getSafeWhatsAppUrl(value: string | null) {
+  const sanitized = value ? sanitizeWhatsAppTarget(value) : null;
+  return sanitized ? new URL(sanitized) : null;
 }
 
 export async function GET(
@@ -94,140 +62,15 @@ export async function GET(
     )?.toUpperCase() ??
     null;
 
-  const sourcePage =
-    optionalText(
-      request.nextUrl.searchParams.get(
-        "sourcePage",
-      ),
-      MAX_SOURCE_LENGTH,
-    ) ?? "/";
+  const sourcePage = operationalSource(
+    request.nextUrl.searchParams.get("sourcePage") ?? "/",
+  );
 
   try {
-    const property =
-      propertyCode
-        ? await prisma.property.findFirst(
-            {
-              where: {
-                code:
-                  propertyCode,
-              },
-
-              select: {
-                id: true,
-                code: true,
-              },
-            },
-          )
-        : null;
-
-    const duplicateWindow =
-      new Date(
-        Date.now() -
-          5 *
-            60 *
-            1000,
-      );
-
-    const existingIntent =
-      await prisma.whatsAppLeadIntent.findFirst(
-        {
-          where: {
-            propertyId:
-              property?.id ??
-              null,
-
-            sourcePage,
-
-            createdAt: {
-              gte:
-                duplicateWindow,
-            },
-          },
-
-          orderBy: {
-            createdAt:
-              "desc",
-          },
-
-          select: {
-            id: true,
-          },
-        },
-      );
-
-    if (!existingIntent) {
-      await prisma.whatsAppLeadIntent.create(
-        {
-          data: {
-            propertyId:
-              property?.id ??
-              null,
-
-            propertyCode:
-              property?.code ??
-              propertyCode,
-
-            sourcePage,
-
-            referrer:
-              optionalText(
-                request.nextUrl.searchParams.get(
-                  "referrer",
-                ),
-                MAX_SOURCE_LENGTH,
-              ),
-
-            utmSource:
-              optionalText(
-                request.nextUrl.searchParams.get(
-                  "utmSource",
-                ),
-                180,
-              ),
-
-            utmMedium:
-              optionalText(
-                request.nextUrl.searchParams.get(
-                  "utmMedium",
-                ),
-                180,
-              ),
-
-            utmCampaign:
-              optionalText(
-                request.nextUrl.searchParams.get(
-                  "utmCampaign",
-                ),
-                250,
-              ),
-
-            utmTerm:
-              optionalText(
-                request.nextUrl.searchParams.get(
-                  "utmTerm",
-                ),
-                250,
-              ),
-
-            utmContent:
-              optionalText(
-                request.nextUrl.searchParams.get(
-                  "utmContent",
-                ),
-                250,
-              ),
-
-            gclid:
-              optionalText(
-                request.nextUrl.searchParams.get(
-                  "gclid",
-                ),
-                255,
-              ),
-          },
-        },
-      );
-    }
+    const intent = await recordWhatsAppIntent({
+      interactionId: interactionId(request.nextUrl.searchParams.get("interactionId")), propertyCode, sourcePage,
+    });
+    if (intent.created) await attachAttribution(request, Object.fromEntries(request.nextUrl.searchParams), "whatsapp", intent.id);
   } catch {
     // Mesmo que o CRM ou o banco
     // estejam indisponíveis,
@@ -235,8 +78,8 @@ export async function GET(
     // continuar para o WhatsApp.
   }
 
-  return NextResponse.redirect(
-    targetUrl,
-    307,
-  );
+  const response = NextResponse.redirect(targetUrl, 307);
+  response.headers.set("Cache-Control", "no-store");
+  response.headers.set("Referrer-Policy", "no-referrer");
+  return response;
 }
