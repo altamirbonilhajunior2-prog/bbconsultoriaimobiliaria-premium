@@ -294,6 +294,7 @@ model PortalLead {
   utmTerm     String? @db.VarChar(250)
   utmContent  String? @db.VarChar(250)
   gclid       String? @db.VarChar(255)
+  advertisingConsentId String? @db.Uuid
 
   consentVersion String    @db.VarChar(50)
   consentText    String    @db.Text
@@ -316,6 +317,7 @@ model PortalLead {
 
 model WhatsAppLeadIntent {
   id Int @id @default(autoincrement())
+  interactionId String? @unique @db.Uuid
 
   propertyId Int?
   property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
@@ -332,6 +334,7 @@ model WhatsAppLeadIntent {
   utmContent  String? @db.VarChar(250)
 
   gclid String? @db.VarChar(255)
+  advertisingConsentId String? @db.Uuid
 
   createdAt DateTime @default(now())
 
@@ -929,4 +932,25 @@ model Development {
   @@index([neighborhood])
   @@index([type])
   @@index([active])
+}
+
+// Advertising consent is separate from permission to contact a lead.
+model AdvertisingConsent {
+  sessionId String @db.Uuid
+  revision Int
+  id        String   @id @db.Uuid
+  version   String   @db.VarChar(50)
+  issuedAt  DateTime
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  @@index([expiresAt])
+  @@unique([sessionId, revision])
+}
+
+model AdvertisingConsentSession {
+  id String @id @db.Uuid
+  revision Int @default(0)
+  activeReceiptId String? @db.Uuid
+  lastGrantAt DateTime?
 }

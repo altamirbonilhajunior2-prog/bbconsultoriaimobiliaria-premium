@@ -115,8 +115,13 @@ export default function PropertyCard({
 
             <strong className="mt-1 block font-serif text-[22px] font-normal text-amber-400">
               {displayedPrice}
-              {isBba002 ? <span className="mt-2 block text-[11px] text-zinc-400">* Consulte condições e disponibilidade.</span> : null}
             </strong>
+
+            {isBba002 ? (
+              <span className="mt-2 block text-[11px] text-zinc-400">
+                * Consulte condições e disponibilidade.
+              </span>
+            ) : null}
           </div>
 
           <div className="mt-auto pt-5">

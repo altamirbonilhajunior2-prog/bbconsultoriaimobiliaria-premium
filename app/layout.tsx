@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { GoogleTagManager } from "@next/third-parties/google";
+import PrivacyConsent from "./components/PrivacyConsent";
+import ConsentAwareTagManager from "./components/ConsentAwareTagManager";
 
 import "./globals.css";
 import PublicFloatingActions from "./components/PublicFloatingActions";
@@ -100,7 +101,8 @@ export default function RootLayout({
 
         <PublicFloatingActions />
 
-        <GoogleTagManager gtmId="GTM-PFRXG4HN" />
+        <PrivacyConsent />
+        <ConsentAwareTagManager />
       </body>
     </html>
   );

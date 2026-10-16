@@ -1,9 +1,11 @@
+import { operationalSource } from "../../../lib/privacy/attribution";
+import { attachAttribution } from "../../../lib/privacy/server-consent";
 import {
   NextRequest,
   NextResponse,
 } from "next/server";
 
-import { prisma } from "../../../lib/prisma";
+import { interactionId, recordWhatsAppIntent } from "../../../lib/privacy/whatsapp-intent";
 
 const MAX_SOURCE_LENGTH = 1000;
 
@@ -181,6 +183,8 @@ export async function POST(
     );
   }
 
+  if (!body || typeof body !== "object") return jsonResponse(request, { error: "Dados inválidos." }, { status: 400 });
+
   const propertyCode =
     optionalText(
       body.propertyCode,
@@ -188,13 +192,13 @@ export async function POST(
     )?.toUpperCase() ??
     null;
 
-  const sourcePage =
+  const rawSourcePage =
     optionalText(
       body.sourcePage,
       MAX_SOURCE_LENGTH,
     );
 
-  if (!sourcePage) {
+  if (!rawSourcePage) {
     return jsonResponse(
       request,
       {
@@ -207,131 +211,13 @@ export async function POST(
     );
   }
 
-  const property =
-    propertyCode
-      ? await prisma.property.findFirst(
-          {
-            where: {
-              code:
-                propertyCode,
-            },
+  const sourcePage = operationalSource(rawSourcePage);
 
-            select: {
-              id: true,
-              code: true,
-            },
-          },
-        )
-      : null;
-
-  const duplicateWindow =
-    new Date(
-      Date.now() -
-        5 *
-          60 *
-          1000,
-    );
-
-  const existingIntent =
-    await prisma.whatsAppLeadIntent.findFirst(
-      {
-        where: {
-          propertyId:
-            property?.id ??
-            null,
-
-          sourcePage,
-
-          createdAt: {
-            gte:
-              duplicateWindow,
-          },
-        },
-
-        orderBy: {
-          createdAt:
-            "desc",
-        },
-
-        select: {
-          id: true,
-        },
-      },
-    );
-
-  if (existingIntent) {
-    return jsonResponse(
-      request,
-      {
-        success: true,
-        intentId:
-          existingIntent.id,
-      },
-    );
-  }
-
-  const intent =
-    await prisma.whatsAppLeadIntent.create(
-      {
-        data: {
-          propertyId:
-            property?.id ??
-            null,
-
-          propertyCode:
-            property?.code ??
-            propertyCode,
-
-          sourcePage,
-
-          referrer:
-            optionalText(
-              body.referrer,
-              MAX_SOURCE_LENGTH,
-            ),
-
-          utmSource:
-            optionalText(
-              body.utmSource,
-              180,
-            ),
-
-          utmMedium:
-            optionalText(
-              body.utmMedium,
-              180,
-            ),
-
-          utmCampaign:
-            optionalText(
-              body.utmCampaign,
-              250,
-            ),
-
-          utmTerm:
-            optionalText(
-              body.utmTerm,
-              250,
-            ),
-
-          utmContent:
-            optionalText(
-              body.utmContent,
-              250,
-            ),
-
-          gclid:
-            optionalText(
-              body.gclid,
-              255,
-            ),
-        },
-
-        select: {
-          id: true,
-        },
-      },
-    );
+  let operation: string;
+  try { operation = interactionId(body.interactionId); }
+  catch { return jsonResponse(request, { error: "Interação inválida." }, { status: 400 }); }
+  const intent = await recordWhatsAppIntent({ interactionId: operation, propertyCode, sourcePage });
+  if (intent.created) await attachAttribution(request, body, "whatsapp", intent.id);
 
   return jsonResponse(
     request,
@@ -341,7 +227,7 @@ export async function POST(
         intent.id,
     },
     {
-      status: 201,
+      status: intent.created ? 201 : 200,
     },
   );
 }

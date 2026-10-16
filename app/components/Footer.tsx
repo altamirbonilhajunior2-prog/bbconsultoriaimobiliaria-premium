@@ -125,6 +125,10 @@ export default function Footer() {
             os direitos reservados.
           </p>
 
+          <nav aria-label="Privacidade" className="flex flex-wrap gap-x-5 gap-y-2">
+            <Link href="/politica-de-privacidade" className="hover:text-white">Política de Privacidade</Link>
+            <Link href="/politica-de-privacidade#preferencias" className="hover:text-white">Preferências de privacidade</Link>
+          </nav>
           <p>
             Inteligência imobiliária para decisões que constroem patrimônio.
           </p>

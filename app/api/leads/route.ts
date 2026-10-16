@@ -1,3 +1,4 @@
+import { attachAttribution, emptyAttribution } from "../../../lib/privacy/server-consent";
 import {
   NextRequest,
   NextResponse,
@@ -8,6 +9,7 @@ import {
   PORTAL_LEAD_CONSENT_VERSION,
 } from "../../../lib/leads/consent";
 import { prisma } from "../../../lib/prisma";
+import { operationalSource } from "../../../lib/privacy/attribution";
 
 const MAX_SOURCE_LENGTH = 1000;
 
@@ -371,16 +373,10 @@ export async function POST(
     );
   }
 
-  const sourcePage =
-    optionalText(
-      body.sourcePage,
-      MAX_SOURCE_LENGTH,
-    ) ??
-    (
-      property
-        ? `/imovel/${property.code.toLowerCase()}`
-        : "/"
-    );
+  const sourcePage = operationalSource(
+    optionalText(body.sourcePage, MAX_SOURCE_LENGTH) ??
+      (property ? "/imovel/" + property.code.toLowerCase() : "/"),
+  );
 
   const lead =
     await prisma.$transaction(
@@ -389,6 +385,12 @@ export async function POST(
           "SELECT pg_advisory_xact_lock(2026093001)",
         );
 
+        // Recheck after the allocation lock: concurrent submissions may pass the fast lookup together.
+        const duplicate = await tx.portalLead.findFirst({
+          where: { propertyId: property?.id ?? null, phone, createdAt: { gte: duplicateWindow } },
+          orderBy: { createdAt: "desc" }, select: { id: true },
+        });
+        if (duplicate) return { id: duplicate.id, created: false };
         const activeAgents =
           await tx.agent.findMany({
             where: {
@@ -445,7 +447,7 @@ export async function POST(
           activeAgents[0]?.id ??
           null;
 
-        return tx.portalLead.create(
+        const created = await tx.portalLead.create(
           {
             data: {
               propertyId:
@@ -468,47 +470,7 @@ export async function POST(
 
               sourcePage,
 
-              referrer:
-                optionalText(
-                  body.referrer,
-                  MAX_SOURCE_LENGTH,
-                ),
-
-              utmSource:
-                optionalText(
-                  body.utmSource,
-                  180,
-                ),
-
-              utmMedium:
-                optionalText(
-                  body.utmMedium,
-                  180,
-                ),
-
-              utmCampaign:
-                optionalText(
-                  body.utmCampaign,
-                  250,
-                ),
-
-              utmTerm:
-                optionalText(
-                  body.utmTerm,
-                  250,
-                ),
-
-              utmContent:
-                optionalText(
-                  body.utmContent,
-                  250,
-                ),
-
-              gclid:
-                optionalText(
-                  body.gclid,
-                  255,
-                ),
+              ...emptyAttribution,
 
               consentVersion:
                 PORTAL_LEAD_CONSENT_VERSION,
@@ -522,8 +484,11 @@ export async function POST(
             },
           },
         );
+        return { id: created.id, created: true };
       },
     );
+
+  if (lead.created) await attachAttribution(request, body, "lead", lead.id);
 
   return jsonResponse(
     request,
@@ -532,7 +497,7 @@ export async function POST(
       leadId: lead.id,
     },
     {
-      status: 201,
+      status: lead.created ? 201 : 200,
     },
   );
 }
