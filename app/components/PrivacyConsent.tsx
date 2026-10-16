@@ -84,7 +84,7 @@ export default function PrivacyConsent() {
 
   useEffect(() => { clientAttribution(); }, [pathname, choice]);
 
-  if (!initialized || !isPublicPath(pathname)) return null;
+  if (!isPublicPath(pathname)) return null;
 
   async function save(advertising: boolean) {
     if (savingRef.current) return;
@@ -122,7 +122,7 @@ export default function PrivacyConsent() {
 
   return (
     <div className={panel === "closed" ? "fixed bottom-3 right-6 z-[1100] flex flex-col gap-2" : "fixed bottom-3 left-3 right-3 z-[1100] flex max-w-xl flex-col gap-2 sm:left-4 sm:right-auto sm:w-full"}>
-      {panel !== "closed" && (
+      {initialized && panel !== "closed" && (
         <section
           aria-labelledby="privacy-title"
           className="max-h-[min(80vh,34rem)] overflow-y-auto rounded-xl border border-[#D5A85A]/50 bg-zinc-950 p-4 text-sm text-white shadow-2xl sm:p-5"
