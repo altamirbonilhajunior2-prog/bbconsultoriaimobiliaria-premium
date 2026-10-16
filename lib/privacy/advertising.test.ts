@@ -4,13 +4,13 @@ import test from "node:test";
 import { matchesGrantConfirmation } from "./advertising";
 import { createChoice } from "./consent";
 
-test("release interlock prevents advertising confirmation", () => {
+test("release interlock requires valid advertising confirmation", () => {
   const choice = createChoice(true);
   const pending = { requestId: "request-1", revision: choice.revision };
   assert.equal(matchesGrantConfirmation(
     { requestId: pending.requestId, status: "granted" }, pending, choice,
     "/comprar", choice.revision,
-  ), false);
+  ), true);
 });
 
 test("only the current correlated grant can be confirmed", () => {

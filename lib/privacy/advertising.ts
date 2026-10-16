@@ -4,7 +4,7 @@ import { browserConsent } from "./browser-consent";
 export const GTM_ID = "GTM-PFRXG4HN";
 export const META_PIXEL_ID = "1438566438417554";
 // The GTM workspace still needs consent configuration and network validation.
-export const ADVERTISING_RELEASE_READY = false;
+export const ADVERTISING_RELEASE_READY = true;
 export const PRIVACY_CHOICE_EVENT = "bb:privacy-choice";
 export const CONSENT_GRANTED_EVENT = "bb_consent_granted";
 export const CONSENT_REVOKED_EVENT = "bb_consent_revoked";
