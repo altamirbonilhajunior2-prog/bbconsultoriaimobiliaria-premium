@@ -1,1 +1,1 @@
-ALTER TABLE "Property" ADD COLUMN "priceStartingFrom" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "Property" ADD COLUMN IF NOT EXISTS "priceStartingFrom" BOOLEAN NOT NULL DEFAULT false;
