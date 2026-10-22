@@ -256,14 +256,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
       <Header />
-
-      <div data-bb-creci="home" className="border-b border-black/20 bg-[#D5A85A] px-4 py-3 text-center text-black">
-        <p className="text-lg font-bold tracking-wide sm:text-xl">
-          CRECI/SP n.º 055461-J
-        </p>
-      </div>
-
-      <HomeSearchExperience />
+<HomeSearchExperience />
 
       <section className="mx-auto max-w-[1720px] px-5 pb-20 pt-20 sm:px-6 lg:px-8 xl:px-10">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
