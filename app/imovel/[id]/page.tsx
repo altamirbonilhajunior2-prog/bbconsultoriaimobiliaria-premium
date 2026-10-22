@@ -1589,14 +1589,29 @@ export default async function PropertyPage({
 
 
 
-  const showStartingSalePrice =
-    currentProperty.priceStartingFrom === true &&
-    currentProperty.purpose !== "LOCACAO" &&
-    decimalToNumber(currentProperty.price) !== null;
+  const isBba002 =
 
-  const displayedSalePrice = showStartingSalePrice
-    ? `A partir de ${salePrice} *`
-    : salePrice;
+    currentProperty.code.trim().toUpperCase() ===
+
+    "BBA002";
+
+
+
+  const displayedSalePrice =
+
+    isBba002
+
+      ? "A partir de R$ 625.555,10 *"
+
+      : currentProperty.opportunityProfiles.includes(
+
+      "LANCAMENTO",
+
+    )
+
+      ? `A partir de ${salePrice}*`
+
+      : salePrice;
 
 
 
@@ -1668,15 +1683,35 @@ export default async function PropertyPage({
 
 
 
-  const shouldMarkCalculatedPricePerSquareMeter = showStartingSalePrice;
+  const shouldMarkCalculatedPricePerSquareMeter =
+
+    currentProperty.code.toUpperCase() ===
+
+    "BBA002";
+
+
 
   const displayedSalePricePerSquareMeter =
+
     shouldMarkCalculatedPricePerSquareMeter &&
+
     salePricePerSquareMeter !== null
-      ? `A partir de ${formattedSalePricePerSquareMeter} *`
+
+      ? `A partir de ${formattedSalePricePerSquareMeter}*`
+
       : formattedSalePricePerSquareMeter;
 
-  const displayedRentalPricePerSquareMeter = formattedRentalPricePerSquareMeter;
+
+
+  const displayedRentalPricePerSquareMeter =
+
+    shouldMarkCalculatedPricePerSquareMeter &&
+
+    rentalPricePerSquareMeter !== null
+
+      ? `A partir de ${formattedRentalPricePerSquareMeter}*`
+
+      : formattedRentalPricePerSquareMeter;
 
   function formatMarketReferenceRange(
 
@@ -2432,11 +2467,11 @@ export default async function PropertyPage({
 
 
 
-                {showStartingSalePrice ? (
+                {isBba002 ? (
 
                   <p className="mt-2 text-sm text-zinc-400">
 
-                    * Consulte condições e valores.
+                    * Consulte condições e disponibilidade.
 
                   </p>
 
@@ -2529,12 +2564,6 @@ export default async function PropertyPage({
                       <p className="mt-3 text-xs leading-5 text-zinc-500">
 
                         Calculado com base no preço anunciado e na área informada no cadastro.
-                        {showStartingSalePrice ? (
-                          <>
-                            <br />
-                            * Consulte condições e valores.
-                          </>
-                        ) : null}
 
                       </p>
 
@@ -2699,12 +2728,6 @@ export default async function PropertyPage({
                     <p className="mt-3 text-xs leading-5 text-zinc-500">
 
                       Calculado com base no preço anunciado e na área informada no cadastro.
-                      {showStartingSalePrice ? (
-                        <>
-                          <br />
-                          * Consulte condições e valores.
-                        </>
-                      ) : null}
 
                     </p>
 
