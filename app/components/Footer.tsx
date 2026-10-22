@@ -43,10 +43,6 @@ export default function Footer() {
             />
           </Link>
 
-          <p data-bb-creci="footer" className="mt-3 inline-block max-w-full rounded-md border border-[#D5A85A]/70 bg-black/40 px-4 py-3 text-base font-bold leading-relaxed tracking-[0.04em] text-[#D5A85A] drop-shadow-[0_0_8px_rgba(213,168,90,0.55)] sm:text-lg">
-            CRECI/SP n.º 055461-J
-          </p>
-
           <p className="mt-4 max-w-sm text-sm leading-7 text-zinc-400">
             Nós atuamos com análise, curadoria e orientação estratégica para
             decisões imobiliárias mais seguras em São José dos Campos.

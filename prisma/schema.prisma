@@ -103,9 +103,8 @@ model Property {
   mapEnabled      Boolean @default(true)
   mapRadiusMeters Int     @default(700)
 
-  price             Decimal? @db.Decimal(15, 2)
-  priceStartingFrom Boolean  @default(false)
-  rentalPrice       Decimal? @db.Decimal(15, 2)
+  price       Decimal? @db.Decimal(15, 2)
+  rentalPrice Decimal? @db.Decimal(15, 2)
 
   condominium Decimal? @db.Decimal(12, 2)
   iptu        Decimal? @db.Decimal(12, 2)
