@@ -819,18 +819,16 @@ export default function NovoImovelPage() {
             <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
               {purpose !==
               "Locação" ? (
-                <label className="flex flex-col gap-2">
-                  <span className={labelTitleClass}>
-                    Valor de venda
-                  </span>
-
-                  <input
-                    name="price"
-                    type="text"
-                    placeholder="Ex.: R$ 3.300.000"
-                    className={inputClass}
-                  />
-                </label>
+                <div className="flex flex-col gap-3">
+                  <label className="flex flex-col gap-2">
+                    <span className={labelTitleClass}>Valor de venda</span>
+                    <input name="price" type="text" placeholder="Ex.: R$ 3.300.000" className={inputClass} />
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-zinc-300">
+                    <input type="checkbox" name="priceStartingFrom" value="true" defaultChecked={false} className="h-4 w-4" />
+                    <span>Preço a partir de</span>
+                  </label>
+                </div>
               ) : null}
 
               {purpose !==

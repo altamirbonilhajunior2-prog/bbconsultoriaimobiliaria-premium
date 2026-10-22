@@ -709,6 +709,7 @@ export async function createPropertyAction(
             price: parseDecimal(
               getText(formData, "price"),
             ),
+            priceStartingFrom: formData.get("priceStartingFrom") === "true",
 
             rentalPrice: parseDecimal(
               getText(formData, "rentalPrice"),

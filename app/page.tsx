@@ -190,12 +190,7 @@ export default async function Home() {
                 property.price,
               );
 
-        const price =
-          property.purpose !==
-            "LOCACAO" &&
-          isLaunch
-            ? `A partir de ${basePrice}*`
-            : basePrice;
+        const price = basePrice;
 
         const tag =
           property.tag ||
@@ -218,6 +213,10 @@ export default async function Home() {
           location,
 
           price,
+          priceStartingFrom:
+            property.priceStartingFrom === true &&
+            property.purpose !== "LOCACAO" &&
+            decimalToNumber(property.price) !== null,
 
           image:
             coverImage?.url ??
@@ -258,6 +257,12 @@ export default async function Home() {
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
       <Header />
 
+      <div data-bb-creci="home" className="border-b border-black/20 bg-[#D5A85A] px-4 py-3 text-center text-black">
+        <p className="text-lg font-bold tracking-wide sm:text-xl">
+          CRECI/SP n.º 055461-J
+        </p>
+      </div>
+
       <HomeSearchExperience />
 
       <section className="mx-auto max-w-[1720px] px-5 pb-20 pt-20 sm:px-6 lg:px-8 xl:px-10">
@@ -290,6 +295,7 @@ export default async function Home() {
                   title={property.title}
                   location={property.location}
                   price={property.price}
+                  priceStartingFrom={property.priceStartingFrom}
                   image={property.image}
                   tag={property.tag}
                   propertyType={

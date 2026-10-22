@@ -6,6 +6,7 @@ type PropertyCardProps = {
   title: string;
   location: string;
   price: string;
+  priceStartingFrom?: boolean;
   image: string;
   tag: string;
   area: string;
@@ -20,6 +21,7 @@ export default function PropertyCard({
   title,
   location,
   price,
+  priceStartingFrom = false,
   image,
   tag,
   area,
@@ -29,9 +31,8 @@ export default function PropertyCard({
   propertyType,
 }: PropertyCardProps) {
   const propertyUrl = `/imovel/${code.toLowerCase()}`;
-  const isBba002 = code.trim().toUpperCase() === "BBA002";
-  const displayedPrice = isBba002
-    ? "A partir de R$ 625.555,10 *"
+  const displayedPrice = priceStartingFrom
+    ? `A partir de ${price} *`
     : price;
 
   const isLand =
@@ -117,9 +118,9 @@ export default function PropertyCard({
               {displayedPrice}
             </strong>
 
-            {isBba002 ? (
+            {priceStartingFrom ? (
               <span className="mt-2 block text-[11px] text-zinc-400">
-                * Consulte condições e disponibilidade.
+                * Consulte condições e valores.
               </span>
             ) : null}
           </div>

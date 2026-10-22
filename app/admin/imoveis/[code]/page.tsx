@@ -446,6 +446,7 @@ export default async function EditarImovelPage({
       decimalToString(
         property.price,
       ),
+    priceStartingFrom: property.priceStartingFrom,
 
     rentalPrice:
       decimalToString(
