@@ -43,7 +43,7 @@ export default function Footer() {
             />
           </Link>
 
-          <p data-bb-creci="footer" className="mt-3 inline-block max-w-full rounded-md border border-[#D5A85A]/70 bg-black/40 px-4 py-3 text-base font-bold leading-relaxed tracking-[0.04em] text-[#D5A85A] drop-shadow-[0_0_8px_rgba(213,168,90,0.55)] sm:text-lg">
+          <p data-bb-creci="footer" className="mt-4 inline-block max-w-full rounded-lg border border-[#FFD76A] bg-black/50 px-5 py-3 text-xl font-extrabold leading-relaxed tracking-[0.06em] text-[#FFD76A] shadow-[0_0_24px_rgba(255,215,106,0.35)] drop-shadow-[0_0_12px_rgba(255,215,106,0.95)] sm:text-2xl">
             CRECI/SP n.º 055461-J
           </p>
 
