@@ -154,6 +154,10 @@ export default async function LancamentosPage() {
           location,
 
           price,
+          priceStartingFrom:
+            property.priceStartingFrom === true &&
+            property.purpose !== "LOCACAO" &&
+            decimalToNumber(property.price) !== null,
 
           image:
             coverImage?.url ??
@@ -291,9 +295,8 @@ export default async function LancamentosPage() {
                   location={
                     property.location
                   }
-                  price={
-                    property.price
-                  }
+                  price={property.price}
+                  priceStartingFrom={property.priceStartingFrom}
                   image={
                     property.image
                   }
