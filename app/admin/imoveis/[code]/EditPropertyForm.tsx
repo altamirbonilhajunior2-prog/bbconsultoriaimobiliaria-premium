@@ -171,6 +171,7 @@ type EditableProperty = {
 
 
   price: string | null;
+  priceStartingFrom?: boolean;
 
   rentalPrice: string | null;
 
@@ -1710,25 +1711,15 @@ export default function EditPropertyForm({
 
             "Locação" ? (
 
-              <Field label="Valor de venda">
-
-                <input
-
-                  name="price"
-
-                  defaultValue={
-
-                    property.price ??
-
-                    ""
-
-                  }
-
-                  className={inputClass}
-
-                />
-
-              </Field>
+              <div className="flex flex-col gap-3">
+                <Field label="Valor de venda">
+                  <input name="price" defaultValue={property.price ?? ""} className={inputClass} />
+                </Field>
+                <label className="flex items-center gap-2 text-sm text-zinc-300">
+                  <input type="checkbox" name="priceStartingFrom" value="true" defaultChecked={property.priceStartingFrom ?? false} className="h-4 w-4" />
+                  <span>Preço a partir de</span>
+                </label>
+              </div>
 
             ) : null}
 
