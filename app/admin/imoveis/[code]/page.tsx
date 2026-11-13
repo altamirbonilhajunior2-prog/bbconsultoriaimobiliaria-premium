@@ -479,6 +479,8 @@ export default async function EditarImovelPage({
     suites:
       property.suites,
 
+    demiSuites: property.demiSuites,
+
     bathrooms:
       property.bathrooms,
 

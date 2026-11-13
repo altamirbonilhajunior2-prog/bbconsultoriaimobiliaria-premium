@@ -943,6 +943,21 @@ export default function NovoImovelPage() {
 
                   <label className="flex flex-col gap-2">
                     <span className={labelTitleClass}>
+                      Demi-suítes
+                    </span>
+
+                    <input
+                      name="demiSuites"
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="0"
+                      className={inputClass}
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-2">
+                    <span className={labelTitleClass}>
                       Banheiros
                     </span>
 

@@ -172,6 +172,12 @@ export async function updatePropertyAction(
     };
   }
 
+  const demiSuitesText = getText(formData, "demiSuites");
+  const demiSuites = demiSuitesText === "" ? 0 : Number(demiSuitesText);
+  if (!Number.isInteger(demiSuites) || demiSuites < 0 || demiSuites > 2147483647) {
+    return { success: false, message: "Informe uma quantidade inteira e não negativa de demi-suítes." };
+  }
+
   const access = await getAccessContext();
 
   const originalCode = getText(
@@ -692,6 +698,7 @@ export async function updatePropertyAction(
           suites: parseInteger(
             getText(formData, "suites"),
           ),
+            demiSuites,
 
           bathrooms: parseInteger(
             getText(formData, "bathrooms"),

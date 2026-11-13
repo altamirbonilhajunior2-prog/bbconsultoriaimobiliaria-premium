@@ -115,6 +115,7 @@ model Property {
 
   bedrooms  Int @default(0)
   suites    Int @default(0)
+  demiSuites Int @default(0)
   bathrooms Int @default(0)
   parking   Int @default(0)
 
