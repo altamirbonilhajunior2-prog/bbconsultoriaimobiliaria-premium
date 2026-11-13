@@ -193,6 +193,8 @@ type EditableProperty = {
 
   suites: number;
 
+  demiSuites: number;
+
   bathrooms: number;
 
   parking: number;
@@ -1906,6 +1908,29 @@ export default function EditPropertyForm({
                     defaultValue={
 
                       property.suites
+
+                    }
+
+                    className={inputClass}
+
+                  />
+
+                </Field>
+
+                <Field label="Demi-suítes">
+
+                  <input
+
+                    name="demiSuites"
+
+                    type="number"
+
+                    min="0"
+                    step="1"
+
+                    defaultValue={
+
+                      property.demiSuites
 
                     }
 
