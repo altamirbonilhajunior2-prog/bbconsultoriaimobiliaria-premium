@@ -24,7 +24,7 @@ enum OpportunityProfile {
 enum PropertyType {
   CASA
   APARTAMENTO
-  PREDIO
+  PREDIO @map("PREDIO_RESIDENCIAL")
   TERRENO
   COMERCIAL
   RURAL

@@ -3,6 +3,12 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
 import ts from "typescript";
+import { propertyTypes } from "../app/data/searchOptions";
+
+test("Prédio is residential and commercial buildings retain their category", () => {
+  assert.deepEqual(propertyTypes["Prédio"], ["Residencial"]);
+  assert.ok(propertyTypes.Comercial.includes("Prédio Comercial"));
+});
 
 // Execute the actual mapping/filter declarations without loading server side effects.
 function declarations(file: string, names: string[]) {
