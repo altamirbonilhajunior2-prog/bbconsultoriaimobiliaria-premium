@@ -566,6 +566,8 @@ export default function ExternalSearchPanel() {
                   Apartamento
                 </option>
 
+                <option value="Prédio">Prédio</option>
+
                 <option value="Terreno">
                   Terreno
                 </option>

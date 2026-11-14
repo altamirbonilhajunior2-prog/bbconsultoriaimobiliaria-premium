@@ -1245,6 +1245,8 @@ export default function IrisAssistant() {
 
     "Apartamento",
 
+    "Prédio",
+
     "Terreno",
 
     "Comercial",

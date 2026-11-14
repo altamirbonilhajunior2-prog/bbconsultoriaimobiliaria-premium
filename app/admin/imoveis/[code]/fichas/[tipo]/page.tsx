@@ -33,6 +33,7 @@ const purposeLabels: Record<string, string> = {
 const propertyTypeLabels: Record<string, string> = {
   CASA: "Casa",
   APARTAMENTO: "Apartamento",
+  PREDIO: "Prédio",
   TERRENO: "Terreno",
   COMERCIAL: "Comercial",
   RURAL: "Rural",

@@ -168,6 +168,7 @@ export async function createMarketReference(
   const allowedTypes = [
     "CASA",
     "APARTAMENTO",
+    "PREDIO",
     "TERRENO",
     "COMERCIAL",
     "RURAL",

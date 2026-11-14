@@ -36,6 +36,7 @@ const purposeLabels = {
 const propertyTypeLabels = {
   CASA: "Casa",
   APARTAMENTO: "Apartamento",
+  PREDIO: "Prédio",
   TERRENO: "Terreno",
   COMERCIAL: "Comercial",
   RURAL: "Rural",

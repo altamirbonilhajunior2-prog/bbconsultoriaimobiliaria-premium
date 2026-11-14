@@ -71,6 +71,7 @@ const codePrefixes: Record<
 > = {
   Casa: "BBC",
   Apartamento: "BBA",
+  "Prédio": "BBP",
   Terreno: "BBT",
   Comercial: "BBM",
   Rural: "BBR",

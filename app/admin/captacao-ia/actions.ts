@@ -230,6 +230,10 @@ function mapExternalPropertyType(
   const normalized =
     normalizedLabel(value);
 
+  if (normalized === "predio") {
+    return "PREDIO" as const;
+  }
+
   if (normalized.includes("casa")) {
     return "CASA" as const;
   }

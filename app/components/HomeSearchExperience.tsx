@@ -8,6 +8,7 @@ export type HomePropertyType =
   | "Todos os tipos"
   | "Casa"
   | "Apartamento"
+  | "Prédio"
   | "Cobertura"
   | "Terreno"
   | "Comercial"

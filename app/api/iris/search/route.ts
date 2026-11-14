@@ -25,6 +25,7 @@ function normalizePropertyType(
 ): PropertyType | undefined {
   if (value === "Casa") return PropertyType.CASA;
   if (value === "Apartamento") return PropertyType.APARTAMENTO;
+  if (value === "Prédio") return PropertyType.PREDIO;
   if (value === "Terreno") return PropertyType.TERRENO;
 
   if (

@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 const propertyTypeLabels: Record<string, string> = {
   CASA: "Casa",
   APARTAMENTO: "Apartamento",
+  PREDIO: "Prédio",
   TERRENO: "Terreno",
   COMERCIAL: "Comercial",
   RURAL: "Rural",

@@ -484,6 +484,8 @@ export default function Hero({
                       Apartamento
                     </option>
 
+                    <option value="Prédio" className="bg-zinc-950">Prédio</option>
+
                     <option value="Cobertura" className="bg-zinc-950">
                       Cobertura
                     </option>

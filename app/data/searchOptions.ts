@@ -20,6 +20,8 @@ export const propertyTypes = {
     "Cobertura",
   ],
 
+  "Prédio": ["Padrão"],
+
   Terreno: [
     "Condomínio Fechado",
     "Residencial",

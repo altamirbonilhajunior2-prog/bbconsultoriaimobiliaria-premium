@@ -114,6 +114,8 @@ function mapPropertyType(value: string) {
       return "CASA" as const;
     case "Apartamento":
       return "APARTAMENTO" as const;
+    case "Prédio":
+      return "PREDIO" as const;
     case "Terreno":
       return "TERRENO" as const;
     case "Comercial":
