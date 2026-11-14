@@ -64,6 +64,7 @@ function propertyTypeLabel(
   > = {
     APARTAMENTO:
       "Apartamento",
+    PREDIO: "Prédio",
     CASA: "Casa",
     TERRENO: "Terreno",
     COMERCIAL: "Comercial",
@@ -301,6 +302,7 @@ export default async function MarketReferencesPage() {
                 <option value="APARTAMENTO">
                   Apartamento
                 </option>
+                <option value="PREDIO">Prédio</option>
 
                 <option value="CASA">
                   Casa

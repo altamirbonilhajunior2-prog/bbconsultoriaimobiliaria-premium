@@ -139,6 +139,8 @@ function mapPropertyType(value: string) {
       return "CASA" as const;
     case "Apartamento":
       return "APARTAMENTO" as const;
+    case "Prédio":
+      return "PREDIO" as const;
     case "Terreno":
       return "TERRENO" as const;
     case "Comercial":
@@ -160,6 +162,8 @@ function getPropertyCodePrefix(
       return "BBC";
     case "APARTAMENTO":
       return "BBA";
+    case "PREDIO":
+      return "BBP";
     case "TERRENO":
       return "BBT";
     case "COMERCIAL":

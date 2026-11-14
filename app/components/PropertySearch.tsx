@@ -48,6 +48,7 @@ const opportunityProfiles = [
 const customPropertyTypes = [
   "Casa",
   "Apartamento",
+  "Prédio",
   "Terreno",
   "Comercial",
 ] as const;

@@ -318,6 +318,8 @@ export default function NovaCaptacaoPage() {
                     Apartamento
                   </option>
 
+                  <option value="Prédio">Prédio</option>
+
                   <option value="Terreno">
                     Terreno
                   </option>

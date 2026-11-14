@@ -13,6 +13,7 @@ export type OpportunityProfile =
 export type PropertyType =
   | "Casa"
   | "Apartamento"
+  | "Prédio"
   | "Terreno"
   | "Comercial"
   | "Rural";
