@@ -8,7 +8,7 @@ import NeighborhoodsSection from "./components/NeighborhoodsSection";
 import PropertyCard from "./components/PropertyCard";
 import { prisma } from "../lib/prisma";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Imóveis em São José dos Campos e Região",
@@ -116,9 +116,16 @@ export default async function Home() {
         published: true,
       },
 
-      include: {
+      select: {
+        code: true, title: true, location: true, neighborhood: true, city: true,
+        opportunityProfiles: true, purpose: true, price: true, rentalPrice: true,
+        priceStartingFrom: true, tag: true, highlight: true, propertyType: true,
+        area: true, landArea: true, bedrooms: true, suites: true, parking: true,
         images: {
+          take: 1,
+          select: { url: true, isCover: true },
           orderBy: [
+            { isCover: "desc" },
             {
               position: "asc",
             },

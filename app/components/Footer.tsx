@@ -35,7 +35,7 @@ export default function Footer() {
             className="relative block h-[190px] w-[320px] max-w-full overflow-hidden"
           >
             <Image
-              src="/logo-bb.png"
+              src="/_next/image?url=%2Flogo-bb.png&w=640&q=75"
               alt="B&B Consultoria Imobiliária"
               fill
               sizes="320px"
