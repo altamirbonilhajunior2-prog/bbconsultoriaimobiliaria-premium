@@ -1,3 +1,4 @@
+import { matchesPropertyUseFilter } from "../../lib/property-use";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
@@ -29,6 +30,7 @@ type ComprarPageProps = {
     bairro?: string | string[];
     empreendimento?: string | string[];
     tipo?: string | string[];
+    uso?: string | string[];
     categoria?: string | string[];
     dormitorios?: string | string[];
     valor?: string | string[];
@@ -383,6 +385,8 @@ export default async function ComprarPage({
         ),
     );
 
+  const propertyUse = getSingleParam(params.uso);
+
   const category =
     getSingleParam(
       params.categoria,
@@ -483,6 +487,7 @@ export default async function ComprarPage({
     );
 
   const hasActiveFilters =
+    Boolean(propertyUse) ||
     hasPurposeFilter ||
     hasStateFilter ||
     hasCityFilter ||
@@ -647,6 +652,10 @@ export default async function ComprarPage({
           return false;
         }
 
+        if (!matchesPropertyUseFilter(property.propertyUse, propertyUse)) {
+          return false;
+        }
+
         if (
           hasPropertyTypeFilter &&
           !selectedPropertyTypes.some(
@@ -755,6 +764,8 @@ export default async function ComprarPage({
             (property.highlight
               ? "Destaque"
               : ""),
+
+          propertyUse: property.propertyUse,
 
           propertyType:
             property.propertyType,
@@ -946,6 +957,7 @@ export default async function ComprarPage({
                   tag={
                     property.tag
                   }
+                  propertyUse={property.propertyUse}
                   propertyType={
                     property.propertyType
                   }

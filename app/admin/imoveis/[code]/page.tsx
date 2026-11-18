@@ -377,6 +377,8 @@ export default async function EditarImovelPage({
         property.propertyType
       ],
 
+    propertyUse: property.propertyUse,
+
     category:
       property.category,
 

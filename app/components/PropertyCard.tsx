@@ -1,3 +1,4 @@
+import { propertyUseLabels, type PropertyUseValue } from "../../lib/property-use";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -14,6 +15,7 @@ type PropertyCardProps = {
   suites: string;
   parking: string;
   propertyType: string;
+  propertyUse?: PropertyUseValue | null;
 };
 
 export default function PropertyCard({
@@ -29,6 +31,7 @@ export default function PropertyCard({
   suites,
   parking,
   propertyType,
+  propertyUse,
 }: PropertyCardProps) {
   const propertyUrl = `/imovel/${code.toLowerCase()}`;
   const displayedPrice = priceStartingFrom
@@ -73,6 +76,10 @@ export default function PropertyCard({
           <h3 className="mt-2 min-h-[48px] font-serif text-[20px] font-normal leading-[1.15] text-white">
             {title}
           </h3>
+
+          {propertyUse && (
+            <p className="mt-2 text-xs text-zinc-400">Uso: {propertyUseLabels[propertyUse]}</p>
+          )}
 
           <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-white/10 py-3 text-[11px] text-zinc-400">
             <span>{area}</span>

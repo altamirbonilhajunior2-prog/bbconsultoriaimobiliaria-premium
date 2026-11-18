@@ -7,6 +7,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { propertyUseLabels } from "../../../../lib/property-use";
 import { propertyTypes } from "../../../data/searchOptions";
 import {
   createPropertyAction,
@@ -571,7 +572,7 @@ export default function NovoImovelPage() {
               02. Classificação comercial
             </p>
 
-            <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
               <label className="flex flex-col gap-2">
                 <span className={labelTitleClass}>
                   Finalidade
@@ -627,6 +628,16 @@ export default function NovoImovelPage() {
                       </option>
                     ),
                   )}
+                </select>
+              </label>
+
+              <label className="flex flex-col gap-2">
+                <span className={labelTitleClass}>Uso</span>
+                <select name="propertyUse" defaultValue="" className={inputClass}>
+                  <option value="">Não informado</option>
+                  {Object.entries(propertyUseLabels).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
                 </select>
               </label>
 
