@@ -111,6 +111,8 @@ export async function updatePublicationAction(
       },
     });
 
+    revalidatePath("/");
+
     revalidatePath(
       "/admin",
     );

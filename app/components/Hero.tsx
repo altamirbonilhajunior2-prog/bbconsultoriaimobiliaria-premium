@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import HomeHeroImage from "./HomeHeroImage";
 import Link from "next/link";
 import TrackedWhatsAppLink from "./TrackedWhatsAppLink";
 import { FormEvent, useEffect, useMemo, useState } from "react";
@@ -302,37 +302,14 @@ export default function Hero({
 
   return (
     <section className="relative overflow-hidden bg-black">
-      <Image
-        src="/hero-clean.png"
-        alt="Imóveis de alto padrão em São José dos Campos e região"
-        fill
-        priority
-        sizes="(min-width: 640px) 100vw, 0px"
-        className="hidden object-cover object-center sm:block"
-        style={{
-          filter:
-            "brightness(1.16) saturate(1.08) contrast(1.02)",
-        }}
-      />
 
+      <div className="relative sm:contents">
+        <HomeHeroImage />
       <div className="absolute inset-0 hidden bg-[linear-gradient(90deg,rgba(0,0,0,0.62)_0%,rgba(0,0,0,0.48)_24%,rgba(0,0,0,0.25)_42%,rgba(0,0,0,0.06)_58%,rgba(0,0,0,0)_72%)] sm:block" />
 
       <div className="absolute inset-0 hidden bg-gradient-to-t from-black/20 via-transparent to-transparent sm:block" />
 
-      <div className="relative sm:contents">
-        <Image
-          src="/hero-mobile.png"
-          alt="Imóveis de alto padrão em São José dos Campos e região"
-          fill
-          priority
-          sizes="(max-width: 639px) 100vw, 0px"
-          className="object-cover object-right sm:hidden"
-          style={{
-            objectPosition: "right 68%",
-            filter:
-              "brightness(1.16) saturate(1.08) contrast(1.02)",
-          }}
-        />
+
 
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.58)_0%,rgba(0,0,0,0.40)_35%,rgba(0,0,0,0.12)_70%,rgba(0,0,0,0)_100%)] sm:hidden" />
 

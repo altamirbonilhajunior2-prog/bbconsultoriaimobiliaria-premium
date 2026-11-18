@@ -36,7 +36,7 @@ export default function Header() {
             className="relative block h-[88px] w-[150px] sm:h-[100px] sm:w-[190px] lg:h-[124px] lg:w-[275px] xl:h-[128px] xl:w-[300px] 2xl:h-[130px] 2xl:w-[320px]"
           >
             <Image
-              src="/logo-bb-header.png"
+              src="/_next/image?url=%2Flogo-bb-header.png&w=640&q=75"
               alt="B&B Consultoria Imobiliária"
               fill
               priority
