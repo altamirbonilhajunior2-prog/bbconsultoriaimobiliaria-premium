@@ -22,6 +22,7 @@ import {
 
 } from "react";
 
+import { propertyUseLabels, type PropertyUseValue } from "../../../../lib/property-use";
 import { propertyTypes } from "../../../data/searchOptions";
 
 import {
@@ -109,6 +110,8 @@ type EditableProperty = {
 
 
   propertyType: PropertyType;
+
+  propertyUse: PropertyUseValue | null;
 
   category: string;
 
@@ -1179,7 +1182,7 @@ export default function EditPropertyForm({
 
 
 
-          <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-7 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
 
             <Field label="Finalidade">
 
@@ -1278,6 +1281,15 @@ export default function EditPropertyForm({
             </Field>
 
 
+
+            <Field label="Uso">
+              <select name="propertyUse" defaultValue={property.propertyUse ?? ""} className={inputClass}>
+                <option value="">Não informado</option>
+                {Object.entries(propertyUseLabels).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </Field>
 
             <Field label="Categoria">
 

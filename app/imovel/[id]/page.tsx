@@ -1,3 +1,5 @@
+import { propertyUseLabels } from "../../../lib/property-use";
+
 import Link from "next/link";
 
 import { notFound } from "next/navigation";
@@ -2117,6 +2119,12 @@ export default async function PropertyPage({
               {currentProperty.title}
 
             </h1>
+
+            {currentProperty.propertyUse && (
+              <p className="mt-4 text-sm text-amber-400">
+                Uso: {propertyUseLabels[currentProperty.propertyUse]}
+              </p>
+            )}
 
 
 

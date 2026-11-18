@@ -30,6 +30,12 @@ enum PropertyType {
   RURAL
 }
 
+enum PropertyUse {
+  RESIDENCIAL
+  COMERCIAL
+  MISTO
+}
+
 enum PropertyStatus {
   DISPONIVEL
   RESERVADO
@@ -78,6 +84,7 @@ model Property {
   opportunityProfiles OpportunityProfile[] @default([])
 
   propertyType PropertyType
+  propertyUse  PropertyUse?
   category     String       @db.VarChar(100)
 
   status        PropertyStatus @default(EM_ANALISE)

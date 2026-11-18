@@ -1,6 +1,8 @@
 
 "use server";
 
+import { parsePropertyUse } from "../../../../lib/property-use";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "../../../../auth";
@@ -344,6 +346,13 @@ export async function createPropertyAction(
     "neighborhood",
   );
 
+  let propertyUse: ReturnType<typeof parsePropertyUse>;
+  try {
+    propertyUse = parsePropertyUse(formData.get("propertyUse"));
+  } catch {
+    return { success: false, message: "Selecione um uso válido: Residencial, Comercial ou Misto." };
+  }
+
   const category = getText(formData, "category");
 
   const purpose = mapPurpose(
@@ -674,6 +683,7 @@ export async function createPropertyAction(
             purpose,
             opportunityProfiles,
             propertyType,
+            propertyUse,
             category,
             status,
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { propertyUseLabels } from "../../lib/property-use";
+
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ChangeEvent,
@@ -237,6 +239,8 @@ export default function PropertySearch({
   ] = useState<string[]>(
     initialPropertyTypes,
   );
+
+  const [propertyUse, setPropertyUse] = useState(searchParams.get("uso") || "");
 
   const [category, setCategory] =
     useState(
@@ -787,6 +791,8 @@ export default function PropertySearch({
     const params =
       new URLSearchParams();
 
+    if (propertyUse) params.set("uso", propertyUse);
+
     const effectivePurpose =
       showPurpose
         ? purpose
@@ -1159,6 +1165,20 @@ export default function PropertySearch({
                     </option>
                   ),
                 )}
+              </select>
+            </label>
+
+            <label className="flex min-w-0 flex-col gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">Uso</span>
+              <select
+                value={propertyUse}
+                onChange={(event) => setPropertyUse(event.target.value)}
+                className="h-14 w-full border border-white/10 bg-[#111111] px-4 text-sm text-white outline-none transition focus:border-amber-500"
+              >
+                <option value="">Todos os usos</option>
+                {Object.entries(propertyUseLabels).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
               </select>
             </label>
 
