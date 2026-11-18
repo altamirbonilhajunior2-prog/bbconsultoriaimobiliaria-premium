@@ -3,11 +3,11 @@ import test from "node:test";
 import { BrowserConsent, DENIAL_EPOCH, REVOCATION_PENDING } from "./browser-consent";
 import { CONSENT_KEY, CONSENT_LIFETIME_MS } from "./consent";
 
-function harness() {
+function harness(serverClockAheadMs = 0) {
   const map = new Map<string, string>();
   let broken = false, offline = false, posts = 0, gets = 0, revision = 0, advertising = false;
   let pause: (() => Promise<void>) | undefined;
-  const issuedAt = Date.now();
+  const issuedAt = Date.now() + serverClockAheadMs;
   const storage: Storage = {
     get length() { return map.size; }, clear: () => map.clear(), key: i => [...map.keys()][i] ?? null,
     getItem: k => map.get(k) ?? null,
@@ -41,6 +41,23 @@ test("stored preference alone cannot enable collection; synchronization is read-
   assert.ok(h.a.current()); assert.equal(h.b.current(), null);
   await h.b.sync(); assert.ok(h.b.current()); assert.equal(h.posts(), 1);
 });
+
+for (const offset of [52_000, 300_000, -52_000]) {
+  test(`save, reload and revocation work with server clock offset ${offset}ms`, async () => {
+    const h = harness(offset);
+    const saved = await h.a.save(true);
+    assert.ok(h.a.current());
+    assert.equal(h.map.has(REVOCATION_PENDING), false);
+    assert.equal(h.b.current(), null);
+    await h.b.sync();
+    assert.equal(h.b.current()?.decidedAt, saved.decidedAt);
+    assert.equal(h.b.current()?.expiresAt, saved.expiresAt);
+    assert.equal(h.posts(), 1);
+    await h.b.save(false);
+    assert.equal(h.a.current(), null);
+    assert.equal(h.b.current(), null);
+  });
+}
 test("late grant response never overrides denial from another tab", async () => {
   const h = harness(); let release!: () => void, arrived!: () => void;
   const started = new Promise<void>(r => { arrived = r; });

@@ -1,6 +1,9 @@
 export const CONSENT_VERSION = "bb-advertising-v1";
 export const CONSENT_KEY = "bb.privacy.choice.v1";
 export const CONSENT_LIFETIME_MS = 180 * 24 * 60 * 60 * 1000;
+// Browser storage may receive server timestamps slightly ahead of the device.
+// This only tolerates issuance skew; expiry and signed server validation stay strict.
+const BROWSER_CLOCK_TOLERANCE_MS = 5 * 60 * 1000;
 export type Choice = {
   version: typeof CONSENT_VERSION;
   advertising: boolean;
@@ -23,7 +26,7 @@ export function parseChoice(raw: string | null, now = Date.now()): Choice | null
     const c = value as Partial<Choice>;
     if (c.version !== CONSENT_VERSION || typeof c.advertising !== "boolean" ||
       !Number.isSafeInteger(c.decidedAt) || !Number.isSafeInteger(c.expiresAt) ||
-      c.decidedAt! > now || c.decidedAt! < 0 || c.expiresAt! <= now ||
+      c.decidedAt! > now + BROWSER_CLOCK_TOLERANCE_MS || c.decidedAt! < 0 || c.expiresAt! <= now ||
       c.expiresAt! - c.decidedAt! !== CONSENT_LIFETIME_MS ||
       typeof c.revision !== "string" || !/^[a-zA-Z0-9-]{16,64}$/.test(c.revision)) return null;
     return c as Choice;
