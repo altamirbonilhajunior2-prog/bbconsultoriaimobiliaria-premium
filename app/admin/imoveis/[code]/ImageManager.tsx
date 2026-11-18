@@ -1,7 +1,6 @@
 "use client";
 
 import { uploadPresigned } from "@vercel/blob/client";
-import Image from "next/image";
 import {
   FormEvent,
   useActionState,
@@ -50,6 +49,16 @@ const allowedTypes = [
 
 const maximumFileSize =
   25 * 1024 * 1024;
+
+// Use the optimizer only for CRM thumbnails; keep stored originals and
+// the public site's global image configuration unchanged.
+function thumbnailUrl(source: string, width: number) {
+  return `/_next/image?${new URLSearchParams({
+    url: source,
+    w: String(width),
+    q: "75",
+  })}`;
+}
 
 const buttonClass =
   "inline-flex min-h-10 items-center justify-center border border-white/10 px-3 text-[10px] font-bold uppercase tracking-[0.12em] text-zinc-300 transition hover:border-amber-500 hover:text-amber-400 disabled:cursor-not-allowed disabled:opacity-40";
@@ -859,15 +868,21 @@ export default function ImageManager({
                   }`}
                 >
                   <div className="relative aspect-[4/3] bg-black">
-                    <Image
-                      src={image.url}
+                    {/* Explicit responsive optimizer URLs are needed because next/image is globally unoptimized. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={thumbnailUrl(image.url, 640)}
+                      srcSet={[384, 640, 1080].map((width) =>
+                        `${thumbnailUrl(image.url, width)} ${width}w`,
+                      ).join(", ")}
                       alt={
                         image.alt ??
                         `${code} - Foto ${index + 1}`
                       }
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                      className="object-cover"
+                      loading="lazy"
+                      decoding="async"
+                      sizes="(max-width: 767px) 100vw, (max-width: 1279px) 50vw, 33vw"
+                      className="absolute inset-0 h-full w-full object-cover"
                     />
 
                     <div className="absolute left-3 top-3 flex gap-2">
