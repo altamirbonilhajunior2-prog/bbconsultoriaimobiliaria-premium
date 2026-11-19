@@ -132,6 +132,7 @@ model Property {
   features String[] @default([])
 
   video       String? @db.Text
+  externalVideo String? @db.Text
   virtualTour String? @db.Text
   brochure    String? @db.Text
 
