@@ -19,6 +19,22 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: "B&B Consultoria Imobiliária",
+    title: "Imóveis em São José dos Campos e Região",
+    description: "Imóveis à venda e para locação com a curadoria da B&B Consultoria Imobiliária.",
+    url: "https://www.bbconsultoriaimoveis.com.br/",
+    images: [{
+      url: "https://www.bbconsultoriaimoveis.com.br/bb-icon-512.png",
+      width: 512,
+      height: 512,
+      type: "image/png",
+      alt: "B&B Consultoria Imobiliária",
+    }],
+  },
 };
 
 const benefits = [
