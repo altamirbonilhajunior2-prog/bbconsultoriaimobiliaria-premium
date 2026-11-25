@@ -1,5 +1,4 @@
 import { propertyUseLabels, type PropertyUseValue } from "../../lib/property-use";
-import Image from "next/image";
 import Link from "next/link";
 
 type PropertyCardProps = {
@@ -34,6 +33,11 @@ export default function PropertyCard({
   propertyUse,
 }: PropertyCardProps) {
   const propertyUrl = `/imovel/${code.toLowerCase()}`;
+  // Use the same image endpoint as the home hero without changing CRM/gallery settings.
+  const canResize = (image.startsWith("/") && !image.startsWith("//")) ||
+    /^https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//i.test(image);
+  const imageUrl = (width: number) =>
+    `/_next/image?url=${encodeURIComponent(image)}&w=${width}&q=75`;
   const displayedPrice = priceStartingFrom
     ? `A partir de ${price} *`
     : price;
@@ -49,12 +53,16 @@ export default function PropertyCard({
         className="flex h-full flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-inset"
       >
         <div className="relative h-[210px] overflow-hidden">
-          <Image
-            src={image}
+          {/* Responsive thumbnails preserve the original for the property gallery. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={canResize ? imageUrl(750) : image}
+            srcSet={canResize ? [384, 640, 750, 1080].map((width) => `${imageUrl(width)} ${width}w`).join(", ") : undefined}
             alt={`${title}, localizado em ${location}`}
-            fill
+            loading="lazy"
+            decoding="async"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            className="object-cover transition-transform duration-700 group-hover:scale-[1.06]"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.06]"
           />
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-black/10" />
