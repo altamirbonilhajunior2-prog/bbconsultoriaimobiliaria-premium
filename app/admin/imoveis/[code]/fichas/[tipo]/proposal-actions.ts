@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getAccessContext } from "../../../../../../lib/admin/access";
+import { proposalClientId } from "../../../../../../lib/admin/proposal-source";
 import { prisma } from "../../../../../../lib/prisma";
 
 function getOptionalText(
@@ -374,23 +375,9 @@ export async function savePropertyProposal(
       proposerPhone,
     );
 
-  const existingClient =
-    normalizedProposerPhone
-      ? await prisma.client.findFirst({
-          where: {
-            phone:
-              normalizedProposerPhone,
-          },
-
-          orderBy: {
-            createdAt: "asc",
-          },
-
-          select: {
-            id: true,
-          },
-        })
-      : null;
+  const linkedClientId = await proposalClientId(prisma, property.id, access, {
+    clientId: formData.get("clientId"), visitId: formData.get("visitId"),
+  }, normalizedProposerPhone);
 
   let responsibleAgentId:
     | number
@@ -435,8 +422,7 @@ export async function savePropertyProposal(
                 property.id,
 
               clientId:
-                existingClient?.id ??
-                null,
+                linkedClientId,
 
               agentId:
                 responsibleAgentId,
