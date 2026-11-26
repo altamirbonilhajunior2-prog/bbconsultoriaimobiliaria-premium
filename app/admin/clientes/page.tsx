@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { getAccessContext } from "../../../lib/admin/access";
 import { prisma } from "../../../lib/prisma";
+import { contactSearchSql } from "../../../lib/admin/contact-search";
 
 import ConvertLeadButton from "./ConvertLeadButton";
 import DeleteLeadButton from "./DeleteLeadButton";
@@ -89,7 +90,9 @@ function getSourceLabel(
   );
 }
 
-export default async function ClientesPage() {
+export default async function ClientesPage({ searchParams }: { searchParams: Promise<{q?: string | string[]}> }) {
+  const params = await searchParams;
+  const query = (Array.isArray(params.q) ? params.q[0] : params.q ?? "").trim().slice(0,180);
   const access =
     await getAccessContext();
 
@@ -111,6 +114,11 @@ export default async function ClientesPage() {
             -1,
         };
 
+  const [matchingClients, matchingLeads] = query ? await Promise.all([
+    prisma.$queryRaw<{id:number}[]>(contactSearchSql("Client", query, access)),
+    prisma.$queryRaw<{id:number}[]>(contactSearchSql("PortalLead", query, access)),
+  ]) : [null, null];
+
   const [
     leads,
     clientRecords,
@@ -122,8 +130,7 @@ export default async function ClientesPage() {
     whatsAppLeadIntents,
   ] = await Promise.all([
     prisma.portalLead.findMany({
-      where:
-        leadWhere,
+      where: { ...leadWhere, ...(matchingLeads ? { id: { in: matchingLeads.map(item => item.id) } } : {}) },
 
       orderBy: {
         createdAt: "desc",
@@ -133,8 +140,7 @@ export default async function ClientesPage() {
     }),
 
     prisma.client.findMany({
-      where:
-        clientWhere,
+      where: { ...clientWhere, ...(matchingClients ? { id: { in: matchingClients.map(item => item.id) } } : {}) },
 
       orderBy: {
         updatedAt: "desc",
@@ -273,7 +279,7 @@ export default async function ClientesPage() {
             Relacionamento comercial
           </p>
 
-          <h1 className="mt-3 font-serif text-5xl">
+          <h1 className="mt-3 font-serif text-3xl sm:text-5xl">
             CLIENTES/LEADS
           </h1>
 
@@ -290,6 +296,16 @@ export default async function ClientesPage() {
             Novo cliente
           </Link>
         </header>
+
+        <form role="search" action="/admin/clientes" method="get" className="mt-8 border border-amber-500/20 bg-[#0b0b0b] p-5">
+          <label htmlFor="contact-search" className="block text-sm font-semibold text-amber-400">Buscar cliente ou lead por nome ou telefone</label>
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <input id="contact-search" key={query} type="search" name="q" defaultValue={query} maxLength={180} placeholder="Ex.: Lara ou (12) 99999-1234" className="min-h-12 min-w-0 flex-1 rounded border border-white/20 bg-[#111] px-4 text-sm text-white outline-none focus:border-amber-500" />
+            <button type="submit" className="min-h-12 rounded bg-amber-500 px-6 text-sm font-bold text-black hover:bg-amber-400">Buscar</button>
+            {query && <Link href="/admin/clientes" className="inline-flex min-h-12 items-center justify-center px-3 text-sm text-zinc-300 underline">Limpar busca</Link>}
+          </div>
+          {query && <p className="mt-3 text-xs text-zinc-400">{clientRecords.length} cliente(s) e {leads.length} lead(s) para “{query}”. Até 250 resultados por lista. Os indicadores mostram os totais da carteira. Cliques anônimos no WhatsApp não possuem nome ou telefone para esta busca.</p>}
+        </form>
 
         <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
           {indicators.map(
@@ -341,8 +357,7 @@ export default async function ClientesPage() {
           {clientRecords.length ===
           0 ? (
             <div className="border border-white/10 bg-[#0a0a0a] p-10 text-center text-zinc-400">
-              Nenhum cliente
-              cadastrado até o momento. Clique em Novo cliente para cadastrar seu primeiro contato.
+              {query ? "Nenhum cliente encontrado para esta busca." : "Nenhum cliente cadastrado até o momento. Clique em Novo cliente para cadastrar seu primeiro contato."}
             </div>
           ) : (
             <div className="grid gap-4 xl:grid-cols-2">
@@ -708,9 +723,7 @@ export default async function ClientesPage() {
 
           {leads.length === 0 ? (
             <div className="border border-white/10 bg-[#0a0a0a] p-10 text-center text-zinc-400">
-              Nenhum lead recebido
-              pelo portal até o
-              momento.
+              {query ? "Nenhum lead encontrado para esta busca." : "Nenhum lead recebido pelo portal até o momento."}
             </div>
           ) : (
             <div className="space-y-5">
