@@ -431,6 +431,7 @@ model PropertyProposal {
   usesOwnResources Boolean @default(false)
   usesFinancing    Boolean @default(false)
   usesFgts         Boolean @default(false)
+  otherResources   String? @db.Text
 
   paymentTerms      String?   @db.Text
   deadline          String?   @db.VarChar(180)

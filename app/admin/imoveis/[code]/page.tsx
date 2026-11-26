@@ -977,6 +977,9 @@ export default async function EditarImovelPage({
                     proposal.usesFgts
                       ? "FGTS"
                       : null,
+                    proposal.otherResources
+                      ? `Outros: ${proposal.otherResources}`
+                      : null,
                   ]
                     .filter(Boolean)
                     .join(" • ");

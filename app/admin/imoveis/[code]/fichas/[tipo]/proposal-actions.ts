@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { getAccessContext } from "../../../../../../lib/admin/access";
 import { proposalClientId } from "../../../../../../lib/admin/proposal-source";
+import { parseOtherResources } from "../../../../../../lib/admin/proposal-resources";
 import { prisma } from "../../../../../../lib/prisma";
 
 function getOptionalText(
@@ -292,6 +293,8 @@ export async function savePropertyProposal(
       "usesFgts",
     );
 
+  const otherResources = parseOtherResources(formData);
+
   const paymentTerms =
     getOptionalText(
       formData,
@@ -442,6 +445,7 @@ export async function savePropertyProposal(
               usesOwnResources,
               usesFinancing,
               usesFgts,
+              otherResources,
 
               paymentTerms,
               deadline,
