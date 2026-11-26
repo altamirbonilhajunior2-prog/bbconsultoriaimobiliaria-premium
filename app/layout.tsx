@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
   title: {
     default:
-      "Imóveis em São José dos Campos | B&B Consultoria Imobiliária",
+      "Imóveis em São José dos Campos e região | B&B Consultoria Imobiliária",
     template:
       "%s | B&B Consultoria Imobiliária",
   },
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     siteName:
       "B&B Consultoria Imobiliária",
     title:
-      "Imóveis em São José dos Campos | B&B Consultoria Imobiliária",
+      "Imóveis em São José dos Campos e região | B&B Consultoria Imobiliária",
     description:
       "Imóveis à venda e para locação em São José dos Campos. Curadoria imobiliária, conhecimento local e atendimento consultivo.",
   },
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title:
-      "Imóveis em São José dos Campos | B&B Consultoria Imobiliária",
+      "Imóveis em São José dos Campos e região | B&B Consultoria Imobiliária",
     description:
       "Imóveis à venda e para locação em São José dos Campos. Curadoria imobiliária, conhecimento local e atendimento consultivo.",
   },
