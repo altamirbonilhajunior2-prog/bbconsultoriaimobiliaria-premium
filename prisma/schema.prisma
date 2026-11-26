@@ -248,6 +248,11 @@ model Client {
 
   email     String?   @db.VarChar(180)
   document  String?   @db.VarChar(40)
+  cpf       String?   @db.VarChar(14)
+  rg        String?   @db.VarChar(40)
+  maritalStatus String? @db.VarChar(40)
+  profession String? @db.VarChar(180)
+  monthlyIncome Decimal? @db.Decimal(15, 2)
   birthDate DateTime?
 
   address String? @db.VarChar(300)

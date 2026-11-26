@@ -274,18 +274,21 @@ export default async function ClientesPage() {
           </p>
 
           <h1 className="mt-3 font-serif text-5xl">
-            Clientes e leads
+            CLIENTES/LEADS
           </h1>
 
           <p className="mt-4 max-w-3xl text-sm leading-7 text-zinc-400">
             Acompanhe os contatos
-            recebidos pelo portal,
+            recebidos pelo portal ou cadastrados manualmente,
             converta leads
             qualificados em clientes
             e mantenha o histórico
             comercial da B&amp;B
             centralizado no CRM.
           </p>
+          <Link href="/admin/clientes/novo" className="mt-6 inline-flex min-h-12 items-center justify-center rounded bg-amber-500 px-6 text-sm font-bold text-black hover:bg-amber-400">
+            Novo cliente
+          </Link>
         </header>
 
         <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
@@ -339,8 +342,7 @@ export default async function ClientesPage() {
           0 ? (
             <div className="border border-white/10 bg-[#0a0a0a] p-10 text-center text-zinc-400">
               Nenhum cliente
-              cadastrado até o
-              momento.
+              cadastrado até o momento. Clique em Novo cliente para cadastrar seu primeiro contato.
             </div>
           ) : (
             <div className="grid gap-4 xl:grid-cols-2">

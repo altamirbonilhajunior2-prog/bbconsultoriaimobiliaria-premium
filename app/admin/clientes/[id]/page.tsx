@@ -6,6 +6,8 @@ import {
 import { revalidatePath } from "next/cache";
 import { getAccessContext } from "../../../../lib/admin/access";
 import { prisma } from "../../../../lib/prisma";
+import { parsePersonalDetails } from "../../../../lib/clients/personal-details";
+import PersonalDetailsFields from "../PersonalDetailsFields";
 export const dynamic = "force-dynamic";
 type PageProps = {
   params: Promise<{
@@ -187,14 +189,9 @@ async function updateClientAction(
   )
     .trim()
     .slice(0, 40);
-  const rawBirthDate = String(
-    formData.get("birthDate") ?? "",
-  ).trim();
-  const address = String(
-    formData.get("address") ?? "",
-  )
-    .trim()
-    .slice(0, 300);
+  let personalDetails;
+  try { personalDetails = parsePersonalDetails(formData); }
+  catch { redirect(`/admin/clientes/${clientId}?erro=dados-cliente&editar=1`); }
   const notes = String(
     formData.get("notes") ?? "",
   )
@@ -225,21 +222,6 @@ async function updateClientAction(
       `/admin/clientes/${clientId}?erro=dados-cliente&editar=1`,
     );
   }
-  let birthDate: Date | null = null;
-  if (rawBirthDate) {
-    birthDate = new Date(
-      `${rawBirthDate}T12:00:00-03:00`,
-    );
-    if (
-      Number.isNaN(
-        birthDate.getTime(),
-      )
-    ) {
-      redirect(
-        `/admin/clientes/${clientId}?erro=dados-cliente&editar=1`,
-      );
-    }
-  }
   const existingClient =
     await prisma.client.findFirst({
       where: {
@@ -268,8 +250,7 @@ async function updateClientAction(
       phone,
       email: email || null,
       document: document || null,
-      birthDate,
-      address: address || null,
+      ...personalDetails,
       notes: notes || null,
       status:
         rawStatus as
@@ -927,7 +908,7 @@ export default async function ClientePage({
             href="/admin/clientes"
             className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400"
           >
-            Voltar para clientes e leads
+            Voltar para CLIENTES/LEADS
           </Link>
           <div className="mt-7 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -996,6 +977,11 @@ export default async function ClientePage({
             <p className="text-sm font-semibold text-red-300">
               Apenas administradores podem excluir clientes.
             </p>
+          </div>
+        ) : null}
+        {ok === "novo-cliente" ? (
+          <div role="status" className="mt-6 border border-emerald-500/40 bg-emerald-500/10 px-5 py-4 text-sm text-emerald-300">
+            Cliente cadastrado com sucesso. Os imóveis de interesse selecionados estão vinculados ao histórico abaixo.
           </div>
         ) : null}
         {ok === "imoveis" ? (
@@ -1136,32 +1122,13 @@ export default async function ClientePage({
                         className="min-h-12 w-full border border-white/15 bg-[#111] px-4 text-sm text-white outline-none focus:border-amber-500"
                       />
                     </label>
-                    <label className="block">
-                      <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
-                        Data de nascimento
-                      </span>
-                      <input
-                        type="date"
-                        name="birthDate"
-                        defaultValue={
-                          client.birthDate
-                            ? formatDateInput(client.birthDate)
-                            : ""
-                        }
-                        className="min-h-12 w-full border border-white/15 bg-[#111] px-4 text-sm text-white outline-none focus:border-amber-500"
-                      />
-                    </label>
-                    <label className="block sm:col-span-2">
-                      <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
-                        Endereço
-                      </span>
-                      <input
-                        name="address"
-                        maxLength={300}
-                        defaultValue={client.address ?? ""}
-                        className="min-h-12 w-full border border-white/15 bg-[#111] px-4 text-sm text-white outline-none focus:border-amber-500"
-                      />
-                    </label>
+                    <PersonalDetailsFields initial={{
+                      cpf: client.cpf ?? "", rg: client.rg ?? "",
+                      maritalStatus: client.maritalStatus ?? "", profession: client.profession ?? "",
+                      monthlyIncome: client.monthlyIncome?.toFixed(2).replace(".", ",") ?? "",
+                      birthDate: client.birthDate ? formatDateInput(client.birthDate) : "",
+                      address: client.address ?? "",
+                    }} />
                     <label className="block sm:col-span-2">
                       <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.14em] text-zinc-500">
                         Status
@@ -1200,6 +1167,11 @@ export default async function ClientePage({
                 <>
                   <div className="mt-5 space-y-4 text-sm">
                     <DataRow label="Nome" value={client.name} />
+                    <DataRow label="CPF" value={client.cpf || "Não informado"} />
+                    <DataRow label="RG" value={client.rg || "Não informado"} />
+                    <DataRow label="Estado civil" value={client.maritalStatus || "Não informado"} />
+                    <DataRow label="Profissão" value={client.profession || "Não informado"} />
+                    <DataRow label="Renda mensal" value={client.monthlyIncome !== null ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(client.monthlyIncome)) : "Não informada"} />
                     <DataRow
                       label="Telefone"
                       value={formatPhone(client.phone)}
