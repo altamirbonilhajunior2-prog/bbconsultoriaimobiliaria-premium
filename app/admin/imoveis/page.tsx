@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "../../../lib/prisma";
+import { matchesAdminPropertySearch } from "../../../lib/admin/property-search";
 
 export const dynamic = "force-dynamic";
 
@@ -235,13 +236,18 @@ function comparePropertyCodes(
   );
 }
 
-export default async function AdminImoveisPage() {
+export default async function AdminImoveisPage({ searchParams }: {
+  searchParams: Promise<{ q?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const query = (Array.isArray(params.q) ? params.q[0] : params.q ?? "").trim().slice(0, 180);
   const properties =
     await prisma.property.findMany({
       select: {
         id: true,
         code: true,
         title: true,
+        development: true,
         purpose: true,
         propertyType: true,
         category: true,
@@ -262,6 +268,8 @@ export default async function AdminImoveisPage() {
         propertyB.code,
       ),
   );
+
+  const filteredProperties = properties.filter(property => matchesAdminPropertySearch(property, query));
 
   const totalAvailable =
     properties.filter(
@@ -315,6 +323,16 @@ export default async function AdminImoveisPage() {
             Cadastrar novo imóvel
           </Link>
         </div>
+
+        <form action="/admin/imoveis" method="get" role="search" className="mt-8 border border-amber-500/20 bg-[#0b0b0b] p-5">
+          <label htmlFor="property-search" className="block text-sm font-semibold text-amber-400">Buscar imóvel por referência ou título</label>
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <input id="property-search" key={query} name="q" type="search" defaultValue={query} maxLength={180} placeholder="Ex.: BBA023, BBA 023 ou nome do condomínio" className="min-h-12 min-w-0 flex-1 rounded border border-white/20 bg-[#111] px-4 text-sm text-white outline-none focus:border-amber-500" />
+            <button type="submit" className="min-h-12 rounded bg-amber-500 px-6 text-sm font-bold text-black hover:bg-amber-400">Buscar</button>
+            {query && <Link href="/admin/imoveis" className="inline-flex min-h-12 items-center justify-center px-3 text-sm text-zinc-300 underline">Limpar busca</Link>}
+          </div>
+          <p className="mt-3 text-xs text-zinc-400">Exibindo {filteredProperties.length} de {properties.length} imóveis{query ? ` para “${query}”` : ""}. Os indicadores abaixo mostram o total do cadastro.</p>
+        </form>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="border border-white/10 bg-[#0b0b0b] p-6">
@@ -393,10 +411,10 @@ export default async function AdminImoveisPage() {
             </span>
           </div>
 
-          {properties.length >
+          {filteredProperties.length >
           0 ? (
             <div>
-              {properties.map(
+              {filteredProperties.map(
                 (property) => {
                   const value =
                     getPropertyValue(
@@ -553,18 +571,18 @@ export default async function AdminImoveisPage() {
           ) : (
             <div className="bg-[#080808] px-6 py-16 text-center">
               <h2 className="font-serif text-3xl">
-                Nenhum imóvel cadastrado.
+                {query ? "Nenhum imóvel encontrado." : "Nenhum imóvel cadastrado."}
               </h2>
 
               <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-zinc-500">
-                O banco de dados está vazio. Cadastre o primeiro imóvel para iniciar a gestão pelo Portal B&amp;B.
+                {query ? "Confira a referência ou tente outra palavra do título ou do condomínio." : "O banco de dados está vazio. Cadastre o primeiro imóvel para iniciar a gestão pelo Portal B&B."}
               </p>
 
               <Link
-                href="/admin/imoveis/novo"
+                href={query ? "/admin/imoveis" : "/admin/imoveis/novo"}
                 className="mt-7 inline-flex min-h-14 items-center justify-center bg-amber-500 px-7 text-xs font-bold uppercase tracking-[0.16em] text-black"
               >
-                Cadastrar primeiro imóvel
+                {query ? "Ver todos os imóveis" : "Cadastrar primeiro imóvel"}
               </Link>
             </div>
           )}
