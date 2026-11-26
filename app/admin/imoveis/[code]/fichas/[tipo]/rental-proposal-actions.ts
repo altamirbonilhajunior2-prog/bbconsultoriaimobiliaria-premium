@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { getAccessContext } from "../../../../../../lib/admin/access";
+import { proposalClientId } from "../../../../../../lib/admin/proposal-source";
 import { prisma } from "../../../../../../lib/prisma";
 
 function optionalText(formData: FormData, field: string) {
@@ -164,19 +165,9 @@ export async function savePropertyRentalProposal(
   }
 
   const normalizedTenantPhone = normalizePhone(tenantPhone);
-  const existingClient = normalizedTenantPhone
-    ? await prisma.client.findFirst({
-        where: {
-          phone: normalizedTenantPhone,
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-        select: {
-          id: true,
-        },
-      })
-    : null;
+  const linkedClientId = await proposalClientId(prisma, property.id, access, {
+    clientId: formData.get("clientId"), visitId: formData.get("visitId"),
+  }, normalizedTenantPhone);
 
   let responsibleAgentId: number | null = access.agentId;
 
@@ -205,7 +196,7 @@ export async function savePropertyRentalProposal(
   await prisma.propertyRentalProposal.create({
     data: {
       propertyId: property.id,
-      clientId: existingClient?.id ?? null,
+      clientId: linkedClientId,
       agentId: responsibleAgentId,
       tenantName,
       tenantDocument,
@@ -251,6 +242,7 @@ export async function savePropertyRentalProposal(
   revalidatePath(propertyPath);
   revalidatePath(proposalPath);
   revalidatePath("/admin/clientes");
+  if (linkedClientId) revalidatePath(`/admin/clientes/${linkedClientId}`);
 
   redirect(`${proposalPath}?salvo=1`);
 }

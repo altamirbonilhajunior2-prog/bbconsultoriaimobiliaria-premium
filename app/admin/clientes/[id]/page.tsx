@@ -1,4 +1,6 @@
 import Link from "next/link";
+import ProposalLinks from "../../ProposalLinks";
+import { openClientProposal } from "./open-proposal";
 import {
   notFound,
   redirect,
@@ -723,6 +725,7 @@ export default async function ClientePage({
                 id: true,
                 code: true,
                 title: true,
+                purpose: true,
               },
             },
           },
@@ -938,6 +941,9 @@ export default async function ClientePage({
             </a>
           </div>
         </header>
+        {erro === "proposta" && <p role="alert" className="mt-5 border border-red-500/30 p-4 text-sm text-red-300">
+          Confira o código do imóvel e escolha uma finalidade disponível (compra ou locação).
+        </p>}
         {erro === "imoveis" ? (
           <div className="mt-6 border border-red-500/40 bg-red-500/10 px-5 py-4">
             <p className="text-sm font-semibold text-red-300">
@@ -1629,6 +1635,25 @@ export default async function ClientePage({
             </article>
           </div>
         </section>
+        <section className="mt-8 border border-amber-500/20 bg-[#0a0a0a] p-6 lg:p-8">
+          <h2 className="font-serif text-3xl">Nova proposta</h2>
+          <p className="mt-3 text-sm text-zinc-400">Escolha o imóvel e abra a ficha com os dados deste cliente já preenchidos e editáveis.</p>
+          <form action={openClientProposal.bind(null, client.id)} className="mt-5 flex flex-wrap items-end gap-4">
+            <label className="block min-w-0 flex-1">
+              <span className="mb-2 block text-xs text-zinc-400">Código do imóvel para a proposta</span>
+              <input name="proposalPropertyCode" required list="proposal-properties" placeholder="Ex.: BBA 023" className="min-h-12 w-full border border-white/15 bg-[#111] px-4 text-sm text-white" />
+              <datalist id="proposal-properties">{relatedPropertyCodes.map(code => <option key={code} value={code} />)}</datalist>
+            </label>
+            <label className="block">
+              <span className="mb-2 block text-xs text-zinc-400">Tipo de proposta</span>
+              <select name="proposalKind" className="min-h-12 border border-white/15 bg-[#111] px-4 text-sm text-white">
+                <option value="proposta">Compra</option>
+                <option value="proposta-locacao">Locação</option>
+              </select>
+            </label>
+            <button type="submit" className="min-h-12 bg-amber-500 px-6 text-sm font-bold text-black hover:bg-amber-400">Abrir proposta</button>
+          </form>
+        </section>
         <section className="mt-8 grid gap-6 xl:grid-cols-2">
           <article className="border border-white/10 bg-[#0a0a0a] p-6">
             <div className="flex items-end justify-between gap-4">
@@ -1721,6 +1746,7 @@ export default async function ClientePage({
                               : "Baixo"}
                         </p>
                       ) : null}
+                      <ProposalLinks code={visit.property.code} purpose={visit.property.purpose} visitId={visit.id} />
                       {visit.status ===
                       "AGENDADA" ? (
                         <div className="mt-4 border-t border-white/10 pt-4">

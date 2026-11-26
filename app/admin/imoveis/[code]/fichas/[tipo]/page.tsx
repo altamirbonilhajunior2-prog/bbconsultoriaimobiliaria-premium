@@ -5,6 +5,8 @@ import type { ReactNode } from "react";
 import { getAccessContext } from "../../../../../../lib/admin/access";
 import { prisma } from "../../../../../../lib/prisma";
 import PrintControls from "./PrintControls";
+import ProposalLinks from "../../../../ProposalLinks";
+import { InvalidProposalSource, resolveProposalSource } from "../../../../../../lib/admin/proposal-source";
 import SignaturePad from "./SignaturePad";
 import { savePropertyProposal } from "./proposal-actions";
 import { savePropertyRentalProposal } from "./rental-proposal-actions";
@@ -21,6 +23,7 @@ type PrintableSheetPageProps = {
   searchParams: Promise<{
     salvo?: string;
     visitId?: string;
+    clientId?: string;
   }>;
 };
 
@@ -323,6 +326,7 @@ export default async function PrintableSheetPage({
   const {
     salvo,
     visitId,
+    clientId,
   } = await searchParams;
 
   if (
@@ -388,6 +392,16 @@ export default async function PrintableSheetPage({
 
   const isPropertySheet =
     tipo === "imovel";
+
+  let proposalSource: Awaited<ReturnType<typeof resolveProposalSource>> = null;
+  if (isProposalSheet || isRentalProposalSheet) {
+    try {
+      proposalSource = await resolveProposalSource(prisma, property.id, access, { clientId, visitId });
+    } catch (error) {
+      if (error instanceof InvalidProposalSource) notFound();
+      throw error;
+    }
+  }
 
   let numericVisitId:
     | number
@@ -493,8 +507,9 @@ export default async function PrintableSheetPage({
         })
       : null;
 
-  const backHref =
-    scheduledVisit?.clientId
+  const backHref = proposalSource?.clientId
+    ? `/admin/clientes/${proposalSource.clientId}`
+    : scheduledVisit?.clientId
       ? `/admin/clientes/${scheduledVisit.clientId}`
       : `/admin/imoveis/${property.code.toLowerCase()}`;
 
@@ -615,6 +630,13 @@ export default async function PrintableSheetPage({
         backHref={backHref}
         printLabel={printLabel}
       />
+
+      {scheduledVisit && <div className="mx-auto max-w-[210mm] pb-4 print:hidden">
+        <ProposalLinks code={property.code} purpose={property.purpose} visitId={scheduledVisit.id} />
+      </div>}
+      {proposalSource && <p className="mx-auto mb-4 max-w-[210mm] text-sm print:hidden">
+        Dados preenchidos a partir {proposalSource.visitId ? "da visita" : "do cadastro do cliente"}. Você pode editá-los nesta proposta sem alterar o cadastro original.
+      </p>}
 
       {isVisitSheet &&
       scheduledVisit ? (
@@ -946,6 +968,8 @@ export default async function PrintableSheetPage({
 
       {isProposalSheet ? (
         <form action={saveProposalAction}>
+          {proposalSource?.visitId ? <input type="hidden" name="visitId" value={proposalSource.visitId} /> :
+            proposalSource?.clientId ? <input type="hidden" name="clientId" value={proposalSource.clientId} /> : null}
           <article className="print-sheet mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white p-5 shadow-2xl sm:p-[12mm] print:p-0">
             <SheetHeader
               title="Proposta de compra"
@@ -997,6 +1021,7 @@ export default async function PrintableSheetPage({
                 <EditableField
                   label="Nome completo"
                   name="proposerName"
+                  defaultValue={proposalSource?.name ?? ""}
                   wide
                   required
                   placeholder="Nome completo do proponente"
@@ -1005,12 +1030,14 @@ export default async function PrintableSheetPage({
                 <EditableField
                   label="CPF"
                   name="proposerDocument"
+                  defaultValue={proposalSource?.document ?? ""}
                   placeholder="000.000.000-00"
                 />
 
                 <EditableField
                   label="Telefone"
                   name="proposerPhone"
+                  defaultValue={proposalSource?.phone ?? ""}
                   type="tel"
                   placeholder="(00) 00000-0000"
                 />
@@ -1018,6 +1045,7 @@ export default async function PrintableSheetPage({
                 <EditableField
                   label="E-mail"
                   name="proposerEmail"
+                  defaultValue={proposalSource?.email ?? ""}
                   type="email"
                   placeholder="nome@email.com"
                 />
@@ -1297,6 +1325,8 @@ export default async function PrintableSheetPage({
 
       {isRentalProposalSheet ? (
         <form action={saveRentalProposalAction}>
+          {proposalSource?.visitId ? <input type="hidden" name="visitId" value={proposalSource.visitId} /> :
+            proposalSource?.clientId ? <input type="hidden" name="clientId" value={proposalSource.clientId} /> : null}
           <article className="print-sheet mx-auto min-h-[297mm] w-full max-w-[210mm] bg-white p-5 shadow-2xl sm:p-[12mm] print:p-0">
             <SheetHeader
               title="Proposta de locação"
@@ -1348,6 +1378,7 @@ export default async function PrintableSheetPage({
                 <EditableField
                   label="Nome completo"
                   name="tenantName"
+                  defaultValue={proposalSource?.name ?? ""}
                   wide
                   required
                   placeholder="Nome completo do pretendente"
@@ -1356,12 +1387,14 @@ export default async function PrintableSheetPage({
                 <EditableField
                   label="CPF ou CNPJ"
                   name="tenantDocument"
+                  defaultValue={proposalSource?.rentalDocument ?? ""}
                   placeholder="Documento do pretendente"
                 />
 
                 <EditableField
                   label="Telefone"
                   name="tenantPhone"
+                  defaultValue={proposalSource?.phone ?? ""}
                   type="tel"
                   placeholder="(00) 00000-0000"
                 />
@@ -1369,6 +1402,7 @@ export default async function PrintableSheetPage({
                 <EditableField
                   label="E-mail"
                   name="tenantEmail"
+                  defaultValue={proposalSource?.email ?? ""}
                   type="email"
                   placeholder="nome@email.com"
                 />

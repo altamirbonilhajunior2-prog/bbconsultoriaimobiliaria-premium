@@ -25,7 +25,7 @@ export default function PrintControls({
         href={backHref}
         className="inline-flex min-h-11 items-center justify-center bg-black px-5 text-[10px] font-bold uppercase tracking-[0.14em] text-white transition hover:bg-zinc-800"
       >
-        ← Voltar para o imóvel
+        ← {backHref.startsWith("/admin/clientes/") ? "Voltar para o cliente" : "Voltar para o imóvel"}
       </Link>
 
       <div className="flex flex-col items-stretch gap-2 sm:items-end">

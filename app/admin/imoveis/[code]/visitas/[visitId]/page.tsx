@@ -1,4 +1,5 @@
 import Image from "next/image";
+import ProposalLinks from "../../../../ProposalLinks";
 import { notFound } from "next/navigation";
 
 import { getAccessContext } from "../../../../../../lib/admin/access";
@@ -242,6 +243,9 @@ export default async function VisitPage({
         backHref={backHref}
         printLabel="Imprimir ficha de visita"
       />
+      <div className="mx-auto max-w-[210mm] pb-4 print:hidden">
+        <ProposalLinks code={property.code} purpose={property.purpose} visitId={visit.id} />
+      </div>
 
       {access.isAdmin ? (
         <div className="mx-auto mb-5 flex w-full max-w-[210mm] justify-end print:hidden">
