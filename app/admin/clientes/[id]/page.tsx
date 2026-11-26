@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ProposalLinks from "../../ProposalLinks";
 import { openClientProposal } from "./open-proposal";
+import DeleteTimelineEventButton from "./DeleteTimelineEventButton";
 import {
   notFound,
   redirect,
@@ -1616,6 +1617,7 @@ export default async function ClientePage({
                                 }
                               </p>
                             ) : null}
+                            {access.isAdmin && <DeleteTimelineEventButton clientId={client.id} eventId={event.id} label={commercialEventLabels[event.type]} />}
                             {event.agent ? (
                               <p className="mt-3 text-xs text-zinc-600">
                                 Responsável:{" "}
