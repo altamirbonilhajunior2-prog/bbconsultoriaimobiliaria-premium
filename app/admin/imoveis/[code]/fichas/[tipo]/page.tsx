@@ -8,6 +8,7 @@ import PrintControls from "./PrintControls";
 import ProposalLinks from "../../../../ProposalLinks";
 import { InvalidProposalSource, resolveProposalSource } from "../../../../../../lib/admin/proposal-source";
 import SignaturePad from "./SignaturePad";
+import ResourceOptions from "./ResourceOptions";
 import { savePropertyProposal } from "./proposal-actions";
 import { savePropertyRentalProposal } from "./rental-proposal-actions";
 import { savePropertyVisit } from "./visit-actions";
@@ -235,26 +236,6 @@ function ChoiceOption({
         value={value}
         defaultChecked={defaultChecked}
         className="h-3.5 w-3.5 border-zinc-400 accent-amber-500"
-      />
-
-      <span>{label}</span>
-    </label>
-  );
-}
-
-function CheckboxOption({
-  name,
-  label,
-}: {
-  name: string;
-  label: string;
-}) {
-  return (
-    <label className="flex min-h-10 cursor-pointer items-center gap-3 border border-zinc-300 px-3 py-2 text-[10px] text-zinc-700 transition hover:border-amber-500">
-      <input
-        type="checkbox"
-        name={name}
-        className="h-4 w-4 accent-amber-500"
       />
 
       <span>{label}</span>
@@ -1077,22 +1058,7 @@ export default async function PrintableSheetPage({
                   Origem dos recursos
                 </p>
 
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <CheckboxOption
-                    name="usesOwnResources"
-                    label="Recursos próprios"
-                  />
-
-                  <CheckboxOption
-                    name="usesFinancing"
-                    label="Financiamento bancário"
-                  />
-
-                  <CheckboxOption
-                    name="usesFgts"
-                    label="FGTS"
-                  />
-                </div>
+                <ResourceOptions />
               </div>
 
               <div className="mt-5 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
