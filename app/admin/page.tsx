@@ -62,7 +62,7 @@ const managementLinks = [
     href: "/admin/edificios",
   },
   {
-    title: "Clientes e leads",
+    title: "CLIENTES/LEADS",
     description:
       "Acompanhar contatos e oportunidades comerciais.",
     href: "/admin/clientes",
@@ -317,8 +317,7 @@ export default async function AdminPage() {
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-300">
                   Estes contatos ainda
                   estão com status Novo.
-                  Abra a área de Clientes
-                  e leads para iniciar o
+                  Abra a área de CLIENTES/LEADS para iniciar o
                   atendimento e atualizar
                   a etapa comercial.
                 </p>
