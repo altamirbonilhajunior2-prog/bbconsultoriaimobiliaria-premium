@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Exclusão de Dados | B&B Consultoria Imobiliária",
+  title: "Exclusão de Dados",
   description:
     "Instruções para solicitação de exclusão de dados pessoais na B&B Consultoria Imobiliária.",
 };

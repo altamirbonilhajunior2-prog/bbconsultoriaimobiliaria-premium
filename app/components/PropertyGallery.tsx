@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import GalleryImage from "./GalleryImage";
 import { useCallback, useEffect, useState } from "react";
 
 type PropertyGalleryProps = {
@@ -122,14 +122,12 @@ export default function PropertyGallery({
             <span className="sr-only">Ampliar imagem</span>
           </button>
 
-          <Image
+          <GalleryImage
             key={selectedImage}
             src={selectedImage}
             alt={`${title} — foto ${selectedIndex + 1}`}
-            fill
             priority
-            draggable={false}
-            sizes="(max-width: 1024px) 100vw, 70vw"
+            sizes="(min-width: 1720px) 1164px, (min-width: 1280px) calc(100vw - 556px), (min-width: 1024px) calc(100vw - 80px), calc(100vw - 48px)"
             className="pointer-events-none select-none object-cover"
           />
 
@@ -140,11 +138,10 @@ export default function PropertyGallery({
           </span>
 
           <div className="pointer-events-none absolute bottom-20 right-5 z-30 h-20 w-48 opacity-70 sm:right-6 sm:h-24 sm:w-52">
-            <Image
+            <GalleryImage
               src="/logo-bb.png"
+              thumbnail
               alt=""
-              fill
-              draggable={false}
               sizes="208px"
               className="select-none object-contain"
             />
@@ -219,12 +216,11 @@ export default function PropertyGallery({
                     : "border-white/10 hover:border-amber-500/60"
                 }`}
               >
-                <Image
+                <GalleryImage
                   src={image}
                   alt={`${title} — miniatura ${index + 1}`}
-                  fill
-                  draggable={false}
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                  thumbnail
+                  sizes="(min-width: 1720px) 220px, (min-width: 1280px) calc(20vw - 124px), (min-width: 1024px) calc(20vw - 29px), (min-width: 640px) calc(33.333vw - 27px), calc(50vw - 32px)"
                   className="pointer-events-none select-none object-cover transition duration-500 group-hover:scale-105"
                 />
 
@@ -274,23 +270,20 @@ export default function PropertyGallery({
             onClick={(event) => event.stopPropagation()}
             className="relative h-[78vh] w-full max-w-[1500px]"
           >
-            <Image
+            <GalleryImage
               key={`lightbox-${selectedImage}`}
               src={selectedImage}
               alt={`${title} — foto ampliada ${selectedIndex + 1}`}
-              fill
               priority
-              draggable={false}
-              sizes="100vw"
+              sizes="(min-width: 1564px) 1500px, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)"
               className="pointer-events-none select-none object-contain"
             />
 
             <div className="pointer-events-none absolute bottom-8 right-8 z-30 h-24 w-60 opacity-70 sm:bottom-10 sm:right-10 sm:h-28 sm:w-64">
-              <Image
+              <GalleryImage
                 src="/logo-bb.png"
+              thumbnail
                 alt=""
-                fill
-                draggable={false}
                 sizes="256px"
                 className="select-none object-contain"
               />

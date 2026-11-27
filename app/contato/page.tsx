@@ -4,7 +4,7 @@ import Header from "../components/Header";
 import TrackedWhatsAppLink from "../components/TrackedWhatsAppLink";
 
 export const metadata = {
-  title: "Contato | B&B Consultoria Imobiliária",
+  title: "Contato",
   description:
     "Entre em contato com a B&B Consultoria Imobiliária para comprar, alugar, vender, investir, solicitar consultoria patrimonial ou avaliação de imóvel em São José dos Campos.",
 };

@@ -7,7 +7,7 @@ import { prisma } from "../../lib/prisma";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Lançamentos | B&B Consultoria Imobiliária",
+  title: "Lançamentos",
   description:
     "Lançamentos imobiliários selecionados em São José dos Campos.",
 };

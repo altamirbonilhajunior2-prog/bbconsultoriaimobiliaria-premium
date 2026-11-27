@@ -4,7 +4,7 @@ import Footer from "../components/Footer";
 import Header from "../components/Header";
 
 export const metadata = {
-  title: "Quem Somos | B&B Consultoria Imobiliária",
+  title: "Quem Somos",
   description:
     "Conheça a história, a missão, a visão e os valores da B&B Consultoria Imobiliária, especializada em decisões patrimoniais em São José dos Campos.",
 };
