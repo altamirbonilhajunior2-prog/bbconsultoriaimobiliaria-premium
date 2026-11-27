@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidade | B&B Consultoria Imobiliária",
+  title: "Política de Privacidade",
   description:
     "Como a B&B Consultoria Imobiliária trata dados de atendimento e oferece escolhas sobre publicidade.",
 };

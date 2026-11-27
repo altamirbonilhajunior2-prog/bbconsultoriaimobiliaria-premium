@@ -55,7 +55,7 @@ function createWhatsAppUrl(message: string) {
 }
 
 export const metadata = {
-  title: "Nossa Metodologia | B&B Consultoria Imobiliária",
+  title: "Nossa Metodologia",
   description:
     "Conheça a metodologia consultiva da B&B para analisar localização, liquidez, valorização, custos, conforto e adequação patrimonial dos imóveis.",
 };

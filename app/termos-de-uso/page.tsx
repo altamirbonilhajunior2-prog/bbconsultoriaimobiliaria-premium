@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Termos de Uso | B&B Consultoria Imobiliária",
+  title: "Termos de Uso",
   description:
     "Termos de Uso dos serviços digitais da B&B Consultoria Imobiliária.",
 };
