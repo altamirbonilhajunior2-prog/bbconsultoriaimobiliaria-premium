@@ -120,6 +120,7 @@ function InfoItem({
 }) {
   return (
     <div
+      data-pdf-info
       className={`border-b border-zinc-300 pb-2 ${
         wide ? "sm:col-span-2" : ""
       }`}
@@ -610,6 +611,8 @@ export default async function PrintableSheetPage({
       <PrintControls
         backHref={backHref}
         printLabel={printLabel}
+        fillable={isVisitSheet || isProposalSheet || isRentalProposalSheet}
+        propertyCode={property.code}
       />
 
       {scheduledVisit && <div className="mx-auto max-w-[210mm] pb-4 print:hidden">

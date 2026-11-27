@@ -221,7 +221,7 @@ export default function SignaturePad({
   }
 
   return (
-    <div className="min-w-0">
+    <div className="min-w-0" data-pdf-signature={label}>
       <input
         type="hidden"
         name={name}
